@@ -46,6 +46,7 @@ yarn build
 
 Playwright requires its Chromium browser (`yarn playwright install chromium`).
 Build output and dependency folders are excluded from version control.
+
 ## Milestone verification
 
 The trip-analysis API is wired through `src/services/api.ts`; local Vite development proxies `/api` to `VITE_API_PROXY_TARGET` (default `http://127.0.0.1:8000`). The map remains an illustrative SVG and does not claim live geographic routing. Route cards and the existing inspector still contain legacy fixture presentation logic; full component extraction and response-driven map/card rendering remain follow-up work.
