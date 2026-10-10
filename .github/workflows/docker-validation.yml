@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [develop, main]
   push:
-    branches: [develop]
+    branches: [main, develop]
 
 permissions:
   contents: read
@@ -14,43 +14,9 @@ jobs:
     name: docker-validation
     runs-on: ubuntu-latest
     steps:
-      # Checks out the three repos as siblings, exactly matching the local
-      # dev workspace layout (work-space/spotter-{frontend,backend,infrastructure}),
-      # since docker-compose.local.yml's build contexts (../spotter-frontend,
-      # ../spotter-backend) depend on that relative structure.
-      - name: Check out spotter-infrastructure
+      - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          path: spotter-infrastructure
 
-      # These are private repositories. The default GITHUB_TOKEN issued to
-      # this workflow only has access to the repo it runs in
-      # (spotter-infrastructure) — it cannot check out sibling private
-      # repos in the same org. CROSS_REPO_CHECKOUT_TOKEN must be a
-      # fine-grained PAT or GitHub App installation token with (at minimum)
-      # Contents: Read on spotter-frontend and spotter-backend. See the
-      # README for exactly what to create and where to add it as a secret.
-      - name: Check out spotter-frontend
-        uses: actions/checkout@v4
-        with:
-          repository: Spotterv1/spotter-frontend
-          ref: develop
-          token: ${{ secrets.CROSS_REPO_CHECKOUT_TOKEN }}
-          path: spotter-frontend
-
-      - name: Check out spotter-backend
-        uses: actions/checkout@v4
-        with:
-          repository: Spotterv1/spotter-backend
-          ref: develop
-          token: ${{ secrets.CROSS_REPO_CHECKOUT_TOKEN }}
-          path: spotter-backend
-
-      # docker compose config / build resolve env_file entries even when
-      # not starting containers. None of these .env files exist in a fresh
-      # checkout — these are empty/placeholder values, no real secrets,
-      # matching what a developer would get from `cp .env.example .env`
-      # before ever editing it.
       - name: Create placeholder .env files
         run: |
           touch spotter-backend/.env

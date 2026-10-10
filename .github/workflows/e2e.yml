@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [develop, main]
   push:
-    branches: [develop]
+    branches: [main, develop]
 
 permissions:
   contents: read
@@ -20,28 +20,8 @@ jobs:
     name: e2e-smoke
     runs-on: ubuntu-latest
     steps:
-      # Sibling checkout — same reasoning and same required secret as
-      # docker-validation.yml (see this repo's README).
-      - name: Check out spotter-infrastructure
+      - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          path: spotter-infrastructure
-
-      - name: Check out spotter-frontend
-        uses: actions/checkout@v4
-        with:
-          repository: Spotterv1/spotter-frontend
-          ref: develop
-          token: ${{ secrets.CROSS_REPO_CHECKOUT_TOKEN }}
-          path: spotter-frontend
-
-      - name: Check out spotter-backend
-        uses: actions/checkout@v4
-        with:
-          repository: Spotterv1/spotter-backend
-          ref: develop
-          token: ${{ secrets.CROSS_REPO_CHECKOUT_TOKEN }}
-          path: spotter-backend
 
       - name: Create placeholder .env files
         run: |

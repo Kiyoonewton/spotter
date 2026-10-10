@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: ['**']
   push:
-    branches: [develop]
+    branches: [main, develop]
 
 concurrency:
   group: frontend-quality-${{ github.workflow }}-${{ github.ref }}
@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 20
     defaults:
       run:
-        working-directory: apps/web
+        working-directory: spotter-frontend/apps/web
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -29,9 +29,9 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: apps/web/.nvmrc
+          node-version-file: spotter-frontend/apps/web/.nvmrc
           cache: yarn
-          cache-dependency-path: apps/web/yarn.lock
+          cache-dependency-path: spotter-frontend/apps/web/yarn.lock
 
       - name: Enable Corepack
         run: corepack enable
@@ -62,8 +62,8 @@ jobs:
         with:
           name: spotter-frontend-ssr-build-${{ github.sha }}
           path: |
-            apps/web/.output
-            apps/web/dist
+            spotter-frontend/apps/web/.output
+            spotter-frontend/apps/web/dist
           if-no-files-found: ignore
           retention-days: 7
 
@@ -81,7 +81,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage-report
-          path: apps/web/coverage
+          path: spotter-frontend/apps/web/coverage
           retention-days: 7
           if-no-files-found: ignore
 
@@ -90,6 +90,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-playwright-report
-          path: apps/web/playwright-report
+          path: spotter-frontend/apps/web/playwright-report
           retention-days: 7
           if-no-files-found: ignore
