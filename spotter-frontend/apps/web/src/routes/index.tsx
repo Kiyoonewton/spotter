@@ -91,8 +91,8 @@ function Index() {
       ...route,
       miles: route.distance_miles,
       minutes: route.duration_minutes,
-      severe: route.risk_miles.Severe ?? 0,
-      high: route.risk_miles.High ?? 0,
+      severe: route.risk_miles['Severe'] ?? 0,
+      high: route.risk_miles['High'] ?? 0,
       average: route.average_risk ?? 0,
       roads: route.name,
     })) ?? [];

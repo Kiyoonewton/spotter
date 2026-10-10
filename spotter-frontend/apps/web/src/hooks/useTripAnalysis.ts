@@ -29,7 +29,7 @@ export type Result = {
   checkpointIndex: number;
   pending: boolean;
   error: string;
-  requestId?: string;
+  requestId: string | undefined;
   submit: (trip: EditableTrip, event?: React.FormEvent) => Promise<void>;
   selectRoute: (id: string) => void;
   setCheckpointIndex: (index: number) => void;
