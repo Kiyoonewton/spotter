@@ -4,7 +4,8 @@ from rest_framework.test import APITestCase
 
 class LiveAnalysisApiTests(APITestCase):
     def test_live_requires_coordinates(self):
-        response = self.client.post("/api/trip-analyses/", {"mode": "live"}, format="json")
+        payload = {"mode": "live", "origin": "Chicago, IL", "destination": "Pittsburgh, PA", "departure_at": "2026-10-10T10:00:00-05:00", "departure_timezone": "America/Chicago", "load_weight_lb": 42000, "checkpoint_spacing_miles": 25}
+        response = self.client.post("/api/trip-analyses/", payload, format="json")
         self.assertEqual(response.status_code, 400)
         self.assertIn("origin_coordinates", response.data["errors"])
 
