@@ -3,7 +3,9 @@ import { env } from '../env';
 export const API_BASE_URL = env.VITE_API_BASE_URL;
 
 export function apiUrl(path: string): string {
-  return `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  const base = API_BASE_URL.replace(/\/+$/, '');
+  const normalizedPath = path.replace(/^\/+/, '');
+  return `${base}/${normalizedPath}`;
 }
 
 export type TripAnalysisRequest = {
