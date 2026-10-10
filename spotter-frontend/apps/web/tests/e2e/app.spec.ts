@@ -122,3 +122,63 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
   await expect(page.locator('svg.route-map')).toHaveCount(0);
   await expect(page.getByLabel('Heatmap opacity')).toHaveCount(0);
 });
+
+test('parent results flow preserves null recommendations and eligibility banners', async ({
+  page,
+}) => {
+  let submission = 0;
+  await page.route('**/api/trip-analyses/', async (route) => {
+    submission += 1;
+    const eligibility = submission === 2 ? 'blocked' : submission === 3 ? 'incomplete' : 'eligible';
+    await route.fulfill({
+      json: {
+        analysis_id: `null-${submission}`,
+        data_source: 'demo',
+        available_route_count: 2,
+        routes: ['alpha', 'beta'].map((id) => ({
+          id,
+          name: id,
+          distance_miles: 10,
+          duration_minutes: 20,
+          eligibility,
+          risk_miles: {},
+          average_risk: eligibility === 'eligible' ? null : null,
+          checkpoints: [
+            {
+              id: `${id}-checkpoint`,
+              route_id: id,
+              distance_from_origin_miles: 0,
+              arrival_at: '2026-10-10T15:00:00Z',
+              risk: 'Unknown',
+              weather: { wind_mph: 12, rain_in_hr: null, snow_in_hr: null },
+              reasons: [],
+            },
+          ],
+        })),
+        recommendation: {
+          status: 'unavailable',
+          recommended_route_id: null,
+          explanation: 'No route recommendation is available.',
+        },
+      },
+    });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: /Compare routes/i }).click();
+  await expect(page.getByText(/Route alpha · Checkpoint 1/)).toBeVisible();
+  await expect(page.getByText('Recommendation unavailable — incomplete forecast')).toBeVisible();
+  await expect(page.getByText('Recommended', { exact: true })).toHaveCount(0);
+  await expect(page.getByText(/Route .* recommended/)).toHaveCount(0);
+  await page
+    .getByRole('button', { name: /Route beta/ })
+    .first()
+    .click();
+  await expect(page.getByText(/Route beta · Checkpoint 1/)).toBeVisible();
+  await expect(page.getByText('Recommended', { exact: true })).toHaveCount(0);
+  await page.getByLabel('Load weight in lbs').fill('43000');
+  await page.getByRole('button', { name: /Compare routes/i }).click();
+  await expect(page.getByText('All routes blocked')).toBeVisible();
+  await page.getByLabel('Load weight in lbs').fill('44000');
+  await page.getByRole('button', { name: /Compare routes/i }).click();
+  await expect(page.getByText('Recommendation unavailable — incomplete forecast')).toBeVisible();
+});
