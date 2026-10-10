@@ -12,7 +12,7 @@ test('loads the dispatch workspace before an analysis is submitted', async ({ pa
 test('mocked live contract journey sends coordinates and hides illustrative map', async ({
   page,
 }) => {
-  await page.route('**/api/locations/**', async (route) => {
+  await page.route('**/api/locations*', async (route) => {
     const query = new URL(route.request().url()).searchParams.get('q') ?? '';
     const candidate = query.toLowerCase().startsWith('new')
       ? {
