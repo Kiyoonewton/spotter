@@ -142,7 +142,7 @@ test('parent results flow preserves null recommendations and eligibility banners
           duration_minutes: 20,
           eligibility,
           risk_miles: {},
-          average_risk: eligibility === 'eligible' ? null : null,
+          average_risk: null,
           checkpoints: [
             {
               id: `${id}-checkpoint`,
@@ -165,7 +165,7 @@ test('parent results flow preserves null recommendations and eligibility banners
   });
   await page.goto('/');
   await page.getByRole('button', { name: /Compare routes/i }).click();
-  await expect(page.getByText(/Route alpha · Checkpoint 1/)).toBeVisible();
+  await expect(page.getByText(/Route alpha · Sample checkpoint 1/)).toBeVisible();
   await expect(page.getByText('Recommendation unavailable — incomplete forecast')).toBeVisible();
   await expect(page.getByText('Recommended', { exact: true })).toHaveCount(0);
   await expect(page.getByText(/Route .* recommended/)).toHaveCount(0);
@@ -173,7 +173,7 @@ test('parent results flow preserves null recommendations and eligibility banners
     .getByRole('button', { name: /Route beta/ })
     .first()
     .click();
-  await expect(page.getByText(/Route beta · Checkpoint 1/)).toBeVisible();
+  await expect(page.getByText(/Route beta · Sample checkpoint 1/)).toBeVisible();
   await expect(page.getByText('Recommended', { exact: true })).toHaveCount(0);
   await page.getByLabel('Load weight in lbs').fill('43000');
   await page.getByRole('button', { name: /Compare routes/i }).click();
