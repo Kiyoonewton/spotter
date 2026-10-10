@@ -30,7 +30,7 @@ describe('GeographicRouteMap', () => {
     const tile = container.querySelector('image');
     if (!tile) throw new Error('Expected visible basemap tile');
     fireEvent.error(tile);
-    expect(screen.getByText(/Basemap tiles unavailable/)).toBeVisible();
+    expect(screen.getByText(/Some basemap tiles could not load/)).toBeVisible();
     expect(segment).toBeInTheDocument();
     expect(screen.queryByLabelText('Heatmap opacity')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'OpenStreetMap contributors' })).toBeVisible();

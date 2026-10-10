@@ -50,8 +50,13 @@ export function GeographicRouteMap(props: Props) {
         <strong>Live route geography</strong>
         <Chip size="small" label="Arrival-time segment risk" variant="outlined" />
       </div>
+      {selectedRoute && ownedSegments(selectedRoute).length === 0 && (
+        <Alert severity="warning">Selected route geometry is unavailable.</Alert>
+      )}
       {tileFailed && (
-        <Alert severity="warning">Basemap tiles unavailable. Route geometry remains visible.</Alert>
+        <Alert severity="warning">
+          Some basemap tiles could not load. Route geometry remains visible.
+        </Alert>
       )}
       <div style={{ position: 'relative' }}>
         <svg
