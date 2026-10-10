@@ -7,6 +7,8 @@ import PauseIcon from '@mui/icons-material/PauseRounded';
 import PlayIcon from '@mui/icons-material/PlayArrowRounded';
 
 type Props = {
+  variant?: 'demo' | 'live';
+  disabled?: boolean;
   forecastHour: number;
   timestamp: string;
   playing: boolean;
@@ -17,6 +19,8 @@ type Props = {
 const sx = (fontSize: number) => ({ fontSize });
 
 export function ForecastTimeline({
+  variant = 'demo',
+  disabled = false,
   forecastHour,
   timestamp,
   playing,
@@ -29,7 +33,9 @@ export function ForecastTimeline({
         <div>
           <CloudIcon sx={sx(20)} />
           <strong>Corridor forecast</strong>
-          <span>Illustrative radar &amp; heatmap</span>
+          <span>
+            {variant === 'live' ? 'Sampled hourly weather' : 'Illustrative radar & heatmap'}
+          </span>
         </div>
         <span className="forecast-timestamp">
           <span className="snapshot-dot" />
@@ -40,6 +46,7 @@ export function ForecastTimeline({
       <div className="forecast-slider-row">
         <Tooltip title={playing ? 'Pause forecast' : 'Play forecast'}>
           <IconButton
+            disabled={disabled}
             className="forecast-play"
             color="primary"
             aria-label={playing ? 'Pause forecast' : 'Play forecast'}
@@ -50,6 +57,7 @@ export function ForecastTimeline({
         </Tooltip>
         <div className="forecast-track">
           <Slider
+            disabled={disabled}
             aria-label="Corridor forecast hours after departure"
             min={0}
             max={48}
@@ -72,8 +80,10 @@ export function ForecastTimeline({
       </div>
       <div className="forecast-note">
         <InfoIcon sx={sx(14)} />
-        Illustrative forecast visualization only. The slider does not change route ranking or
-        checkpoint arrival-time weather.
+        {variant === 'live'
+          ? 'Live forecast samples. '
+          : 'Illustrative forecast visualization only. '}
+        The slider does not change route ranking or checkpoint arrival-time weather.
       </div>
     </div>
   );

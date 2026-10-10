@@ -6,6 +6,7 @@ import { RouteComparison } from './RouteComparison';
 import { CheckpointInspector, type InspectorCheckpoint } from './CheckpointInspector';
 import { MapWorkspace } from './MapWorkspace';
 import { GeographicRouteMap } from './GeographicRouteMap';
+import { LiveMapWorkspace } from './LiveMapWorkspace';
 import type { TripAnalysis } from '@/services/api';
 import type { DemoState } from '@/lib/dispatch-data';
 import type { RouteView } from './RouteCard';
@@ -31,6 +32,9 @@ type Props = {
   state: DemoState;
   dataSource?: 'demo' | 'live';
   analysis?: TripAnalysis;
+  startAt?: string;
+  timezone?: string;
+  loadWeight?: number;
   onDrawer: () => void;
   onTab: (tab: 'routes' | 'checkpoint') => void;
   onRoute: (id: string) => void;
@@ -83,7 +87,26 @@ export function ResultsWorkspace(props: Props) {
           onNext={() => props.onCheckpoint(props.checkpoint + 1)}
         />
       </aside>
-      {props.dataSource === 'live' ? (
+      {props.dataSource === 'live' &&
+      props.analysis &&
+      props.startAt &&
+      props.timezone &&
+      props.loadWeight !== undefined ? (
+        <LiveMapWorkspace
+          key={props.analysis.analysis_id}
+          analysis={props.analysis}
+          startAt={props.startAt}
+          timezone={props.timezone}
+          load={props.loadWeight}
+          selected={props.selected}
+          checkpoint={props.checkpoint}
+          onRoute={props.onRoute}
+          onCheckpoint={(index) => {
+            props.onCheckpoint(index);
+            props.onTab('checkpoint');
+          }}
+        />
+      ) : props.dataSource === 'live' ? (
         <GeographicRouteMap
           key={props.analysis?.analysis_id}
           routes={props.analysis?.routes ?? []}

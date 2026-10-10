@@ -26,7 +26,7 @@ def classify_weather(weather: Weather, load_weight_lb: float) -> tuple[str, list
             continue
         known.append(condition)
         if condition == "wind":
-            severity, threshold = (("No Travel", 55) if value >= 55 else ("Severe", 45) if value >= 35 and load_weight_lb > 30000 else ("High", 35) if value >= 35 else ("Moderate", 25) if value >= 25 else ("Low", 0))
+            severity, threshold = (("No Travel", 55) if value >= 55 else ("Severe", 45) if value >= 45 else ("High", 35) if value >= 35 else ("Moderate", 25) if value >= 25 else ("Low", 0))
             if value >= 45 and value < 55 and load_weight_lb > 30000:
                 severity, threshold = "No Travel", 30000
             elif value >= 35 and value < 45 and load_weight_lb > 40000:
@@ -40,6 +40,8 @@ def classify_weather(weather: Weather, load_weight_lb: float) -> tuple[str, list
                 severity = "No Travel" if value > 3 else "Severe" if value >= 2 else "High" if value >= 1 else "Moderate" if value >= .5 else "Low"
                 unit = "in/hr"
             reasons.append({"code": f"{condition}_{severity.lower().replace(' ', '_')}", "condition": condition, "observed": value, "threshold": value, "severity": severity, "explanation": f"{condition.title()} of {value:g} {unit} results in {severity} risk."})
+    if any(reason["severity"] == "No Travel" for reason in reasons):
+        return "No Travel", reasons
     if len(known) < 3:
         return "Unknown", reasons
     return max((r["severity"] for r in reasons), key=lambda x: RISK_ORDER[x]), reasons
