@@ -2,25 +2,15 @@ import type { Risk } from '@/lib/dispatch-data';
 
 type Props = {
   miles: number;
-  high: number;
-  severe: number;
+  riskMiles: Partial<Record<Risk, number>>;
   route: string;
-  blocked: boolean;
-  missing: boolean;
 };
-export function RiskMileageBar({ miles, high, severe, route, blocked, missing }: Props) {
-  // Low/Moderate splits are visual illustrative detail, never ranking inputs.
-  const moderate = route === 'A' ? 92 : route === 'B' ? 108 : 74;
-  const portions: { risk: Risk; miles: number }[] = blocked
-    ? [{ risk: 'No Travel', miles }]
-    : missing
-      ? [{ risk: 'Unknown', miles }]
-      : [
-          { risk: 'Low', miles: Math.max(0, miles - moderate - high - severe) },
-          { risk: 'Moderate', miles: moderate },
-          { risk: 'High', miles: high },
-          { risk: 'Severe', miles: severe },
-        ];
+export function RiskMileageBar({ miles, route, riskMiles }: Props) {
+  const portions: { risk: Risk; miles: number }[] = (
+    ['Low', 'Moderate', 'High', 'Severe', 'No Travel', 'Unknown'] as Risk[]
+  )
+    .map((risk) => ({ risk, miles: riskMiles[risk] ?? 0 }))
+    .filter((part) => part.miles > 0);
   let start = 0;
   return (
     <div className="risk-mileage">
@@ -50,13 +40,7 @@ export function RiskMileageBar({ miles, high, severe, route, blocked, missing }:
       </svg>
       <div className="mileage-caption">
         <span>Weather exposure</span>
-        <span>
-          {blocked
-            ? 'No Travel'
-            : missing
-              ? 'Risk unknown'
-              : `${miles.toLocaleString()} mi · illustrative`}
-        </span>
+        <span>{`${miles.toLocaleString()} mi · illustrative geography`}</span>
       </div>
     </div>
   );
