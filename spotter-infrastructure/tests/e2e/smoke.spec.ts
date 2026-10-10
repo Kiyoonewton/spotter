@@ -17,3 +17,17 @@ test.describe('API through Nginx', () => {
     expect(response.headers()['x-request-id']).toBeTruthy();
   });
 });
+
+test('real trip journey submits through the frontend and keeps route ownership', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: /weather-aware routing/i })).toBeVisible();
+  const load = page.getByLabel('Load weight');
+  await load.fill('30000');
+  await page.getByRole('button', { name: /compare routes/i }).click();
+  await expect(page.getByText(/Route [ABC] recommended/)).toBeVisible();
+  await load.fill('42000');
+  await page.getByRole('button', { name: /compare routes/i }).click();
+  await expect(page.getByText(/Route [ABC] recommended/)).toBeVisible();
+  await page.getByRole('button', { name: /Route A/ }).first().click();
+  await expect(page.getByText(/Route A · Sample checkpoint/)).toBeVisible();
+});

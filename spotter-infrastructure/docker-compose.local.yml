@@ -25,6 +25,7 @@ services:
       - /app/node_modules
     environment:
       CHOKIDAR_USEPOLLING: "true"
+      VITE_API_BASE_URL: /api
     expose:
       - "5173"
     restart: unless-stopped
