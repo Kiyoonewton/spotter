@@ -12,7 +12,7 @@ COPY spotter-frontend/apps/web/ ./
 
 # Only public Vite values belong here.
 # Never pass API keys, database URLs, or server secrets.
-ARG VITE_API_BASE_URL=""
+ARG VITE_API_BASE_URL="/api"
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 RUN yarn build
@@ -31,6 +31,6 @@ ARG CONF_ENV=prod
 
 COPY spotter-infrastructure/webserver/conf.d/${CONF_ENV} /etc/nginx/conf.d
 COPY spotter-infrastructure/webserver/snippets /etc/nginx/snippets
-COPY --from=frontend-build /app/dist /usr/share/nginx/html
+COPY --from=frontend-build /app/.output/public /usr/share/nginx/html
 
 EXPOSE 80

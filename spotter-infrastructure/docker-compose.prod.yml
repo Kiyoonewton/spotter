@@ -11,7 +11,7 @@ services:
       - "80:80"
     depends_on:
       spotter-backend:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   spotter-backend:
@@ -24,4 +24,9 @@ services:
       - ../spotter-backend/.env
     environment:
       DJANGO_DEBUG: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "python manage.py check"]
+      interval: 5s
+      timeout: 10s
+      retries: 12
     restart: unless-stopped
