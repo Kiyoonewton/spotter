@@ -65,6 +65,13 @@ def _point_at(points, cumulative, target):
     return points[-1]
 
 
+def _path_between(points, cumulative, start, end):
+    path = [_point_at(points, cumulative, start)]
+    path.extend(point for point, distance in zip(points[1:-1], cumulative[1:-1]) if start < distance < end)
+    path.append(_point_at(points, cumulative, end))
+    return tuple(path)
+
+
 def sample_route(route: NormalizedRoute, spacing_miles: int, departure_at: str) -> tuple[list[SampledCheckpoint], list[SampledSegment], dict]:
     if spacing_miles not in SPACING:
         raise ValueError("Checkpoint spacing must be 10, 25, or 50 miles.")
@@ -93,6 +100,6 @@ def sample_route(route: NormalizedRoute, spacing_miles: int, departure_at: str) 
     segments = [SampledSegment(
         f"{route.provider_id}-seg-{index}", route.provider_id, start.id, end.id,
         end.distance_miles - start.distance_miles,
-        tuple(points for points in [start.coordinates, end.coordinates]),
+        _path_between(points, cumulative, start.distance_miles / MILES_PER_METER, end.distance_miles / MILES_PER_METER),
     ) for index, (start, end) in enumerate(zip(checkpoints, checkpoints[1:]))]
     return checkpoints, segments, {"provider_distance_miles": provider_miles, "geometry_distance_miles": geometry_meters * MILES_PER_METER, "timing_method": "distance_proportional_estimate"}
