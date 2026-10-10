@@ -23,15 +23,18 @@ The selected providers are:
 - **Weather: [Open-Meteo Forecast API](https://open-meteo.com/en/docs).** NWS's hourly
   endpoint does not guarantee the snowfall field required by this assessment, so Open-Meteo
   is the selected provider for this task. Its hourly API supplies `wind_speed_10m` in km/h,
-  `rain` in millimetres for the preceding hour, and `snowfall` in centimetres for the
-  preceding hour. The response includes UTC-valid hourly timestamps and supports seven days
+  `rain` and `showers` in millimetres for the preceding hour, and `snowfall` in centimetres
+  for the preceding hour. The response includes UTC-valid hourly timestamps and supports seven days
   of forecast coverage, enough for checkpoint ETAs and the planned 0–48-hour view. The
   public forecast endpoint requires no API key but is subject to fair-use/rate limits.
-  The adapter converts km/h to mph, millimetres to inches per hour, and centimetres to
-  inches per hour; these are valid hourly preceding-interval rates, not totals over an
-  unspecified period. It requests wind speed, never wind gusts, and rain separately from
-  snowfall. NWS remains documented as a US-only provisional alternative for fields it can
-  provide, but is not used for this adapter.
+  The adapter treats precipitation at timestamp `T` as the half-open preceding interval
+  `[T-1h, T)`. An ETA at 10:30 selects the 11:00 sample; an ETA exactly at 11:00 selects
+  the 12:00 sample. It exposes both interval boundaries and divides the preceding one-hour
+  accumulation by one hour as an hourly average rate. Wind is instantaneous and uses the
+  nearest available sample without interpolation across missing values or extrapolation.
+  Rain is `rain + showers` only when both matching-unit values exist; missing showers remain
+  missing. Snowfall remains separate. NWS remains documented as a provisional US-only
+  alternative and is not used for this adapter.
 
 `OPENCAGE_API_KEY` is required for live geocoding and `HERE_API_KEY` for live routing.
 Live geocoding and routing fail with structured provider configuration errors when keys are
