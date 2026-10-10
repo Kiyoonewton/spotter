@@ -10,6 +10,7 @@ describe('App', () => {
 
     const html = renderToString(<RouterProvider router={router} />);
     expect(html).toContain('Weather-aware routing');
-    expect(html).toContain('Route B recommended');
+    expect(html).toContain('Deterministic demo analysis');
+    expect(html).not.toContain('Route B recommended');
   });
 });
