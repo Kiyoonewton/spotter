@@ -125,7 +125,7 @@ function Index() {
           originCandidate,
           destinationCandidate,
           departure,
-          timezone: originCandidate?.timezone ?? 'America/Chicago',
+          timezone: originCandidate?.timezone ?? (mode === 'demo' ? 'America/Chicago' : ''),
           weight,
           spacing,
         },
@@ -258,7 +258,7 @@ function Index() {
               forecast={forecast}
               playing={playing}
               state={state}
-          dataSource={analysis.data_source}
+              dataSource={analysis.data_source}
               onDrawer={() => setDrawer(!drawer)}
               onTab={(tab) => {
                 setActiveTab(tab);
