@@ -1,12 +1,14 @@
 import { useEffect, useState, type FormEvent, type RefObject } from 'react';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
+import InputAdornment from '@mui/material/InputAdornment';
 import Button from '@mui/material/Button';
 import CalendarIcon from '@mui/icons-material/EventOutlined';
 import ScaleIcon from '@mui/icons-material/ScaleOutlined';
 import RouteIcon from '@mui/icons-material/RouteOutlined';
 import ArrowRightIcon from '@mui/icons-material/ArrowForwardRounded';
 import Autocomplete from '@mui/material/Autocomplete';
+import PlaceIcon from '@mui/icons-material/PlaceOutlined';
 import type { LocationCandidate } from '@/services/api';
 import type { AnalysisMode } from '@/hooks/useTripAnalysis';
 
@@ -54,6 +56,8 @@ export function TripForm(props: Props) {
     destinationCandidate = null,
     originOptions = [],
     destinationOptions = [],
+    originLoading = false,
+    destinationLoading = false,
     locationError = '',
     onOrigin,
     onDestination,
