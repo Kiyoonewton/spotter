@@ -127,7 +127,7 @@ export function TripForm(props: Props) {
         {props.mode === 'live' ? 'Live provider locations' : 'Demo locations'}
       </span>
       <TextField
-        disabled={!ready}
+        disabled={!ready || (props.mode === 'live' && (!originCandidate || !destinationCandidate))}
         className="trip-field-mui"
         label={`Departure · ${timezone}`}
         type="datetime-local"

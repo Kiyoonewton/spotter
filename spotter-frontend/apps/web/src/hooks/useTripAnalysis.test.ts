@@ -110,6 +110,44 @@ describe('useTripAnalysis', () => {
     });
     expect(create).toHaveBeenCalledOnce();
   });
+
+  it('preserves the previous successful trip when a later request fails', async () => {
+    const create = vi
+      .spyOn(api, 'createTripAnalysis')
+      .mockResolvedValueOnce(result('kept', 'route-kept'))
+      .mockRejectedValueOnce(new Error('provider unavailable'));
+    const { result: hook } = renderHook(() => useTripAnalysis());
+    await act(() => hook.current.submit(trip));
+    await act(() => hook.current.submit({ ...trip, origin: 'Other', weight: '30000' }));
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(hook.current.analysis?.analysis_id).toBe('kept');
+    expect(hook.current.applied?.origin).toBe('Chicago, IL');
+    expect(hook.current.applied?.weight).toBe(42000);
+    expect(hook.current.error).toBe('provider unavailable');
+  });
+
+  it('rejects live submissions without location timezones before calling the API', async () => {
+    const create = vi.spyOn(api, 'createTripAnalysis');
+    const { result: hook } = renderHook(() => useTripAnalysis());
+    await act(() =>
+      hook.current.submit({
+        ...trip,
+        mode: 'live',
+        origin: 'New York, NY',
+        destination: 'Boston, MA',
+        timezone: undefined,
+        originCandidate: { provider_id: 'o', label: 'New York, NY', latitude: 40, longitude: -74 },
+        destinationCandidate: {
+          provider_id: 'd',
+          label: 'Boston, MA',
+          latitude: 42,
+          longitude: -71,
+        },
+      }),
+    );
+    expect(create).not.toHaveBeenCalled();
+    expect(hook.current.error).toMatch(/timezone/i);
+  });
 });
 
 describe('departure timezone conversion', () => {
