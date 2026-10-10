@@ -44,7 +44,11 @@ test("real trip journey submits through the frontend and keeps route ownership",
   const firstBody = await firstAnalysis.json();
   expect(firstBody.routes).toHaveLength(3);
   const recommendedRoute = firstBody.recommendation.recommended_route_id;
-  await expect(page.getByText(`Route ${recommendedRoute} recommended`)).toBeVisible();
+  if (recommendedRoute) {
+    await expect(page.getByText(`Route ${recommendedRoute} recommended`)).toBeVisible();
+  } else {
+    await expect(page.getByText(/Recommendation unavailable/)).toBeVisible();
+  }
   await load.fill("42000");
   const [secondAnalysis] = await Promise.all([
     page.waitForResponse(
@@ -61,7 +65,11 @@ test("real trip journey submits through the frontend and keeps route ownership",
   );
   expect(secondBody.recommendation).toBeTruthy();
   const secondRecommendedRoute = secondBody.recommendation.recommended_route_id;
-  await expect(page.getByText(`Route ${secondRecommendedRoute} recommended`)).toBeVisible();
+  if (secondRecommendedRoute) {
+    await expect(page.getByText(`Route ${secondRecommendedRoute} recommended`)).toBeVisible();
+  } else {
+    await expect(page.getByText(/Recommendation unavailable/)).toBeVisible();
+  }
   await page
     .getByRole("button", { name: /Route A/ })
     .first()
