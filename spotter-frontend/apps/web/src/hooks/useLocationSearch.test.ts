@@ -13,8 +13,9 @@ describe('useLocationSearch', () => {
       () => new Promise((resolve) => deferred.push(resolve)),
     );
     const { result, rerender, unmount } = renderHook(
-      ({ mode, value, enabled }) => useLocationSearch(mode, value, enabled),
-      { initialProps: { mode: 'live' as const, value: 'Ch', enabled: true } },
+      ({ mode, value, enabled }: { mode: 'demo' | 'live'; value: string; enabled: boolean }) =>
+        useLocationSearch(mode, value, enabled),
+      { initialProps: { mode: 'live' as 'demo' | 'live', value: 'Ch', enabled: true } },
     );
     await act(async () => {
       vi.advanceTimersByTime(299);
@@ -26,7 +27,7 @@ describe('useLocationSearch', () => {
     expect(api.searchLocations).toHaveBeenCalledOnce();
     rerender({ mode: 'live', value: 'C', enabled: true });
     expect(result.current.options).toEqual([]);
-    deferred[0]([candidate]);
+    deferred[0]?.([candidate]);
     await act(async () => Promise.resolve());
     expect(result.current.options).toEqual([]);
     rerender({ mode: 'live', value: 'Chicago', enabled: true });
@@ -35,7 +36,7 @@ describe('useLocationSearch', () => {
     });
     expect(api.searchLocations).toHaveBeenCalledTimes(2);
     rerender({ mode: 'demo', value: 'Chicago', enabled: true });
-    deferred[1]([candidate]);
+    deferred[1]?.([candidate]);
     await act(async () => Promise.resolve());
     expect(result.current.options).toEqual([]);
     rerender({ mode: 'demo', value: 'Chicago', enabled: false });

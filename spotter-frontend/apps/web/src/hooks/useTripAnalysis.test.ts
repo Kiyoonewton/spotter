@@ -136,12 +136,19 @@ describe('useTripAnalysis', () => {
         origin: 'New York, NY',
         destination: 'Boston, MA',
         timezone: undefined,
-        originCandidate: { provider_id: 'o', label: 'New York, NY', latitude: 40, longitude: -74 },
+        originCandidate: {
+          provider_id: 'o',
+          label: 'New York, NY',
+          latitude: 40,
+          longitude: -74,
+          timezone: 'America/New_York',
+        },
         destinationCandidate: {
           provider_id: 'd',
           label: 'Boston, MA',
           latitude: 42,
           longitude: -71,
+          timezone: 'America/New_York',
         },
       }),
     );
