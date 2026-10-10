@@ -52,7 +52,7 @@ function wallAt(instant: number, timezone: string) {
       .formatToParts(instant)
       .map(({ type, value }) => [type, value]),
   );
-  return `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}:${values.second}`;
+  return `${values['year']}-${values['month']}-${values['day']}T${values['hour']}:${values['minute']}:${values['second']}`;
 }
 function offsetAt(instant: number, timezone: string) {
   const values = Object.fromEntries(
@@ -60,12 +60,12 @@ function offsetAt(instant: number, timezone: string) {
       .formatToParts(instant)
       .map(({ type, value }) => [type, value]),
   );
-  const match = values.timeZoneName?.match(/GMT([+-])(\d{2}):?(\d{2})/);
+  const match = values['timeZoneName']?.match(/GMT([+-])(\d{2}):?(\d{2})/);
   return match
     ? (match[1] === '+' ? 1 : -1) * (Number(match[2]) * 60 + Number(match[3])) * 60000
     : 0;
 }
-function localTimestamp(value: string, timezone: string) {
+export function localTimestamp(value: string, timezone: string) {
   if (!timezone) throw new Error('Select an origin with a valid IANA timezone.');
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
   if (!match) throw new Error(`Enter a valid departure time in ${timezone}.`);
@@ -85,7 +85,7 @@ function localTimestamp(value: string, timezone: string) {
     );
   if (candidates.length > 1)
     throw new Error(`That departure time is ambiguous in ${timezone}; choose a different time.`);
-  return new Date(candidates[0]).toISOString();
+  return new Date(candidates[0]!).toISOString();
 }
 
 export function useTripAnalysis(): Result {

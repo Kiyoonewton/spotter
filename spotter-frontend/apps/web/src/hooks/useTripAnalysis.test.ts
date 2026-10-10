@@ -93,3 +93,16 @@ describe('useTripAnalysis', () => {
     expect(hook.current.selectedRouteId).toBe('A');
   });
 });
+
+import { localTimestamp } from './useTripAnalysis';
+
+describe('departure timezone conversion', () => {
+  it('converts Chicago wall time independently of the browser timezone', () => {
+    expect(localTimestamp('2026-07-01T10:00', 'America/Chicago')).toBe('2026-07-01T15:00:00.000Z');
+    expect(localTimestamp('2026-01-01T10:00', 'America/Chicago')).toBe('2026-01-01T16:00:00.000Z');
+  });
+  it('rejects nonexistent and ambiguous daylight-saving times', () => {
+    expect(() => localTimestamp('2026-03-08T02:30', 'America/Chicago')).toThrow(/does not exist/);
+    expect(() => localTimestamp('2026-11-01T01:30', 'America/Chicago')).toThrow(/ambiguous/);
+  });
+});

@@ -35,7 +35,7 @@ export async function searchLocations(
 ) {
   const response = await fetch(
     `${apiUrl('/locations/')}?q=${encodeURIComponent(query)}&mode=${mode}`,
-    { signal },
+    signal ? { signal } : undefined,
   );
   const body = (await response.json().catch(() => ({}))) as {
     results?: LocationCandidate[];
