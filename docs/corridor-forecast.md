@@ -13,8 +13,9 @@ A shared Django cache backend is suitable for a future multi-worker deployment.
 Open-Meteo wind is instantaneous and uses the nearest scheduled sample, earlier
 on ties. Missing nearest wind stays missing. Rain is rain + showers only when
 both are present. Rain and snowfall are preceding-hour accumulations converted
-to average hourly rates in inches/hour. A snapshot at T uses the precipitation
-interval [T, T+1h), labelled separately from wind_valid_at. No out-of-horizon
+to average hourly rates in inches/hour. An exact-hour snapshot at T uses the precipitation
+interval [T, T+1h); other snapshots use the containing hourly interval.
+The accumulation interval is labelled separately from wind_valid_at. No out-of-horizon
 clamping or extrapolation occurs; missing measurements remain null.
 
 The live map shows sampled checkpoint circles, not radar or a continuous weather

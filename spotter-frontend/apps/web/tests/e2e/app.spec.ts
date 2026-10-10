@@ -14,7 +14,7 @@ test('loads the dispatch workspace before an analysis is submitted', async ({ pa
 
 test('mocked live contract journey sends coordinates and hides illustrative map', async ({
   page,
-}) => {
+}, testInfo) => {
   await page.route(/\/api\/locations\/?\?/, async (route) => {
     const query = new URL(route.request().url()).searchParams.get('q') ?? '';
     const candidate = query.toLowerCase().startsWith('new')
@@ -94,6 +94,10 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
   await expect(
     page.getByRole('button', { name: 'Map route here-safe, High segment' }),
   ).toBeVisible();
+  await testInfo.attach('live-corridor-forecast', {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: 'image/png',
+  });
   await page.getByRole('button', { name: 'Snow · in/hr', exact: true }).click();
   await expect(page.getByTestId('forecast-here-safe-here-safe-start')).toHaveAttribute(
     'data-value',
