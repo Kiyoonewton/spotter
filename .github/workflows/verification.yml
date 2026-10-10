@@ -2,9 +2,9 @@ name: Spotter verification
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   push:
-    branches: [main, 'feat/**']
+    branches: [main, develop, 'feat/**', 'fix/**']
 
 permissions:
   contents: read
