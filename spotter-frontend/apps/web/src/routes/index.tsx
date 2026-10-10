@@ -15,7 +15,7 @@ import { WorkspaceHeader } from '@/components/WorkspaceHeader';
 import { useLocationSearch } from '@/hooks/useLocationSearch';
 import { useTripAnalysis, type AnalysisMode } from '@/hooks/useTripAnalysis';
 import type { LocationCandidate } from '@/services/api';
-import type { DemoState } from '@/lib/dispatch-data';
+import type { DemoState, Risk } from '@/lib/dispatch-data';
 
 export const Route = createFileRoute('/')({
   head: () => ({
@@ -108,7 +108,7 @@ function Index() {
         wind: apiCheckpoint.weather?.wind_mph ?? null,
         rain: apiCheckpoint.weather?.rain_in_hr ?? null,
         snow: apiCheckpoint.weather?.snow_in_hr ?? null,
-        risk: apiCheckpoint.risk as any,
+        risk: apiCheckpoint.risk as Risk,
         rule: apiCheckpoint.reasons.map((reason) => reason.explanation).join(' '),
         arrivalAt: apiCheckpoint.arrival_at,
       }
