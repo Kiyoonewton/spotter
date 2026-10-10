@@ -60,7 +60,9 @@ describe('RouteCard', () => {
     renderCard(route('blocked-route', 'blocked', null), null);
     expect(screen.getByText('No Travel — see returned blocking reasons')).toBeInTheDocument();
     renderCard(route('incomplete-route', 'incomplete', null), null);
-    expect(screen.getAllByText('Partial forecast').length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText('Incomplete — see returned forecast coverage').length,
+    ).toBeGreaterThan(0);
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
   });
 });
