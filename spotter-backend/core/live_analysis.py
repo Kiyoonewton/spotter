@@ -14,6 +14,9 @@ class LiveAnalysisError(Exception):
     pass
 
 
+MAX_ANALYSIS_CHECKPOINTS = 200
+
+
 def _route_result(route, request, weather_by_index):
     checkpoints, sampled_segments, timing = sample_route(route, request["checkpoint_spacing_miles"], request["departure_at"])
     output_checkpoints, risk_by_id = [], {}
@@ -46,9 +49,10 @@ def _route_result(route, request, weather_by_index):
 def analyze_live(request: dict) -> dict:
     origin, destination = request["origin_coordinates"], request["destination_coordinates"]
     routes = calculate_routes(RouteRequest(origin["lat"], origin["lon"], destination["lat"], destination["lon"], request["departure_at"]))
-    if sum(len(route.coordinates) for route in routes) > 200:
-        raise LiveAnalysisError("Route checkpoint limit exceeded; reduce route complexity.")
     sampled = [sample_route(route, request["checkpoint_spacing_miles"], request["departure_at"])[0] for route in routes]
+    checkpoint_count = sum(len(group) for group in sampled)
+    if checkpoint_count > MAX_ANALYSIS_CHECKPOINTS:
+        raise LiveAnalysisError(f"Analysis would require {checkpoint_count} checkpoints; maximum is {MAX_ANALYSIS_CHECKPOINTS}.")
     unique = {(point.coordinates, point.arrival_at): point for group in sampled for point in group}
     weather = fetch_hourly([WeatherCheckpoint(point.coordinates[0], point.coordinates[1], datetime.fromisoformat(point.arrival_at.replace("Z", "+00:00"))) for point in unique.values()])
     weather_by_key = dict(zip(unique, weather))

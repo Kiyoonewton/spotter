@@ -1,4 +1,5 @@
 from uuid import uuid4
+import math
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -48,11 +49,11 @@ def trip_analyses(request):
     if mode == "live":
         for field in ("origin_coordinates", "destination_coordinates"):
             value = data.get(field)
-            if not isinstance(value, dict) or not isinstance(value.get("lat"), (int, float)) or not isinstance(value.get("lon"), (int, float)) or not -90 <= value["lat"] <= 90 or not -180 <= value["lon"] <= 180:
+            if (not isinstance(value, dict) or isinstance(value.get("lat"), bool) or isinstance(value.get("lon"), bool) or not isinstance(value.get("lat"), (int, float)) or not isinstance(value.get("lon"), (int, float)) or not math.isfinite(value["lat"]) or not math.isfinite(value["lon"]) or not -90 <= value["lat"] <= 90 or not -180 <= value["lon"] <= 180):
                 errors[field] = "Valid latitude and longitude coordinates are required for live mode."
         if errors:
             return Response({"errors": errors}, status=400)
-    if (data.get("origin", "").strip(), data.get("destination", "").strip()) != ("Chicago, IL", "Pittsburgh, PA"):
+    if mode == "demo" and (data.get("origin", "").strip(), data.get("destination", "").strip()) != ("Chicago, IL", "Pittsburgh, PA"):
         errors["destination"] = "Demo analysis supports Chicago, IL to Pittsburgh, PA only."
     try:
         departure = datetime.fromisoformat(data["departure_at"])
@@ -63,7 +64,7 @@ def trip_analyses(request):
     except Exception: errors["departure_timezone"] = "Use a valid IANA timezone."
     try:
         weight = float(data["load_weight_lb"])
-        if weight < 0: raise ValueError
+        if not math.isfinite(weight) or weight < 0: raise ValueError
     except (TypeError, ValueError): errors["load_weight_lb"] = "Load weight must be a finite non-negative number."
     try:
         spacing = int(data["checkpoint_spacing_miles"])
