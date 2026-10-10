@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom/vitest';
 import { createRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import { fireEvent, render, screen } from '@testing-library/react';
