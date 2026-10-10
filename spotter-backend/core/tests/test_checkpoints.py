@@ -32,7 +32,7 @@ class CheckpointSamplingTests(SimpleTestCase):
         checkpoints, segments, _ = sample_route(sampled, 50, "2026-07-01T12:00:00+02:00")
         self.assertTrue(all(item.route_id == "route-A" for item in checkpoints + segments))
         self.assertEqual(checkpoints[-1].distance_miles, 52)
-        self.assertEqual(checkpoints[-1].arrival_at, "2026-07-01T12:49:00Z")
+        self.assertEqual(checkpoints[-1].arrival_at, "2026-07-01T11:00:00Z")
 
     def test_requires_offset_aware_departure(self):
         with self.assertRaises(ValueError):

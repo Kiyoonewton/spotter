@@ -52,9 +52,9 @@ def _decode_flexible_polyline(encoded: str) -> list[tuple[float, float]]:
                 raise RoutingProviderError("HERE returned an overlong flexible polyline.")
         raise RoutingProviderError("HERE returned truncated flexible polyline data.")
 
+    version = varint()
     header = varint()
-    version = header & 7
-    precision, third_dim = (header >> 3) & 15, (header >> 6) & 7
+    precision, third_dim = header & 15, (header >> 4) & 7
     if version != 1:
         raise RoutingProviderError("HERE returned an unsupported flexible polyline version.")
     if third_dim:

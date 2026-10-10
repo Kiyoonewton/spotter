@@ -20,19 +20,24 @@ The selected providers are:
   HERE's truck profile. Duplicate alternatives are removed when their complete decoded
   coordinate sequences are identical. It uses an eight-second timeout and does not retry
   authentication or invalid requests.
-- **Weather: [National Weather Service API](https://www.weather.gov/documentation/services-web-api).**
-  The `/points/{lat},{lon}` endpoint identifies a grid and `/gridpoints/.../forecast/hourly`
-  provides hourly periods. It requires a descriptive User-Agent rather than an API key,
-  is limited by NWS service policy, and covers the United States. Its standard hourly period
-  fields provide wind speed, probability of precipitation, and quantitative precipitation;
-  snowfall accumulation is not guaranteed as a standard hourly field across grids. Required
-  snowfall therefore needs a `forecastGridData` field or a replacement provider before
-  weather orchestration. All values require explicit unit normalization.
+- **Weather: [Open-Meteo Forecast API](https://open-meteo.com/en/docs).** NWS's hourly
+  endpoint does not guarantee the snowfall field required by this assessment, so Open-Meteo
+  is the selected provider for this task. Its hourly API supplies `wind_speed_10m` in km/h,
+  `rain` in millimetres for the preceding hour, and `snowfall` in centimetres for the
+  preceding hour. The response includes UTC-valid hourly timestamps and supports seven days
+  of forecast coverage, enough for checkpoint ETAs and the planned 0–48-hour view. The
+  public forecast endpoint requires no API key but is subject to fair-use/rate limits.
+  The adapter converts km/h to mph, millimetres to inches per hour, and centimetres to
+  inches per hour; these are valid hourly preceding-interval rates, not totals over an
+  unspecified period. It requests wind speed, never wind gusts, and rain separately from
+  snowfall. NWS remains documented as a US-only provisional alternative for fields it can
+  provide, but is not used for this adapter.
 
 `OPENCAGE_API_KEY` is required for live geocoding and `HERE_API_KEY` for live routing.
 Live geocoding and routing fail with structured provider configuration errors when keys are
 absent. Demo mode uses
 captured, deterministic values and remains independent of upstream services.
 
-The weather adapter remains blocked on a documented snowfall source decision. Live requests
-must be validated manually with credentials supplied outside the repository.
+Open-Meteo weather requests are now implemented without credentials; live validation still
+requires network access. Forecast values outside the returned horizon are represented as
+missing rather than clamped.
