@@ -149,7 +149,7 @@ export function GeographicRouteMap(props: Props) {
           }}
         />
       </div>
-      <Stack direction="row" justifyContent="center" aria-label="Pan geographic map">
+      <Stack direction="row" sx={{ justifyContent: 'center' }} aria-label="Pan geographic map">
         <Button onClick={() => move(-160, 0)} aria-label="Pan west">
           West
         </Button>
