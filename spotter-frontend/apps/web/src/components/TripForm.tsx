@@ -76,12 +76,38 @@ export function TripForm(props: Props) {
         value={originCandidate}
         inputValue={origin}
         onInputChange={(_, value) => onOrigin(value)}
-        onChange={(_, value) => { onOriginCandidate(value); onOrigin(value?.label ?? ''); }}
+        onChange={(_, value) => {
+          onOriginCandidate(value);
+          onOrigin(value?.label ?? '');
+        }}
         getOptionLabel={(option) => option.label}
         isOptionEqualToValue={(option, value) => option.provider_id === value.provider_id}
         loading={originLoading}
         noOptionsText={origin.length < 2 ? 'Type at least 2 characters' : 'No locations found'}
-        renderInput={(params) => <TextField {...params} disabled={!ready} className="trip-field-mui" label="Origin" error={Boolean(locationError)} helperText={locationError || undefined} InputProps={{ ...params.InputProps, startAdornment: <InputAdornment position="start"><PlaceIcon sx={sx(18)} /></InputAdornment>, endAdornment: <>{originLoading ? <CircularProgress size={18} /> : null}{params.InputProps.endAdornment}</> }} />}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            disabled={!ready}
+            className="trip-field-mui"
+            label="Origin"
+            error={Boolean(locationError)}
+            helperText={locationError || undefined}
+            InputProps={{
+              ...params.InputProps,
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PlaceIcon sx={sx(18)} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <>
+                  {originLoading ? <CircularProgress size={18} /> : null}
+                  {params.InputProps.endAdornment}
+                </>
+              ),
+            }}
+          />
+        )}
       />
       <ArrowRightIcon className="trip-arrow" sx={sx(18)} />
       <Autocomplete
@@ -89,15 +115,42 @@ export function TripForm(props: Props) {
         value={destinationCandidate}
         inputValue={destination}
         onInputChange={(_, value) => onDestination(value)}
-        onChange={(_, value) => { onDestinationCandidate(value); onDestination(value?.label ?? ''); }}
+        onChange={(_, value) => {
+          onDestinationCandidate(value);
+          onDestination(value?.label ?? '');
+        }}
         getOptionLabel={(option) => option.label}
         isOptionEqualToValue={(option, value) => option.provider_id === value.provider_id}
         loading={destinationLoading}
         noOptionsText={destination.length < 2 ? 'Type at least 2 characters' : 'No locations found'}
-        renderInput={(params) => <TextField {...params} disabled={!ready} className="trip-field-mui" label="Destination" error={Boolean(locationError)} InputProps={{ ...params.InputProps, startAdornment: <InputAdornment position="start"><PlaceIcon sx={sx(18)} /></InputAdornment>, endAdornment: <>{destinationLoading ? <CircularProgress size={18} /> : null}{params.InputProps.endAdornment}</> }} />}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            disabled={!ready}
+            className="trip-field-mui"
+            label="Destination"
+            error={Boolean(locationError)}
+            InputProps={{
+              ...params.InputProps,
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PlaceIcon sx={sx(18)} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <>
+                  {destinationLoading ? <CircularProgress size={18} /> : null}
+                  {params.InputProps.endAdornment}
+                </>
+              ),
+            }}
+          />
+        )}
       />
       {/* The mode label keeps the selected provider context visible to keyboard and screen-reader users. */}
-      <span className="sr-only">{props.mode === 'live' ? 'Live provider locations' : 'Demo locations'}</span>
+      <span className="sr-only">
+        {props.mode === 'live' ? 'Live provider locations' : 'Demo locations'}
+      </span>
       <TextField
         disabled={!ready}
         className="trip-field-mui"

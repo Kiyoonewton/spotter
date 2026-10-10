@@ -32,9 +32,16 @@ export async function searchLocations(query: string, mode: 'demo' | 'live' = 'de
   const response = await fetch(
     `${apiUrl('/locations/')}?q=${encodeURIComponent(query)}&mode=${mode}`,
   );
-  const body = (await response.json().catch(() => ({}))) as { results?: LocationCandidate[]; error?: string; code?: string; request_id?: string };
+  const body = (await response.json().catch(() => ({}))) as {
+    results?: LocationCandidate[];
+    error?: string;
+    code?: string;
+    request_id?: string;
+  };
   if (!response.ok) {
-    const error = new Error(body.error ?? 'Location search is temporarily unavailable.') as Error & { code?: string; requestId?: string };
+    const error = new Error(
+      body.error ?? 'Location search is temporarily unavailable.',
+    ) as Error & { code?: string; requestId?: string };
     error.code = body.code;
     error.requestId = body.request_id;
     throw error;
@@ -61,7 +68,14 @@ export type TripAnalysis = {
       distance_from_origin_miles: number;
       arrival_at: string;
       risk: string;
-      weather: { wind_mph: number | null; rain_in_hr: number | null; snow_in_hr: number | null; forecast_valid_at?: string; interval_start?: string; interval_end?: string } | null;
+      weather: {
+        wind_mph: number | null;
+        rain_in_hr: number | null;
+        snow_in_hr: number | null;
+        forecast_valid_at?: string;
+        interval_start?: string;
+        interval_end?: string;
+      } | null;
       reasons: Array<{ explanation: string }>;
     }>;
   }>;
@@ -76,7 +90,11 @@ export async function createTripAnalysis(input: TripAnalysisRequest): Promise<Tr
   });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    const error = new Error(body.errors ? Object.values(body.errors).map(String).join(' ') : body.error ?? 'Trip analysis failed.') as Error & { code?: string; requestId?: string };
+    const error = new Error(
+      body.errors
+        ? Object.values(body.errors).map(String).join(' ')
+        : (body.error ?? 'Trip analysis failed.'),
+    ) as Error & { code?: string; requestId?: string };
     error.code = body.code;
     error.requestId = body.request_id;
     throw error;
