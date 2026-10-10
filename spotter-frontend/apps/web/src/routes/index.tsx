@@ -265,6 +265,7 @@ function Index() {
               playing={playing}
               state={state}
               dataSource={analysis.data_source}
+              analysis={analysis}
               onDrawer={() => setDrawer(!drawer)}
               onTab={(tab) => {
                 setActiveTab(tab);
@@ -285,7 +286,7 @@ function Index() {
           </span>
           <span>
             {mode === 'live'
-              ? 'Geographic map unavailable for live routes'
+              ? 'Live geography · Arrival-time risk'
               : 'Illustrative prototype · Not an operational routing service'}
           </span>
         </footer>

@@ -5,6 +5,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import { RouteComparison } from './RouteComparison';
 import { CheckpointInspector, type InspectorCheckpoint } from './CheckpointInspector';
 import { MapWorkspace } from './MapWorkspace';
+import { GeographicRouteMap } from './GeographicRouteMap';
+import type { TripAnalysis } from '@/services/api';
 import type { DemoState } from '@/lib/dispatch-data';
 import type { RouteView } from './RouteCard';
 
@@ -28,6 +30,7 @@ type Props = {
   playing: boolean;
   state: DemoState;
   dataSource?: 'demo' | 'live';
+  analysis?: TripAnalysis;
   onDrawer: () => void;
   onTab: (tab: 'routes' | 'checkpoint') => void;
   onRoute: (id: string) => void;
@@ -81,14 +84,17 @@ export function ResultsWorkspace(props: Props) {
         />
       </aside>
       {props.dataSource === 'live' ? (
-        <section className="map-workspace" aria-label="Geographic map unavailable">
-          <div className="map-stage">
-            <div className="map-loading">
-              <h3>Geographic map is not available yet.</h3>
-              <p>Live route comparison and checkpoint inspection remain available.</p>
-            </div>
-          </div>
-        </section>
+        <GeographicRouteMap
+          key={props.analysis?.analysis_id}
+          routes={props.analysis?.routes ?? []}
+          selected={props.selected}
+          checkpoint={props.checkpoint}
+          onRoute={props.onRoute}
+          onCheckpoint={(index) => {
+            props.onCheckpoint(index);
+            props.onTab('checkpoint');
+          }}
+        />
       ) : (
         <MapWorkspace
           selected={props.selected}
