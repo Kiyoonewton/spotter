@@ -1,9 +1,184 @@
 import { expect, test } from '@playwright/test';
 
-test('loads the dispatch workspace with temporary route data', async ({ page }) => {
+test('loads the dispatch workspace before an analysis is submitted', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.getByRole('heading', { name: /weather-aware routing/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /compare routes/i })).toBeVisible();
-  await expect(page.getByText('Route B recommended', { exact: true })).toBeVisible();
+  await expect(page.getByText('Compare routes')).toBeVisible();
+  await expect(page.getByText('Route B recommended', { exact: true })).not.toBeVisible();
+});
+
+test('mocked live contract journey sends coordinates and hides illustrative map', async ({
+  page,
+}) => {
+  await page.route(/\/api\/locations\/?\?/, async (route) => {
+    const query = new URL(route.request().url()).searchParams.get('q') ?? '';
+    const candidate = query.toLowerCase().startsWith('new')
+      ? {
+          provider_id: 'mock:new-york',
+          label: 'New York, NY',
+          latitude: 40.7,
+          longitude: -74,
+          timezone: 'America/New_York',
+        }
+      : {
+          provider_id: 'mock:boston',
+          label: 'Boston, MA',
+          latitude: 42.3,
+          longitude: -71.1,
+          timezone: 'America/New_York',
+        };
+    await route.fulfill({ json: { results: [candidate] } });
+  });
+  let requestBody: Record<string, unknown> | undefined;
+  await page.route('**/api/trip-analyses/', async (route) => {
+    requestBody = JSON.parse(route.request().postData() ?? '{}');
+    await route.fulfill({
+      json: {
+        analysis_id: 'mock',
+        data_source: 'live',
+        available_route_count: 2,
+        routes: [
+          {
+            id: 'here-fast',
+            name: 'Fast',
+            distance_miles: 10,
+            duration_minutes: 20,
+            eligibility: 'eligible',
+            risk_miles: {},
+            average_risk: 1,
+            checkpoints: [
+              {
+                id: 'fast-cp',
+                route_id: 'here-fast',
+                distance_from_origin_miles: 0,
+                arrival_at: '2026-07-01T15:00:00Z',
+                risk: 'Low',
+                weather: { wind_mph: 10, rain_in_hr: null, snow_in_hr: 0 },
+                reasons: [],
+              },
+            ],
+          },
+          {
+            id: 'here-safe',
+            name: 'Safe',
+            distance_miles: 12,
+            duration_minutes: 25,
+            eligibility: 'eligible',
+            risk_miles: {},
+            average_risk: 2,
+            checkpoints: [
+              {
+                id: 'safe-cp',
+                route_id: 'here-safe',
+                distance_from_origin_miles: 0,
+                arrival_at: '2026-07-01T15:00:00Z',
+                risk: 'Low',
+                weather: { wind_mph: 8, rain_in_hr: 0, snow_in_hr: 0 },
+                reasons: [],
+              },
+            ],
+          },
+        ],
+        recommendation: {
+          status: 'recommended',
+          recommended_route_id: 'here-safe',
+          explanation: 'Safe is recommended.',
+        },
+      },
+    });
+  });
+  await page.goto('/');
+  await expect(page.getByLabel('Load weight in lbs')).toBeEnabled();
+  await page.getByRole('button', { name: 'Live' }).click();
+  const origin = page.getByRole('combobox', { name: 'Origin' });
+  const destination = page.getByRole('combobox', { name: 'Destination' });
+  await origin.fill('New');
+  await page.getByRole('option', { name: 'New York, NY', exact: true }).click();
+  await destination.fill('Boston');
+  await page.getByRole('option', { name: 'Boston, MA', exact: true }).click();
+  await page.getByRole('button', { name: /Compare routes/i }).click();
+  await expect
+    .poll(() => requestBody)
+    .toMatchObject({
+      mode: 'live',
+      origin: 'New York, NY',
+      destination: 'Boston, MA',
+      departure_timezone: 'America/New_York',
+    });
+  expect(requestBody?.origin_coordinates).toEqual({ lat: 40.7, lon: -74 });
+  expect(requestBody?.destination_coordinates).toEqual({ lat: 42.3, lon: -71.1 });
+  expect(requestBody?.departure_at).toBe('2026-10-10T14:00:00.000Z');
+  await expect(page.getByText('Route here-safe recommended')).toBeVisible();
+  await expect(page.getByText('Geographic map is not available yet.')).toBeVisible();
+  await page
+    .getByRole('button', { name: /Route here-fast/ })
+    .first()
+    .click();
+  await expect(page.getByText(/Route here-fast · Sample checkpoint/)).toBeVisible();
+  await origin.fill('New Y');
+  await expect(page.getByRole('button', { name: /Compare routes/i })).toBeDisabled();
+  await expect(page.locator('svg.route-map')).toHaveCount(0);
+  await expect(page.getByLabel('Heatmap opacity')).toHaveCount(0);
+});
+
+test('parent results flow preserves null recommendations and eligibility banners', async ({
+  page,
+}) => {
+  let submission = 0;
+  await page.route('**/api/trip-analyses/', async (route) => {
+    submission += 1;
+    const eligibility = submission === 2 ? 'blocked' : submission === 3 ? 'incomplete' : 'eligible';
+    await route.fulfill({
+      json: {
+        analysis_id: `null-${submission}`,
+        data_source: 'demo',
+        available_route_count: 2,
+        routes: ['alpha', 'beta'].map((id) => ({
+          id,
+          name: id,
+          distance_miles: 10,
+          duration_minutes: 20,
+          eligibility,
+          risk_miles: {},
+          average_risk: null,
+          checkpoints: [
+            {
+              id: `${id}-checkpoint`,
+              route_id: id,
+              distance_from_origin_miles: 0,
+              arrival_at: '2026-10-10T15:00:00Z',
+              risk: 'Unknown',
+              weather: { wind_mph: 12, rain_in_hr: null, snow_in_hr: null },
+              reasons: [],
+            },
+          ],
+        })),
+        recommendation: {
+          status: 'unavailable',
+          recommended_route_id: null,
+          explanation: 'No route recommendation is available.',
+        },
+      },
+    });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: /Compare routes/i }).click();
+  await expect(page.getByText(/Route alpha · Sample checkpoint 1/)).toBeVisible();
+  await expect(page.getByText('Recommendation unavailable — incomplete forecast')).toBeVisible();
+  await expect(page.getByText('Recommended', { exact: true })).toHaveCount(0);
+  await expect(page.getByText(/Route .* recommended/)).toHaveCount(0);
+  await page
+    .getByRole('button', { name: /Route beta/ })
+    .first()
+    .click();
+  await expect(page.getByText(/Route beta · Sample checkpoint 1/)).toBeVisible();
+  await expect(page.getByText('Recommended', { exact: true })).toHaveCount(0);
+  await page.getByLabel('Load weight in lbs').fill('43000');
+  await page.getByRole('button', { name: /Compare routes/i }).click();
+  await expect(page.getByText('All routes blocked')).toBeVisible();
+  await page.getByLabel('Load weight in lbs').fill('44000');
+  await page.getByRole('button', { name: /Compare routes/i }).click();
+  await expect(page.getByText('Recommendation unavailable — incomplete forecast')).toBeVisible();
 });

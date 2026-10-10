@@ -5,15 +5,15 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import { RouteComparison } from './RouteComparison';
 import { CheckpointInspector, type InspectorCheckpoint } from './CheckpointInspector';
 import { MapWorkspace } from './MapWorkspace';
-import type { DemoState, RouteId } from '@/lib/dispatch-data';
+import type { DemoState } from '@/lib/dispatch-data';
 import type { RouteView } from './RouteCard';
 
 type Props = {
   drawer: boolean;
   tab: 'routes' | 'checkpoint';
   routes: RouteView[];
-  selected: RouteId;
-  recommended: RouteId;
+  selected: string;
+  recommended: string | null;
   blocked: boolean;
   missing: boolean;
   pending: boolean;
@@ -27,9 +27,10 @@ type Props = {
   forecast: number;
   playing: boolean;
   state: DemoState;
+  dataSource?: 'demo' | 'live';
   onDrawer: () => void;
   onTab: (tab: 'routes' | 'checkpoint') => void;
-  onRoute: (id: RouteId) => void;
+  onRoute: (id: string) => void;
   onCheckpoint: (index: number) => void;
   onOpacity: (value: number) => void;
   onForecast: (value: number) => void;
@@ -79,28 +80,39 @@ export function ResultsWorkspace(props: Props) {
           onNext={() => props.onCheckpoint(props.checkpoint + 1)}
         />
       </aside>
-      <MapWorkspace
-        selected={props.selected}
-        checkpoint={props.checkpoint}
-        pending={props.pending}
-        progress={props.progress}
-        opacity={props.opacity}
-        forecast={props.forecast}
-        playing={props.playing}
-        state={props.state}
-        departure={props.departure}
-        spacing={props.spacing}
-        missing={props.missing}
-        onSelect={props.onRoute}
-        onCheckpoint={(index) => {
-          props.onCheckpoint(index);
-          props.onTab('checkpoint');
-          props.onDrawer();
-        }}
-        onOpacity={props.onOpacity}
-        onForecast={props.onForecast}
-        onPlaying={props.onPlaying}
-      />
+      {props.dataSource === 'live' ? (
+        <section className="map-workspace" aria-label="Geographic map unavailable">
+          <div className="map-stage">
+            <div className="map-loading">
+              <h3>Geographic map is not available yet.</h3>
+              <p>Live route comparison and checkpoint inspection remain available.</p>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <MapWorkspace
+          selected={props.selected}
+          checkpoint={props.checkpoint}
+          pending={props.pending}
+          progress={props.progress}
+          opacity={props.opacity}
+          forecast={props.forecast}
+          playing={props.playing}
+          state={props.state}
+          departure={props.departure}
+          spacing={props.spacing}
+          missing={props.missing}
+          onSelect={props.onRoute}
+          onCheckpoint={(index) => {
+            props.onCheckpoint(index);
+            props.onTab('checkpoint');
+            props.onDrawer();
+          }}
+          onOpacity={props.onOpacity}
+          onForecast={props.onForecast}
+          onPlaying={props.onPlaying}
+        />
+      )}
     </div>
   );
 }

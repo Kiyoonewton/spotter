@@ -1,17 +1,16 @@
 import LinearProgress from '@mui/material/LinearProgress';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
 import { RouteCard, type RouteView } from './RouteCard';
-import type { RouteId } from '@/lib/dispatch-data';
 type Props = {
   routes: RouteView[];
-  selected: RouteId;
-  recommended: RouteId;
+  selected: string;
+  recommended: string | null;
   blocked: boolean;
   missing: boolean;
   loading: boolean;
   progress: number;
   spacing: number;
-  onSelect: (id: RouteId) => void;
+  onSelect: (id: string) => void;
 };
 export function RouteComparison({
   routes,
@@ -40,11 +39,11 @@ export function RouteComparison({
           <RouteCard
             key={route.id}
             route={route}
-            rank={index}
+            rank={route.eligibility === 'eligible' ? index : null}
             selected={selected}
             recommended={recommended}
-            blocked={blocked}
-            missing={missing}
+            blocked={route.eligibility === 'blocked'}
+            missing={route.eligibility === 'incomplete'}
             spacing={spacing}
             onSelect={onSelect}
           />

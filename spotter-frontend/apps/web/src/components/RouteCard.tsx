@@ -7,17 +7,17 @@ import InfoIcon from '@mui/icons-material/InfoOutlined';
 import ShieldIcon from '@mui/icons-material/GppGoodOutlined';
 import WarningIcon from '@mui/icons-material/WarningAmberRounded';
 import { RiskMileageBar } from './risk-mileage-bar';
-import type { Risk, RouteId } from '@/lib/dispatch-data';
+import type { Risk } from '@/lib/dispatch-data';
 
 export type RouteView = {
-  id: RouteId;
+  id: string;
   name: string;
   roads: string;
   miles: number;
   minutes: number;
   severe: number;
   high: number;
-  average: number;
+  average: number | null;
   risk_miles?: Record<string, number>;
   eligibility?: string;
 };
@@ -25,13 +25,13 @@ const sx = (fontSize: number) => ({ fontSize });
 
 type Props = {
   route: RouteView;
-  rank: number;
-  selected: RouteId;
-  recommended: RouteId;
+  rank: number | null;
+  selected: string;
+  recommended: string | null;
   blocked: boolean;
   missing: boolean;
   spacing: number;
-  onSelect: (id: RouteId) => void;
+  onSelect: (id: string) => void;
 };
 export function RouteCard({
   route,
@@ -57,7 +57,7 @@ export function RouteCard({
             <strong>Route {route.id}</strong>
             <span>{route.name}</span>
           </div>
-          {!blocked && !missing && rank === 0 ? (
+          {!blocked && !missing && route.id === recommended ? (
             <Chip
               size="small"
               color="success"
@@ -65,7 +65,11 @@ export function RouteCard({
               label="Recommended"
             />
           ) : (
-            <Chip size="small" variant="outlined" label={`#${rank + 1}`} />
+            <Chip
+              size="small"
+              variant="outlined"
+              label={blocked ? 'Blocked' : missing ? 'Incomplete' : `#${(rank ?? 0) + 1}`}
+            />
           )}
         </div>
         <div className="route-road">
@@ -95,8 +99,8 @@ export function RouteCard({
           <div>
             <span>Average risk</span>
             <strong>
-              {blocked || missing ? '—' : route.average.toFixed(1)}
-              <small>{!blocked && !missing ? ' / 5' : ''}</small>
+              {blocked || missing || route.average == null ? '—' : route.average.toFixed(1)}
+              <small>{!blocked && !missing && route.average != null ? ' / 5' : ''}</small>
             </strong>
           </div>
           <div>
@@ -116,6 +120,11 @@ export function RouteCard({
           <div className="blocked-rule">
             <WarningIcon sx={sx(14)} />
             No Travel — see returned blocking reasons
+          </div>
+        ) : missing ? (
+          <div className="blocked-rule">
+            <InfoIcon sx={sx(14)} />
+            Incomplete — see returned forecast coverage
           </div>
         ) : (
           <div className="route-card-footer">

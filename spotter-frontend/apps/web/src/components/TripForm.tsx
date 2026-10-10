@@ -7,24 +7,39 @@ import CalendarIcon from '@mui/icons-material/EventOutlined';
 import ScaleIcon from '@mui/icons-material/ScaleOutlined';
 import RouteIcon from '@mui/icons-material/RouteOutlined';
 import ArrowRightIcon from '@mui/icons-material/ArrowForwardRounded';
+import Autocomplete from '@mui/material/Autocomplete';
 import PlaceIcon from '@mui/icons-material/PlaceOutlined';
+import type { LocationCandidate } from '@/services/api';
+import type { AnalysisMode } from '@/hooks/useTripAnalysis';
 
 const sx = (fontSize: number) => ({ fontSize });
 
 type Props = {
+  mode?: AnalysisMode;
+  pending?: boolean;
   origin: string;
   destination: string;
   departure: string;
+  timezone?: string;
   weight: string;
   spacing: string;
   departureRef: RefObject<HTMLInputElement | null>;
   error: string;
+  originCandidate?: LocationCandidate | null;
+  destinationCandidate?: LocationCandidate | null;
+  originOptions?: LocationCandidate[];
+  destinationOptions?: LocationCandidate[];
+  originLoading?: boolean;
+  destinationLoading?: boolean;
+  locationError?: string;
   onOrigin: (value: string) => void;
   onDestination: (value: string) => void;
   onDeparture: (value: string) => void;
   onWeight: (value: string) => void;
   onSpacing: (value: string) => void;
   onSubmit: (event: FormEvent) => void;
+  onOriginCandidate?: (candidate: LocationCandidate | null) => void;
+  onDestinationCandidate?: (candidate: LocationCandidate | null) => void;
 };
 
 export function TripForm(props: Props) {
@@ -35,56 +50,109 @@ export function TripForm(props: Props) {
     origin,
     destination,
     departure,
+    timezone = 'Select timezone',
     weight,
     spacing,
     departureRef,
     error,
+    originCandidate = null,
+    destinationCandidate = null,
+    originOptions = [],
+    destinationOptions = [],
+    originLoading = false,
+    destinationLoading = false,
+    locationError = '',
     onOrigin,
     onDestination,
     onDeparture,
     onWeight,
     onSpacing,
     onSubmit,
+    onOriginCandidate = () => undefined,
+    onDestinationCandidate = () => undefined,
   } = props;
   return (
     <form className="trip-form" onSubmit={onSubmit}>
-      <TextField
+      <Autocomplete
         disabled={!ready}
-        className="trip-field-mui"
-        label="Origin"
-        value={origin}
-        onChange={(e) => onOrigin(e.target.value)}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <PlaceIcon sx={sx(18)} />
-              </InputAdornment>
-            ),
-          },
+        filterOptions={(options) => options}
+        options={originOptions}
+        value={originCandidate}
+        inputValue={origin}
+        onInputChange={(_, value, reason) => {
+          if (reason === 'input' || reason === 'clear') onOrigin(value);
         }}
+        onChange={(_, value) => {
+          onOrigin(value?.label ?? '');
+          onOriginCandidate(value);
+        }}
+        getOptionLabel={(option) => option.label}
+        isOptionEqualToValue={(option, value) => option.provider_id === value.provider_id}
+        loading={originLoading}
+        noOptionsText={origin.length < 2 ? 'Type at least 2 characters' : 'No locations found'}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            disabled={!ready}
+            className="trip-field-mui"
+            label="Origin"
+            error={Boolean(locationError)}
+            helperText={locationError || undefined}
+            slotProps={{
+              ...params.slotProps,
+              htmlInput: {
+                ...params.slotProps.htmlInput,
+                disabled: !ready,
+                'aria-label': 'Origin',
+              },
+            }}
+          />
+        )}
       />
       <ArrowRightIcon className="trip-arrow" sx={sx(18)} />
-      <TextField
+      <Autocomplete
         disabled={!ready}
-        className="trip-field-mui"
-        label="Destination"
-        value={destination}
-        onChange={(e) => onDestination(e.target.value)}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <PlaceIcon sx={sx(18)} />
-              </InputAdornment>
-            ),
-          },
+        filterOptions={(options) => options}
+        options={destinationOptions}
+        value={destinationCandidate}
+        inputValue={destination}
+        onInputChange={(_, value, reason) => {
+          if (reason === 'input' || reason === 'clear') onDestination(value);
         }}
+        onChange={(_, value) => {
+          onDestination(value?.label ?? '');
+          onDestinationCandidate(value);
+        }}
+        getOptionLabel={(option) => option.label}
+        isOptionEqualToValue={(option, value) => option.provider_id === value.provider_id}
+        loading={destinationLoading}
+        noOptionsText={destination.length < 2 ? 'Type at least 2 characters' : 'No locations found'}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            disabled={!ready}
+            className="trip-field-mui"
+            label="Destination"
+            error={Boolean(locationError)}
+            slotProps={{
+              ...params.slotProps,
+              htmlInput: {
+                ...params.slotProps.htmlInput,
+                disabled: !ready,
+                'aria-label': 'Destination',
+              },
+            }}
+          />
+        )}
       />
+      {/* The mode label keeps the selected provider context visible to keyboard and screen-reader users. */}
+      <span className="sr-only">
+        {props.mode === 'live' ? 'Live provider locations' : 'Demo locations'}
+      </span>
       <TextField
         disabled={!ready}
         className="trip-field-mui"
-        label="Departure · CDT"
+        label={`Departure · ${timezone}`}
         type="datetime-local"
         value={departure}
         onChange={(e) => onDeparture(e.target.value)}
@@ -144,7 +212,11 @@ export function TripForm(props: Props) {
       </TextField>
       <Button
         className="calculate-button-mui"
-        disabled={!ready}
+        disabled={
+          !ready ||
+          props.pending ||
+          (props.mode === 'live' && (!originCandidate || !destinationCandidate))
+        }
         variant="contained"
         size="large"
         type="submit"

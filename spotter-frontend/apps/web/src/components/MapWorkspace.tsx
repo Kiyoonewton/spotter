@@ -5,10 +5,10 @@ import LayersIcon from '@mui/icons-material/LayersOutlined';
 import RouteIcon from '@mui/icons-material/RouteOutlined';
 import { DispatchMap } from './dispatch-map';
 import { ForecastTimeline } from './ForecastTimeline';
-import type { DemoState, RouteId, Risk } from '@/lib/dispatch-data';
+import type { DemoState, Risk } from '@/lib/dispatch-data';
 
 type Props = {
-  selected: RouteId;
+  selected: string;
   checkpoint: number;
   pending: boolean;
   progress: number;
@@ -19,7 +19,7 @@ type Props = {
   departure: string;
   spacing: number;
   missing: boolean;
-  onSelect: (id: RouteId) => void;
+  onSelect: (id: string) => void;
   onCheckpoint: (index: number) => void;
   onOpacity: (value: number) => void;
   onForecast: (value: number) => void;
