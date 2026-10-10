@@ -31,7 +31,9 @@ export async function createTripAnalysis(input: TripAnalysisRequest): Promise<Tr
   });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(body.errors ? Object.values(body.errors).map(String).join(' ') : 'Trip analysis failed.');
+    throw new Error(
+      body.errors ? Object.values(body.errors).map(String).join(' ') : 'Trip analysis failed.',
+    );
   }
   return response.json() as Promise<TripAnalysis>;
 }

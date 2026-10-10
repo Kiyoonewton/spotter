@@ -159,7 +159,14 @@ function Index() {
     setState('loading');
     setProgress(12);
     try {
-      const result = await createTripAnalysis({ origin, destination, departure_at: new Date(departure).toISOString(), departure_timezone: 'America/Chicago', load_weight_lb: Number(weight), checkpoint_spacing_miles: Number(spacing) });
+      const result = await createTripAnalysis({
+        origin,
+        destination,
+        departure_at: new Date(departure).toISOString(),
+        departure_timezone: 'America/Chicago',
+        load_weight_lb: Number(weight),
+        checkpoint_spacing_miles: Number(spacing),
+      });
       setAnalysis(result);
       setState('results');
       const best = result.recommendation.recommended_route_id as RouteId | null;
