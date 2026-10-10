@@ -54,6 +54,17 @@ export async function searchLocations(
   return body.results ?? [];
 }
 
+export type MapCoordinate = { lat: number; lon: number };
+export type RouteSegment = {
+  id: string;
+  route_id: string;
+  start_checkpoint_id: string;
+  end_checkpoint_id: string;
+  coordinates: MapCoordinate[];
+  distance_miles: number;
+  risk: string;
+};
+
 export type TripAnalysis = {
   analysis_id: string;
   data_source: 'demo' | 'live';
@@ -67,9 +78,11 @@ export type TripAnalysis = {
     eligibility: string;
     risk_miles: Record<string, number>;
     average_risk: number | null;
+    segments?: RouteSegment[];
     checkpoints: Array<{
       id: string;
       route_id: string;
+      coordinates?: MapCoordinate;
       distance_from_origin_miles: number;
       arrival_at: string;
       risk: string;

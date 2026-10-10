@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { liveMapAnalysis } from '../fixtures/live-map-analysis';
 
 test('loads the dispatch workspace before an analysis is submitted', async ({ page }) => {
   await page.goto('/');
@@ -31,63 +32,16 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
         };
     await route.fulfill({ json: { results: [candidate] } });
   });
+  await page.route('https://tile.openstreetmap.org/**', (route) =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"/>',
+    }),
+  );
   let requestBody: Record<string, unknown> | undefined;
   await page.route('**/api/trip-analyses/', async (route) => {
     requestBody = JSON.parse(route.request().postData() ?? '{}');
-    await route.fulfill({
-      json: {
-        analysis_id: 'mock',
-        data_source: 'live',
-        available_route_count: 2,
-        routes: [
-          {
-            id: 'here-fast',
-            name: 'Fast',
-            distance_miles: 10,
-            duration_minutes: 20,
-            eligibility: 'eligible',
-            risk_miles: {},
-            average_risk: 1,
-            checkpoints: [
-              {
-                id: 'fast-cp',
-                route_id: 'here-fast',
-                distance_from_origin_miles: 0,
-                arrival_at: '2026-07-01T15:00:00Z',
-                risk: 'Low',
-                weather: { wind_mph: 10, rain_in_hr: null, snow_in_hr: 0 },
-                reasons: [],
-              },
-            ],
-          },
-          {
-            id: 'here-safe',
-            name: 'Safe',
-            distance_miles: 12,
-            duration_minutes: 25,
-            eligibility: 'eligible',
-            risk_miles: {},
-            average_risk: 2,
-            checkpoints: [
-              {
-                id: 'safe-cp',
-                route_id: 'here-safe',
-                distance_from_origin_miles: 0,
-                arrival_at: '2026-07-01T15:00:00Z',
-                risk: 'Low',
-                weather: { wind_mph: 8, rain_in_hr: 0, snow_in_hr: 0 },
-                reasons: [],
-              },
-            ],
-          },
-        ],
-        recommendation: {
-          status: 'recommended',
-          recommended_route_id: 'here-safe',
-          explanation: 'Safe is recommended.',
-        },
-      },
-    });
+    await route.fulfill({ json: liveMapAnalysis });
   });
   await page.goto('/');
   await expect(page.getByLabel('Load weight in lbs')).toBeEnabled();
@@ -111,7 +65,15 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
   expect(requestBody?.destination_coordinates).toEqual({ lat: 42.3, lon: -71.1 });
   expect(requestBody?.departure_at).toBe('2026-10-10T14:00:00.000Z');
   await expect(page.getByText('Route here-safe recommended')).toBeVisible();
-  await expect(page.getByText('Geographic map is not available yet.')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Geographic route map' })).toBeVisible();
+  await page.getByRole('button', { name: 'Map route here-fast, Low segment' }).press('Enter');
+  await page.getByRole('button', { name: 'Map checkpoint 2 on route here-fast' }).press('Enter');
+  await expect(page.getByText(/Route here-fast · Sample checkpoint 2/)).toBeVisible();
+  await page
+    .getByRole('button', { name: /Route here-safe/ })
+    .first()
+    .click();
+  await expect(page.getByText(/Route here-safe · Sample checkpoint 1/)).toBeVisible();
   await page
     .getByRole('button', { name: /Route here-fast/ })
     .first()
