@@ -50,7 +50,7 @@ export function useTripAnalysis(): Result {
   const [checkpointIndex, setCheckpointIndex] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
-  const [requestId, setRequestId] = useState<string>();
+  const [requestId, setRequestId] = useState<string | undefined>(undefined);
   const sequence = useRef(0);
   const reset = useCallback(() => {
     sequence.current += 1;
@@ -124,7 +124,7 @@ export function useTripAnalysis(): Result {
       if (id === sequence.current) {
         const errorValue = requestError as Error & { requestId?: string };
         setError(errorValue.message);
-        setRequestId(errorValue.requestId);
+        setRequestId(errorValue.requestId ?? undefined);
       }
     } finally {
       if (id === sequence.current) setPending(false);

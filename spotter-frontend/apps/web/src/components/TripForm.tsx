@@ -92,19 +92,21 @@ export function TripForm(props: Props) {
             label="Origin"
             error={Boolean(locationError)}
             helperText={locationError || undefined}
-            InputProps={{
-              ...params.InputProps,
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PlaceIcon sx={sx(18)} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <>
-                  {originLoading ? <CircularProgress size={18} /> : null}
-                  {params.InputProps.endAdornment}
-                </>
-              ),
+            slotProps={{
+              input: {
+                ...params.slotProps?.input,
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PlaceIcon sx={sx(18)} />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <>
+                    {originLoading ? <CircularProgress size={18} /> : null}
+                    {params.slotProps?.input?.endAdornment}
+                  </>
+                ),
+              },
             }}
           />
         )}
@@ -130,19 +132,21 @@ export function TripForm(props: Props) {
             className="trip-field-mui"
             label="Destination"
             error={Boolean(locationError)}
-            InputProps={{
-              ...params.InputProps,
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PlaceIcon sx={sx(18)} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <>
-                  {destinationLoading ? <CircularProgress size={18} /> : null}
-                  {params.InputProps.endAdornment}
-                </>
-              ),
+            slotProps={{
+              input: {
+                ...params.slotProps?.input,
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PlaceIcon sx={sx(18)} />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <>
+                    {destinationLoading ? <CircularProgress size={18} /> : null}
+                    {params.slotProps?.input?.endAdornment}
+                  </>
+                ),
+              },
             }}
           />
         )}

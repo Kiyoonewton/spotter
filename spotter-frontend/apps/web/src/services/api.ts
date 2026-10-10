@@ -42,8 +42,8 @@ export async function searchLocations(query: string, mode: 'demo' | 'live' = 'de
     const error = new Error(
       body.error ?? 'Location search is temporarily unavailable.',
     ) as Error & { code?: string; requestId?: string };
-    error.code = body.code;
-    error.requestId = body.request_id;
+    if (body.code !== undefined) error.code = body.code;
+    if (body.request_id !== undefined) error.requestId = body.request_id;
     throw error;
   }
   return body.results ?? [];
@@ -95,8 +95,8 @@ export async function createTripAnalysis(input: TripAnalysisRequest): Promise<Tr
         ? Object.values(body.errors).map(String).join(' ')
         : (body.error ?? 'Trip analysis failed.'),
     ) as Error & { code?: string; requestId?: string };
-    error.code = body.code;
-    error.requestId = body.request_id;
+    if (body.code !== undefined) error.code = body.code;
+    if (body.request_id !== undefined) error.requestId = body.request_id;
     throw error;
   }
   return response.json() as Promise<TripAnalysis>;

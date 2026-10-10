@@ -4,11 +4,10 @@ import ArrowRightIcon from '@mui/icons-material/ArrowForwardRounded';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
 import ShieldIcon from '@mui/icons-material/GppGoodOutlined';
 import WarningIcon from '@mui/icons-material/WarningAmberRounded';
-import type { RouteId } from '@/lib/dispatch-data';
 
 type Props = {
   status: 'loading' | 'recommended' | 'blocked' | 'incomplete' | 'error';
-  recommendedRouteId: RouteId | null;
+  recommendedRouteId: string | null;
   explanation: string;
   onChangeDeparture: () => void;
 };
