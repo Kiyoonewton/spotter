@@ -19,7 +19,24 @@ export type TripAnalysis = {
   analysis_id: string;
   data_source: 'demo';
   demo_notice: string;
-  routes: Array<{ id: 'A' | 'B' | 'C'; eligibility: string; risk_miles: Record<string, number> }>;
+  routes: Array<{
+    id: 'A' | 'B' | 'C';
+    name: string;
+    distance_miles: number;
+    duration_minutes: number;
+    eligibility: string;
+    risk_miles: Record<string, number>;
+    average_risk: number | null;
+    checkpoints: Array<{
+      id: string;
+      route_id: string;
+      distance_from_origin_miles: number;
+      arrival_at: string;
+      risk: string;
+      weather: { wind_mph: number | null; rain_in_hr: number | null; snow_in_hr: number | null };
+      reasons: Array<{ explanation: string }>;
+    }>;
+  }>;
   recommendation: { status: string; recommended_route_id: string | null; explanation: string };
 };
 

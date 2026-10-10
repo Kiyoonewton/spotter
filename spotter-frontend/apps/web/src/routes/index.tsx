@@ -118,21 +118,45 @@ function Index() {
     const timer = setInterval(() => setProgress((value) => (value >= 92 ? 38 : value + 7)), 650);
     return () => clearInterval(timer);
   }, [state]);
-  const ranking = rankRoutes(applied.weight);
+  const apiRoutes = analysis?.routes.map((route) => ({
+    ...route,
+    miles: route.distance_miles,
+    minutes: route.duration_minutes,
+    severe: route.risk_miles['Severe'] ?? 0,
+    high: route.risk_miles['High'] ?? 0,
+    average: route.average_risk ?? 0,
+    roads: 'Illustrative corridor geometry',
+  }));
+  const ranking = apiRoutes?.length ? apiRoutes : rankRoutes(applied.weight);
   const recommended = ranking[0];
-  const cp = checkpoints[checkpoint] ?? checkpoints[2];
+  const selectedApiRoute = apiRoutes?.find((route) => route.id === selected);
+  const apiCheckpoint = selectedApiRoute?.checkpoints[checkpoint];
+  const cp = apiCheckpoint
+    ? {
+        city: `Checkpoint ${checkpoint + 1}`,
+        miles: apiCheckpoint.distance_from_origin_miles,
+        minutes: 0,
+        wind: apiCheckpoint.weather.wind_mph ?? 0,
+        rain: apiCheckpoint.weather.rain_in_hr ?? 0,
+        snow: apiCheckpoint.weather.snow_in_hr ?? 0,
+        risk: apiCheckpoint.risk as Risk,
+        rule: apiCheckpoint.reasons.map((reason) => reason.explanation).join(' '),
+      }
+    : (checkpoints[checkpoint] ?? checkpoints[2]);
   if (!recommended || !cp) return null;
   const missing = state === 'missing';
   const blocked = state === 'blocked';
-  const cpRisk: Risk = blocked
-    ? 'No Travel'
-    : missing && checkpoint === 3
-      ? 'Unknown'
-      : selected === 'A' && checkpoint === 2
-        ? 'Severe'
-        : selected === 'C' && checkpoint === 2
-          ? 'High'
-          : cp.risk;
+  const cpRisk: Risk = apiCheckpoint
+    ? (apiCheckpoint.risk as Risk)
+    : blocked
+      ? 'No Travel'
+      : missing && checkpoint === 3
+        ? 'Unknown'
+        : selected === 'A' && checkpoint === 2
+          ? 'Severe'
+          : selected === 'C' && checkpoint === 2
+            ? 'High'
+            : cp.risk;
   async function calculate(e: React.FormEvent) {
     e.preventDefault();
     if (!origin.trim() || !destination.trim() || !departure || Number(weight) <= 0) {
@@ -502,7 +526,10 @@ function Index() {
                   >
                     <CardActionArea
                       className="route-card"
-                      onClick={() => setSelected(route.id)}
+                      onClick={() => {
+                        setSelected(route.id);
+                        setCheckpoint(0);
+                      }}
                       aria-pressed={selected === route.id}
                     >
                       <div className="route-card-top">
@@ -529,10 +556,11 @@ function Index() {
                       <RiskMileageBar
                         route={route.id}
                         miles={route.miles}
-                        high={route.high}
-                        severe={route.severe}
-                        blocked={blocked}
-                        missing={missing}
+                        riskMiles={
+                          'risk_miles' in route
+                            ? (route.risk_miles as Record<Risk, number>)
+                            : { High: route.high, Severe: route.severe }
+                        }
                       />
                       <div className="route-metrics">
                         <div>
