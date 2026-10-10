@@ -20,7 +20,7 @@ export default defineConfig({
   webServer: {
     // CI serves prebuilt assets so cold Vite transforms cannot delay hydration.
     command: isCI
-      ? 'yarn build && PORT=5173 HOST=127.0.0.1 node .output/server/index.mjs'
+      ? 'yarn build && yarn preview --host 127.0.0.1 --port 5173'
       : 'yarn dev --host 127.0.0.1',
     timeout: 120_000,
     url: 'http://127.0.0.1:5173',
