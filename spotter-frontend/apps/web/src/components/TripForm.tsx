@@ -1,4 +1,4 @@
-import type { FormEvent, RefObject } from 'react';
+import { useEffect, useState, type FormEvent, type RefObject } from 'react';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -28,6 +28,9 @@ type Props = {
 };
 
 export function TripForm(props: Props) {
+  // SSR controls must not accept edits or native submission before React attaches handlers.
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
   const {
     origin,
     destination,
@@ -46,6 +49,7 @@ export function TripForm(props: Props) {
   return (
     <form className="trip-form" onSubmit={onSubmit}>
       <TextField
+        disabled={!ready}
         className="trip-field-mui"
         label="Origin"
         value={origin}
@@ -62,6 +66,7 @@ export function TripForm(props: Props) {
       />
       <ArrowRightIcon className="trip-arrow" sx={sx(18)} />
       <TextField
+        disabled={!ready}
         className="trip-field-mui"
         label="Destination"
         value={destination}
@@ -77,6 +82,7 @@ export function TripForm(props: Props) {
         }}
       />
       <TextField
+        disabled={!ready}
         className="trip-field-mui"
         label="Departure · CDT"
         type="datetime-local"
@@ -96,6 +102,7 @@ export function TripForm(props: Props) {
         }}
       />
       <TextField
+        disabled={!ready}
         className="trip-field-mui"
         label="Load weight"
         type="number"
@@ -114,6 +121,7 @@ export function TripForm(props: Props) {
         }}
       />
       <TextField
+        disabled={!ready}
         className="trip-field-mui"
         select
         label="Checkpoints"
@@ -135,7 +143,8 @@ export function TripForm(props: Props) {
         <MenuItem value="50">Every 50 mi</MenuItem>
       </TextField>
       <Button
-        className="onSubmit-button-mui"
+        className="calculate-button-mui"
+        disabled={!ready}
         variant="contained"
         size="large"
         type="submit"

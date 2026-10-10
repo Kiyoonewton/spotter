@@ -29,7 +29,8 @@ test("real trip journey submits through the frontend and keeps route ownership",
   await expect(
     page.getByRole("heading", { name: /weather-aware routing/i }),
   ).toBeVisible();
-  const load = page.getByLabel("Load weight");
+  const load = page.getByRole("spinbutton", { name: "Load weight in lbs" });
+  await expect(load).toBeEnabled();
   await load.fill("30000");
   const [firstAnalysis] = await Promise.all([
     page.waitForResponse(
@@ -39,6 +40,7 @@ test("real trip journey submits through the frontend and keeps route ownership",
     ),
     page.getByRole("button", { name: /compare routes/i }).click(),
   ]);
+  expect(firstAnalysis.status()).toBe(200);
   const firstBody = await firstAnalysis.json();
   expect(firstBody.routes).toHaveLength(3);
   await expect(page.getByText(/Route [ABC] recommended/)).toBeVisible();
@@ -51,6 +53,7 @@ test("real trip journey submits through the frontend and keeps route ownership",
     ),
     page.getByRole("button", { name: /compare routes/i }).click(),
   ]);
+  expect(secondAnalysis.status()).toBe(200);
   const secondBody = await secondAnalysis.json();
   expect(secondBody.routes[0].risk_miles).not.toEqual(
     firstBody.routes[0].risk_miles,
