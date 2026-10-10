@@ -16,6 +16,7 @@ const sx = (fontSize: number) => ({ fontSize });
 
 type Props = {
   mode?: AnalysisMode;
+  pending?: boolean;
   origin: string;
   destination: string;
   departure: string;
@@ -73,13 +74,17 @@ export function TripForm(props: Props) {
   return (
     <form className="trip-form" onSubmit={onSubmit}>
       <Autocomplete
+        disabled={!ready}
+        filterOptions={(options) => options}
         options={originOptions}
         value={originCandidate}
         inputValue={origin}
-        onInputChange={(_, value) => onOrigin(value)}
+        onInputChange={(_, value, reason) => {
+          if (reason === 'input' || reason === 'clear') onOrigin(value);
+        }}
         onChange={(_, value) => {
-          onOriginCandidate(value);
           onOrigin(value?.label ?? '');
+          onOriginCandidate(value);
         }}
         getOptionLabel={(option) => option.label}
         isOptionEqualToValue={(option, value) => option.provider_id === value.provider_id}
@@ -93,19 +98,30 @@ export function TripForm(props: Props) {
             label="Origin"
             error={Boolean(locationError)}
             helperText={locationError || undefined}
-            slotProps={{ htmlInput: { disabled: !ready, 'aria-label': 'Origin' } }}
+            slotProps={{
+              ...params.slotProps,
+              htmlInput: {
+                ...params.slotProps.htmlInput,
+                disabled: !ready,
+                'aria-label': 'Origin',
+              },
+            }}
           />
         )}
       />
       <ArrowRightIcon className="trip-arrow" sx={sx(18)} />
       <Autocomplete
+        disabled={!ready}
+        filterOptions={(options) => options}
         options={destinationOptions}
         value={destinationCandidate}
         inputValue={destination}
-        onInputChange={(_, value) => onDestination(value)}
+        onInputChange={(_, value, reason) => {
+          if (reason === 'input' || reason === 'clear') onDestination(value);
+        }}
         onChange={(_, value) => {
-          onDestinationCandidate(value);
           onDestination(value?.label ?? '');
+          onDestinationCandidate(value);
         }}
         getOptionLabel={(option) => option.label}
         isOptionEqualToValue={(option, value) => option.provider_id === value.provider_id}
@@ -118,7 +134,14 @@ export function TripForm(props: Props) {
             className="trip-field-mui"
             label="Destination"
             error={Boolean(locationError)}
-            slotProps={{ htmlInput: { disabled: !ready, 'aria-label': 'Destination' } }}
+            slotProps={{
+              ...params.slotProps,
+              htmlInput: {
+                ...params.slotProps.htmlInput,
+                disabled: !ready,
+                'aria-label': 'Destination',
+              },
+            }}
           />
         )}
       />
@@ -127,7 +150,7 @@ export function TripForm(props: Props) {
         {props.mode === 'live' ? 'Live provider locations' : 'Demo locations'}
       </span>
       <TextField
-        disabled={!ready || (props.mode === 'live' && (!originCandidate || !destinationCandidate))}
+        disabled={!ready}
         className="trip-field-mui"
         label={`Departure · ${timezone}`}
         type="datetime-local"
@@ -189,7 +212,11 @@ export function TripForm(props: Props) {
       </TextField>
       <Button
         className="calculate-button-mui"
-        disabled={!ready}
+        disabled={
+          !ready ||
+          props.pending ||
+          (props.mode === 'live' && (!originCandidate || !destinationCandidate))
+        }
         variant="contained"
         size="large"
         type="submit"

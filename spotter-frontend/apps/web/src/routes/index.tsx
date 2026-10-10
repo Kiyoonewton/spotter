@@ -171,6 +171,7 @@ function Index() {
         </ToggleButtonGroup>
         <TripForm
           mode={mode}
+          pending={pending}
           origin={origin}
           destination={destination}
           departure={departure}

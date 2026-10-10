@@ -12,7 +12,7 @@ test('loads the dispatch workspace before an analysis is submitted', async ({ pa
 test('mocked live contract journey sends coordinates and hides illustrative map', async ({
   page,
 }) => {
-  await page.route('**/api/locations*', async (route) => {
+  await page.route(/\/api\/locations\/?\?/, async (route) => {
     const query = new URL(route.request().url()).searchParams.get('q') ?? '';
     const candidate = query.toLowerCase().startsWith('new')
       ? {
@@ -90,13 +90,14 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
     });
   });
   await page.goto('/');
+  await expect(page.getByLabel('Load weight in lbs')).toBeEnabled();
   await page.getByRole('button', { name: 'Live' }).click();
-  const origin = page.locator('input[aria-label="Origin"]');
-  const destination = page.locator('input[aria-label="Destination"]');
+  const origin = page.getByRole('combobox', { name: 'Origin' });
+  const destination = page.getByRole('combobox', { name: 'Destination' });
   await origin.fill('New');
-  await page.getByText('New York, NY').click();
+  await page.getByRole('option', { name: 'New York, NY', exact: true }).click();
   await destination.fill('Boston');
-  await page.getByText('Boston, MA').click();
+  await page.getByRole('option', { name: 'Boston, MA', exact: true }).click();
   await page.getByRole('button', { name: /Compare routes/i }).click();
   await expect
     .poll(() => requestBody)
@@ -107,6 +108,7 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
       departure_timezone: 'America/New_York',
     });
   expect(requestBody?.origin_coordinates).toEqual({ lat: 40.7, lon: -74 });
+  expect(requestBody?.destination_coordinates).toEqual({ lat: 42.3, lon: -71.1 });
   expect(requestBody?.departure_at).toBe('2026-10-10T14:00:00.000Z');
   await expect(page.getByText('Route here-safe recommended')).toBeVisible();
   await expect(page.getByText('Geographic map is not available yet.')).toBeVisible();
