@@ -25,9 +25,9 @@ const sx = (fontSize: number) => ({ fontSize });
 
 type Props = {
   route: RouteView;
-  rank: number;
+  rank: number | null;
   selected: string;
-  recommended: string;
+  recommended: string | null;
   blocked: boolean;
   missing: boolean;
   spacing: number;
@@ -65,7 +65,11 @@ export function RouteCard({
               label="Recommended"
             />
           ) : (
-            <Chip size="small" variant="outlined" label={`#${rank + 1}`} />
+            <Chip
+              size="small"
+              variant="outlined"
+              label={blocked ? 'Blocked' : missing ? 'Incomplete' : `#${(rank ?? 0) + 1}`}
+            />
           )}
         </div>
         <div className="route-road">
@@ -116,6 +120,11 @@ export function RouteCard({
           <div className="blocked-rule">
             <WarningIcon sx={sx(14)} />
             No Travel — see returned blocking reasons
+          </div>
+        ) : missing ? (
+          <div className="blocked-rule">
+            <InfoIcon sx={sx(14)} />
+            Incomplete — see returned forecast coverage
           </div>
         ) : (
           <div className="route-card-footer">

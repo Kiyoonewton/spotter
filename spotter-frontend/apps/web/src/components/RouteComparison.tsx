@@ -4,7 +4,7 @@ import { RouteCard, type RouteView } from './RouteCard';
 type Props = {
   routes: RouteView[];
   selected: string;
-  recommended: string;
+  recommended: string | null;
   blocked: boolean;
   missing: boolean;
   loading: boolean;
@@ -39,7 +39,7 @@ export function RouteComparison({
           <RouteCard
             key={route.id}
             route={route}
-            rank={index}
+            rank={route.eligibility === 'eligible' ? index : null}
             selected={selected}
             recommended={recommended}
             blocked={route.eligibility === 'blocked'}

@@ -16,6 +16,7 @@ import { useLocationSearch } from '@/hooks/useLocationSearch';
 import { useTripAnalysis, type AnalysisMode } from '@/hooks/useTripAnalysis';
 import type { LocationCandidate } from '@/services/api';
 import type { DemoState, Risk } from '@/lib/dispatch-data';
+import { rankRoutes } from '@/lib/route-ranking';
 
 export const Route = createFileRoute('/')({
   head: () => ({
@@ -96,9 +97,8 @@ function Index() {
       average: route.average_risk,
       roads: route.name,
     })) ?? [];
-  const recommended =
-    routes.find((route) => route.id === analysis?.recommendation.recommended_route_id) ?? routes[0];
-  const selectedRoute = routes.find((route) => route.id === selected) ?? recommended;
+  const rankedRoutes = rankRoutes(routes);
+  const selectedRoute = routes.find((route) => route.id === selected) ?? routes[0];
   const apiCheckpoint = selectedRoute?.checkpoints[checkpoint];
   const inspectorCheckpoint = apiCheckpoint
     ? {
@@ -210,7 +210,7 @@ function Index() {
             {requestId ? ` (Request ${requestId})` : ''}
           </div>
         )}
-        {analysis && applied && recommended && selectedRoute && inspectorCheckpoint && (
+        {analysis && applied && selectedRoute && inspectorCheckpoint && (
           <>
             <div className="results-heading">
               <div>
@@ -237,18 +237,20 @@ function Index() {
                   ? 'loading'
                   : analysis.recommendation.recommended_route_id
                     ? 'recommended'
-                    : 'incomplete'
+                    : routes.every((route) => route.eligibility === 'blocked')
+                      ? 'blocked'
+                      : 'incomplete'
               }
-              recommendedRouteId={analysis.recommendation.recommended_route_id ?? selectedRoute.id}
+              recommendedRouteId={analysis.recommendation.recommended_route_id}
               explanation={analysis.recommendation.explanation}
               onChangeDeparture={() => departureRef.current?.focus()}
             />
             <ResultsWorkspace
               drawer={drawer}
               tab={activeTab}
-              routes={routes}
+              routes={rankedRoutes}
               selected={selected || selectedRoute.id}
-              recommended={analysis.recommendation.recommended_route_id ?? selectedRoute.id}
+              recommended={analysis.recommendation.recommended_route_id}
               blocked={selectedRoute.eligibility === 'blocked'}
               missing={selectedRoute.eligibility === 'incomplete'}
               pending={pending}

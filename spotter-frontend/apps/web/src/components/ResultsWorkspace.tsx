@@ -13,7 +13,7 @@ type Props = {
   tab: 'routes' | 'checkpoint';
   routes: RouteView[];
   selected: string;
-  recommended: string;
+  recommended: string | null;
   blocked: boolean;
   missing: boolean;
   pending: boolean;
