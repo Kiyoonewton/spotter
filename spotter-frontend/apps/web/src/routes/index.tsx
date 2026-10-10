@@ -39,6 +39,7 @@ import WarningIcon from '@mui/icons-material/WarningAmberRounded';
 import CalendarIcon from '@mui/icons-material/EventOutlined';
 import { DispatchMap } from '@/components/dispatch-map';
 import { RiskMileageBar } from '@/components/risk-mileage-bar';
+import { createTripAnalysis, type TripAnalysis } from '@/services/api';
 import {
   checkpoints,
   rankRoutes,
@@ -104,6 +105,7 @@ function Index() {
   const [drawer, setDrawer] = useState(true);
   const [progress, setProgress] = useState(38);
   const [error, setError] = useState('');
+  const [analysis, setAnalysis] = useState<TripAnalysis | null>(null);
   const [activeTab, setActiveTab] = useState<'routes' | 'checkpoint'>('routes');
   const departureRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -131,7 +133,7 @@ function Index() {
         : selected === 'C' && checkpoint === 2
           ? 'High'
           : cp.risk;
-  function calculate(e: React.FormEvent) {
+  async function calculate(e: React.FormEvent) {
     e.preventDefault();
     if (!origin.trim() || !destination.trim() || !departure || Number(weight) <= 0) {
       setError('Enter both locations, a departure time, and a positive load weight.');
@@ -156,11 +158,16 @@ function Index() {
     });
     setState('loading');
     setProgress(12);
-    window.setTimeout(() => {
+    try {
+      const result = await createTripAnalysis({ origin, destination, departure_at: new Date(departure).toISOString(), departure_timezone: 'America/Chicago', load_weight_lb: Number(weight), checkpoint_spacing_miles: Number(spacing) });
+      setAnalysis(result);
       setState('results');
-      const best = rankRoutes(Number(weight))[0];
-      if (best) setSelected(best.id);
-    }, 1400);
+      const best = result.recommendation.recommended_route_id as RouteId | null;
+      if (best) setSelected(best);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Trip analysis failed.');
+      setState('results');
+    }
   }
   return (
     <div className={`dispatch-app ${state === 'mobile' ? 'mobile-preview' : ''}`}>
