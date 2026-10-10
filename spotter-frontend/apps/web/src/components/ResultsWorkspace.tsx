@@ -27,6 +27,7 @@ type Props = {
   forecast: number;
   playing: boolean;
   state: DemoState;
+  dataSource?: 'demo' | 'live';
   onDrawer: () => void;
   onTab: (tab: 'routes' | 'checkpoint') => void;
   onRoute: (id: string) => void;
@@ -79,28 +80,39 @@ export function ResultsWorkspace(props: Props) {
           onNext={() => props.onCheckpoint(props.checkpoint + 1)}
         />
       </aside>
-      <MapWorkspace
-        selected={props.selected}
-        checkpoint={props.checkpoint}
-        pending={props.pending}
-        progress={props.progress}
-        opacity={props.opacity}
-        forecast={props.forecast}
-        playing={props.playing}
-        state={props.state}
-        departure={props.departure}
-        spacing={props.spacing}
-        missing={props.missing}
-        onSelect={props.onRoute}
-        onCheckpoint={(index) => {
-          props.onCheckpoint(index);
-          props.onTab('checkpoint');
-          props.onDrawer();
-        }}
-        onOpacity={props.onOpacity}
-        onForecast={props.onForecast}
-        onPlaying={props.onPlaying}
-      />
+      {props.dataSource === 'live' ? (
+        <section className="map-workspace" aria-label="Geographic map unavailable">
+          <div className="map-stage">
+            <div className="map-loading">
+              <h3>Geographic map is not available yet.</h3>
+              <p>Live route comparison and checkpoint inspection remain available.</p>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <MapWorkspace
+          selected={props.selected}
+          checkpoint={props.checkpoint}
+          pending={props.pending}
+          progress={props.progress}
+          opacity={props.opacity}
+          forecast={props.forecast}
+          playing={props.playing}
+          state={props.state}
+          departure={props.departure}
+          spacing={props.spacing}
+          missing={props.missing}
+          onSelect={props.onRoute}
+          onCheckpoint={(index) => {
+            props.onCheckpoint(index);
+            props.onTab('checkpoint');
+            props.onDrawer();
+          }}
+          onOpacity={props.onOpacity}
+          onForecast={props.onForecast}
+          onPlaying={props.onPlaying}
+        />
+      )}
     </div>
   );
 }

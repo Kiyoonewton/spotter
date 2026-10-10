@@ -19,6 +19,7 @@ export type AppliedTrip = {
   destination: string;
   departure: string;
   timezone: string;
+  resolvedDepartureAt: string;
   weight: number;
   spacing: number;
 };
@@ -36,11 +37,55 @@ export type Result = {
   reset: () => void;
 };
 
+function wallAt(instant: number, timezone: string) {
+  const values = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hourCycle: 'h23',
+    })
+      .formatToParts(instant)
+      .map(({ type, value }) => [type, value]),
+  );
+  return `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}:${values.second}`;
+}
+function offsetAt(instant: number, timezone: string) {
+  const values = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'longOffset' })
+      .formatToParts(instant)
+      .map(({ type, value }) => [type, value]),
+  );
+  const match = values.timeZoneName?.match(/GMT([+-])(\d{2}):?(\d{2})/);
+  return match
+    ? (match[1] === '+' ? 1 : -1) * (Number(match[2]) * 60 + Number(match[3])) * 60000
+    : 0;
+}
 function localTimestamp(value: string, timezone: string) {
-  const date = new Date(value);
-  if (!value || Number.isNaN(date.getTime()))
-    throw new Error(`Enter a valid departure time in ${timezone}.`);
-  return date.toISOString();
+  if (!timezone) throw new Error('Select an origin with a valid IANA timezone.');
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+  if (!match) throw new Error(`Enter a valid departure time in ${timezone}.`);
+  const wall = `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:00`;
+  const naive = Date.parse(`${wall}Z`);
+  const offsets = new Set(
+    [-172800000, -86400000, 0, 86400000, 172800000].map((delta) =>
+      offsetAt(naive + delta, timezone),
+    ),
+  );
+  const candidates = [...offsets]
+    .map((offset) => naive - offset)
+    .filter((instant) => wallAt(instant, timezone) === wall);
+  if (candidates.length === 0)
+    throw new Error(
+      `That departure time does not exist in ${timezone} because of daylight-saving time.`,
+    );
+  if (candidates.length > 1)
+    throw new Error(`That departure time is ambiguous in ${timezone}; choose a different time.`);
+  return new Date(candidates[0]).toISOString();
 }
 
 export function useTripAnalysis(): Result {
@@ -52,8 +97,10 @@ export function useTripAnalysis(): Result {
   const [error, setError] = useState('');
   const [requestId, setRequestId] = useState<string | undefined>(undefined);
   const sequence = useRef(0);
+  const pendingGuard = useRef(false);
   const reset = useCallback(() => {
     sequence.current += 1;
+    pendingGuard.current = false;
     setAnalysis(null);
     setApplied(null);
     setSelectedRouteId('');
@@ -68,34 +115,27 @@ export function useTripAnalysis(): Result {
   }, []);
   const submit = useCallback(async (trip: EditableTrip, event?: React.FormEvent) => {
     event?.preventDefault();
-    const mode = trip.mode ?? 'demo';
-    if (mode === 'live' && (!trip.originCandidate || !trip.destinationCandidate))
-      throw new Error('Select an origin and destination from the search results.');
-    const weight = Number(trip.weight);
-    const spacing = Number(trip.spacing);
-    if (!Number.isFinite(weight) || weight < 0)
-      throw new Error('Enter a valid non-negative load weight.');
+    if (pendingGuard.current) return;
     const id = ++sequence.current;
-    const timezone = trip.timezone ?? 'America/Chicago';
-    const next: AppliedTrip = {
-      mode,
-      origin: trip.origin,
-      destination: trip.destination,
-      departure: trip.departure,
-      timezone,
-      weight,
-      spacing,
-    };
-    setApplied(next);
-    setPending(true);
-    setError('');
-    setRequestId(undefined);
+    const mode = trip.mode ?? 'demo';
     try {
+      if (mode === 'live' && (!trip.originCandidate || !trip.destinationCandidate))
+        throw new Error('Select an origin and destination from the search results.');
+      const weight = Number(trip.weight);
+      const spacing = Number(trip.spacing);
+      if (!Number.isFinite(weight) || weight < 0)
+        throw new Error('Enter a valid non-negative load weight.');
+      const timezone = trip.timezone ?? '';
+      const resolvedDepartureAt = localTimestamp(trip.departure, timezone);
+      pendingGuard.current = true;
+      setPending(true);
+      setError('');
+      setRequestId(undefined);
       const input = {
         mode,
         origin: trip.origin,
         destination: trip.destination,
-        departure_at: localTimestamp(trip.departure, timezone),
+        departure_at: resolvedDepartureAt,
         departure_timezone: timezone,
         load_weight_lb: weight,
         checkpoint_spacing_miles: spacing,
@@ -114,11 +154,20 @@ export function useTripAnalysis(): Result {
       };
       const result = await createTripAnalysis(input);
       if (id !== sequence.current) return;
-      setAnalysis(result);
-      const recommended = result.recommendation.recommended_route_id;
       const fallback =
         result.routes.find((route) => route.eligibility === 'eligible') ?? result.routes[0];
-      setSelectedRouteId(recommended ?? fallback?.id ?? '');
+      setAnalysis(result);
+      setApplied({
+        mode,
+        origin: trip.origin,
+        destination: trip.destination,
+        departure: trip.departure,
+        timezone,
+        resolvedDepartureAt,
+        weight,
+        spacing,
+      });
+      setSelectedRouteId(result.recommendation.recommended_route_id ?? fallback?.id ?? '');
       setCheckpointIndex(0);
     } catch (requestError) {
       if (id === sequence.current) {
@@ -127,7 +176,10 @@ export function useTripAnalysis(): Result {
         setRequestId(errorValue.requestId ?? undefined);
       }
     } finally {
-      if (id === sequence.current) setPending(false);
+      if (id === sequence.current) {
+        pendingGuard.current = false;
+        setPending(false);
+      }
     }
   }, []);
   return {

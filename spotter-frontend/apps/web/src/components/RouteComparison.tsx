@@ -42,8 +42,8 @@ export function RouteComparison({
             rank={index}
             selected={selected}
             recommended={recommended}
-            blocked={blocked}
-            missing={missing}
+            blocked={route.eligibility === 'blocked'}
+            missing={route.eligibility === 'incomplete'}
             spacing={spacing}
             onSelect={onSelect}
           />

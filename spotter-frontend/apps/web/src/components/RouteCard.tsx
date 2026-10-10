@@ -57,7 +57,7 @@ export function RouteCard({
             <strong>Route {route.id}</strong>
             <span>{route.name}</span>
           </div>
-          {!blocked && !missing && rank === 0 ? (
+          {!blocked && !missing && route.id === recommended ? (
             <Chip
               size="small"
               color="success"

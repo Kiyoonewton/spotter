@@ -258,6 +258,7 @@ function Index() {
               forecast={forecast}
               playing={playing}
               state={state}
+          dataSource={analysis.data_source}
               onDrawer={() => setDrawer(!drawer)}
               onTab={(tab) => {
                 setActiveTab(tab);
