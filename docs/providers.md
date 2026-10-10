@@ -12,22 +12,27 @@ The selected providers are:
   not provide truck routing or road restrictions. The implemented adapter uses a five-second
   timeout and validates every coordinate.
 - **Routing: [HERE Routing API v8](https://docs.here.com/routing/reference/routing-v8-api-overview).**
-  Its API supports truck transport mode, alternatives, flexible-polyline geometry, route
-  summaries, and timed sections. It requires a HERE API key and has account-specific quotas.
-  Truck restrictions are only those represented by HERE vehicle attributes; ordinary-driving
-  mode must never be described as truck-safe. This adapter is not implemented in this task.
+  Its API supports `transportMode=truck`, `alternatives` from 0 through 6 (we request 2,
+  for at most 3 total routes), Flexible Polyline geometry, route summaries, and section
+  timing. It requires `HERE_API_KEY` and has account-specific quotas. The adapter requests
+  `routingMode=fast`, `departureTime`, `return=polyline,summary,travelSummary`, and imperial
+  units. It does not claim hazardous-material, clearance, or commercial suitability beyond
+  HERE's truck profile. Duplicate alternatives are removed when their complete decoded
+  coordinate sequences are identical. It uses an eight-second timeout and does not retry
+  authentication or invalid requests.
 - **Weather: [National Weather Service API](https://www.weather.gov/documentation/services-web-api).**
   The `/points/{lat},{lon}` endpoint identifies a grid and `/gridpoints/.../forecast/hourly`
   provides hourly periods. It requires a descriptive User-Agent rather than an API key,
-  is limited by NWS service policy, and covers the United States. Wind speed, rain
-  precipitation, and snowfall fields require explicit unit normalization. This adapter is
-  not implemented in this task.
+  is limited by NWS service policy, and covers the United States. Its standard hourly period
+  fields provide wind speed, probability of precipitation, and quantitative precipitation;
+  snowfall accumulation is not guaranteed as a standard hourly field across grids. Required
+  snowfall therefore needs a `forecastGridData` field or a replacement provider before
+  weather orchestration. All values require explicit unit normalization.
 
-`OPENCAGE_API_KEY` is required only for live geocoding. `ROUTING_API_KEY` and
-`WEATHER_API_KEY` are not used yet and are not required. Live geocoding fails with a
-structured provider configuration error when the OpenCage key is absent. Demo mode uses
+`OPENCAGE_API_KEY` is required for live geocoding and `HERE_API_KEY` for live routing.
+Live geocoding and routing fail with structured provider configuration errors when keys are
+absent. Demo mode uses
 captured, deterministic values and remains independent of upstream services.
 
-The next implementation step is to add fixture-backed HERE routing and NWS hourly-weather
-adapters, then validate live requests manually with credentials/configuration supplied
-outside the repository.
+The weather adapter remains blocked on a documented snowfall source decision. Live requests
+must be validated manually with credentials supplied outside the repository.
