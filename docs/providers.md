@@ -31,7 +31,9 @@ The selected providers are:
   `[T-1h, T)`. An ETA at 10:30 selects the 11:00 sample; an ETA exactly at 11:00 selects
   the 12:00 sample. It exposes both interval boundaries and divides the preceding one-hour
   accumulation by one hour as an hourly average rate. Wind is instantaneous and uses the
-  nearest available sample without interpolation across missing values or extrapolation.
+  nearest scheduled sample, preferring the earlier sample on an exact tie, and accepts it
+  only within one hour of the ETA. If that selected sample is missing, wind remains missing;
+  the adapter does not search farther samples or extrapolate.
   Rain is `rain + showers` only when both matching-unit values exist; missing showers remain
   missing. Snowfall remains separate. NWS remains documented as a provisional US-only
   alternative and is not used for this adapter.
