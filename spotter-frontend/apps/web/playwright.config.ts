@@ -7,6 +7,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
+  failOnFlakyTests: isCI,
   reporter: isCI ? 'html' : 'list',
 
   use: {
@@ -17,7 +18,11 @@ export default defineConfig({
   },
 
   webServer: {
-    command: 'yarn dev --host 127.0.0.1',
+    // CI serves prebuilt assets so cold Vite transforms cannot delay hydration.
+    command: isCI
+      ? 'yarn build && PORT=5173 HOST=127.0.0.1 node .output/server/index.mjs'
+      : 'yarn dev --host 127.0.0.1',
+    timeout: 120_000,
     url: 'http://127.0.0.1:5173',
     reuseExistingServer: !isCI,
   },
