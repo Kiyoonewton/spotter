@@ -1,0 +1,65 @@
+services:
+  webserver:
+    build:
+      context: ..
+      dockerfile: ./spotter-infrastructure/webserver/Dockerfile.prod
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+        CONF_ENV: development
+    image: spotter-webserver:development
+    ports:
+      - "80:80"
+    depends_on:
+      spotter-backend:
+        condition: service_started
+    restart: unless-stopped
+
+  spotter-backend:
+    build:
+      context: ../spotter-backend
+      dockerfile: Dockerfile
+    image: spotter-backend:development
+    env_file:
+      - .env.development
+    environment:
+      DJANGO_DEBUG: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - spotter_development_postgres_data:/var/lib/postgresql/data
+    # Not published to the host — only reachable from other containers on
+    # this compose network.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - spotter_development_redis_data:/data
+    # Not published to the host — only reachable from other containers on
+    # this compose network.
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  spotter_development_postgres_data:
+  spotter_development_redis_data:

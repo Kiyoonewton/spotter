@@ -1,0 +1,78 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+jobs:
+  frontend-quality:
+    name: frontend-quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: apps/web/.nvmrc
+          cache: yarn
+          cache-dependency-path: apps/web/yarn.lock
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      # src/env.ts validates VITE_API_BASE_URL at module load time and
+      # throws if it's missing — every mode (test, dev, build) needs it.
+      # None of the real .env files are committed (see .env.example), so
+      # CI provides the same safe placeholder value local dev uses for
+      # the nginx-proxied "local" environment. Not a secret.
+      - name: Create placeholder env files
+        run: |
+          echo "VITE_API_BASE_URL=/api" > .env
+          echo "VITE_API_BASE_URL=/api" > .env.test
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run quality gate (lint, typecheck, format, unit/RTL/MSW tests, Playwright, build)
+        id: quality
+        run: yarn quality
+
+      # Best-effort coverage report for the failure-artifact step below.
+      # `yarn quality` itself runs `yarn test` (no coverage instrumentation),
+      # so this is a separate run purely to produce something to upload —
+      # it does not replace or change the quality gate above.
+      - name: Generate coverage report (only if quality failed)
+        if: failure() && steps.quality.outcome == 'failure'
+        continue-on-error: true
+        run: yarn test:coverage
+
+      - name: Upload coverage report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage-report
+          path: apps/web/coverage
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
+          if-no-files-found: ignore

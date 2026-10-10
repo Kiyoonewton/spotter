@@ -1,0 +1,128 @@
+name: Full-Stack E2E Smoke
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+env:
+  # Generic CI base URL — never a personal local domain. Nginx's
+  # server_name in webserver/conf.d/dev/spotter.conf doesn't need to
+  # match this for plain IP/host access on port 80.
+  E2E_BASE_URL: http://127.0.0.1
+
+jobs:
+  e2e-smoke:
+    name: e2e-smoke
+    runs-on: ubuntu-latest
+    steps:
+      # Sibling checkout — same reasoning and same required secret as
+      # docker-validation.yml (see this repo's README).
+      - name: Check out spotter-infrastructure
+        uses: actions/checkout@v4
+        with:
+          path: spotter-infrastructure
+
+      - name: Check out spotter-frontend
+        uses: actions/checkout@v4
+        with:
+          repository: Spotterv1/spotter-frontend
+          ref: develop
+          token: ${{ secrets.CROSS_REPO_CHECKOUT_TOKEN }}
+          path: spotter-frontend
+
+      - name: Check out spotter-backend
+        uses: actions/checkout@v4
+        with:
+          repository: Spotterv1/spotter-backend
+          ref: develop
+          token: ${{ secrets.CROSS_REPO_CHECKOUT_TOKEN }}
+          path: spotter-backend
+
+      - name: Create placeholder .env files
+        run: |
+          touch spotter-backend/.env
+          cp spotter-infrastructure/.env.example spotter-infrastructure/.env
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: spotter-infrastructure/.nvmrc
+          cache: yarn
+          cache-dependency-path: spotter-infrastructure/yarn.lock
+
+      - name: Install infrastructure test dependencies
+        working-directory: spotter-infrastructure
+        run: yarn install --frozen-lockfile
+
+      - name: Install Playwright browser
+        working-directory: spotter-infrastructure
+        run: npx playwright install --with-deps chromium
+
+      - name: Start the Local stack
+        working-directory: spotter-infrastructure
+        run: docker compose -f docker-compose.local.yml up -d --build
+
+      - name: Wait for /api/health through Nginx
+        run: |
+          for _ in $(seq 1 30); do
+            status="$(curl -s -o /dev/null -w '%{http_code}' "$E2E_BASE_URL/api/health" || true)"
+            if [ "$status" = "200" ]; then
+              echo "Backend is healthy through Nginx."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Timed out waiting for $E2E_BASE_URL/api/health to return 200." >&2
+          exit 1
+
+      - name: Run full-stack Playwright smoke tests
+        working-directory: spotter-infrastructure
+        run: yarn test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-playwright-report
+          path: spotter-infrastructure/playwright-report
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload Playwright traces/screenshots/videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: spotter-infrastructure/test-results
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Collect container logs
+        if: failure()
+        working-directory: spotter-infrastructure
+        continue-on-error: true
+        run: docker compose -f docker-compose.local.yml logs --no-color > docker-compose.log || true
+
+      - name: Upload container logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-container-logs
+          path: spotter-infrastructure/docker-compose.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      # Always stop the stack, whether the tests passed or failed. Never
+      # `-v` — this must not delete the named Postgres/Redis volumes.
+      # Best-effort: if an earlier step failed before the stack ever
+      # started (e.g. checkout), there's nothing to stop, so tolerate that.
+      - name: Stop the Local stack
+        if: always()
+        working-directory: spotter-infrastructure
+        continue-on-error: true
+        run: docker compose -f docker-compose.local.yml down

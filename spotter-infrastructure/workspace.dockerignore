@@ -1,0 +1,32 @@
+# This workspace root holds many unrelated projects. The Spotter
+# production webserver build uses `context: ..` (this directory) so its
+# Dockerfile can COPY both spotter-frontend/ and
+# spotter-infrastructure/webserver/. Everything else must be excluded so
+# none of it — most importantly spotter-backend/.env — is ever sent to
+# the Docker build context.
+#
+# Allowlist approach: ignore everything, then un-ignore only the paths the
+# production webserver build actually needs.
+*
+
+!spotter-frontend
+!spotter-frontend/**
+!spotter-infrastructure
+!spotter-infrastructure/**
+
+# Re-exclude anything under the allowed trees that should never be sent to
+# a build context, even by accident.
+**/node_modules
+**/dist
+**/.git
+**/.env
+**/.env.*
+!spotter-frontend/apps/web/.env.example
+!spotter-infrastructure/.env.example
+**/coverage
+**/test-results
+**/playwright-report
+**/*.log
+
+# spotter-backend must never be part of this build context at all — its
+# .env (and everything else) stays fully excluded by the leading `*` above.

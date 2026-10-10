@@ -1,0 +1,93 @@
+services:
+  webserver:
+    build:
+      context: .
+      dockerfile: ./webserver/Dockerfile
+    image: spotter-webserver:dev
+    container_name: webserver
+    ports:
+      - "80:80"
+    depends_on:
+      spotter-backend:
+        condition: service_started
+      spotter-frontend:
+        condition: service_started
+    restart: unless-stopped
+
+  spotter-frontend:
+    build:
+      context: ../spotter-frontend
+      dockerfile: Dockerfile.dev
+    image: spotter-frontend:dev
+    container_name: spotter-frontend
+    volumes:
+      - ../spotter-frontend/apps/web:/app
+      - /app/node_modules
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+    expose:
+      - "5173"
+    restart: unless-stopped
+
+  spotter-backend:
+    build:
+      context: ../spotter-backend
+      dockerfile: Dockerfile.dev
+    image: spotter-backend:dev
+    container_name: spotter-backend
+    volumes:
+      - ../spotter-backend:/app
+    env_file:
+      - ../spotter-backend/.env
+    environment:
+      DJANGO_DEBUG: "true"
+      PYTHONUNBUFFERED: "1"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-spotter}:${POSTGRES_PASSWORD:-spotter}@postgres:5432/${POSTGRES_DB:-spotter}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: spotter-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-spotter}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spotter}
+      POSTGRES_DB: ${POSTGRES_DB:-spotter}
+    volumes:
+      - spotter_postgres_data:/var/lib/postgresql/data
+      - ../spotter-backend/docker/postgres-init:/docker-entrypoint-initdb.d
+    # Not published to the host by default — only reachable from other
+    # containers on this compose network. Uncomment to connect from the
+    # host (e.g. a local GUI client) during local development only; never
+    # do this for a staging or production setup.
+    # ports:
+    #   - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-spotter} -d ${POSTGRES_DB:-spotter}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: spotter-redis
+    volumes:
+      - spotter_redis_data:/data
+    # Not published to the host — only reachable from other containers on
+    # this compose network.
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  spotter_postgres_data:
+  spotter_redis_data:

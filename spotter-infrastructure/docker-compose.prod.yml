@@ -1,0 +1,27 @@
+services:
+  webserver:
+    build:
+      context: ..
+      dockerfile: ./spotter-infrastructure/webserver/Dockerfile.prod
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+    image: spotter-webserver:prod
+    container_name: webserver
+    ports:
+      - "80:80"
+    depends_on:
+      spotter-backend:
+        condition: service_started
+    restart: unless-stopped
+
+  spotter-backend:
+    build:
+      context: ../spotter-backend
+      dockerfile: Dockerfile
+    image: spotter-backend:prod
+    container_name: spotter-backend
+    env_file:
+      - ../spotter-backend/.env
+    environment:
+      DJANGO_DEBUG: "false"
+    restart: unless-stopped
