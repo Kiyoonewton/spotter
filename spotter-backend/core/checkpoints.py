@@ -72,6 +72,12 @@ def _path_between(points, cumulative, start, end):
     return tuple(path)
 
 
+def _geometry_distance_for_provider_miles(miles, provider_miles, geometry_meters):
+    if provider_miles <= 0:
+        return 0.0
+    return geometry_meters * (miles / provider_miles)
+
+
 def sample_route(route: NormalizedRoute, spacing_miles: int, departure_at: str) -> tuple[list[SampledCheckpoint], list[SampledSegment], dict]:
     if spacing_miles not in SPACING:
         raise ValueError("Checkpoint spacing must be 10, 25, or 50 miles.")
@@ -84,8 +90,12 @@ def sample_route(route: NormalizedRoute, spacing_miles: int, departure_at: str) 
     departure = departure.astimezone(timezone.utc)
     points, cumulative, geometry_meters = _geometry(route)
     provider_miles = route.distance_meters * MILES_PER_METER
-    distances = list(range(0, int(provider_miles), spacing_miles))
-    if not distances or distances[-1] != provider_miles:
+    distances = []
+    current = 0.0
+    while current < provider_miles:
+        distances.append(current)
+        current += spacing_miles
+    if not distances or abs(distances[-1] - provider_miles) > 1e-9:
         distances.append(provider_miles)
     checkpoints: list[SampledCheckpoint] = []
     for index, miles in enumerate(distances):
@@ -94,12 +104,17 @@ def sample_route(route: NormalizedRoute, spacing_miles: int, departure_at: str) 
         arrival = departure + timedelta(seconds=elapsed)
         checkpoints.append(SampledCheckpoint(
             f"{route.provider_id}-cp-{index}", route.provider_id, miles,
-            _point_at(points, cumulative, geometry_meters * ratio), elapsed,
+            _point_at(points, cumulative, _geometry_distance_for_provider_miles(miles, provider_miles, geometry_meters)), elapsed,
             arrival.isoformat().replace("+00:00", "Z"), "distance_proportional_estimate",
         ))
     segments = [SampledSegment(
         f"{route.provider_id}-seg-{index}", route.provider_id, start.id, end.id,
         end.distance_miles - start.distance_miles,
-        _path_between(points, cumulative, start.distance_miles / MILES_PER_METER, end.distance_miles / MILES_PER_METER),
+        _path_between(
+            points,
+            cumulative,
+            _geometry_distance_for_provider_miles(start.distance_miles, provider_miles, geometry_meters),
+            _geometry_distance_for_provider_miles(end.distance_miles, provider_miles, geometry_meters),
+        ),
     ) for index, (start, end) in enumerate(zip(checkpoints, checkpoints[1:]))]
     return checkpoints, segments, {"provider_distance_miles": provider_miles, "geometry_distance_miles": geometry_meters * MILES_PER_METER, "timing_method": "distance_proportional_estimate"}

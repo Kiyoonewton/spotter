@@ -63,6 +63,7 @@ def trip_analyses(request):
     try: ZoneInfo(data["departure_timezone"])
     except Exception: errors["departure_timezone"] = "Use a valid IANA timezone."
     try:
+        if isinstance(data["load_weight_lb"], bool): raise ValueError
         weight = float(data["load_weight_lb"])
         if not math.isfinite(weight) or weight < 0: raise ValueError
     except (TypeError, ValueError): errors["load_weight_lb"] = "Load weight must be a finite non-negative number."
