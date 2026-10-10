@@ -17,6 +17,23 @@ export type TripAnalysisRequest = {
   checkpoint_spacing_miles: number;
 };
 
+export type LocationCandidate = {
+  provider_id: string;
+  label: string;
+  latitude: number;
+  longitude: number;
+  timezone: string | null;
+};
+
+export async function searchLocations(query: string, mode: 'demo' | 'live' = 'demo') {
+  const response = await fetch(
+    `${apiUrl('/locations/')}?q=${encodeURIComponent(query)}&mode=${mode}`,
+  );
+  if (!response.ok) throw new Error('Location search is unavailable.');
+  const body = (await response.json()) as { results: LocationCandidate[] };
+  return body.results;
+}
+
 export type TripAnalysis = {
   analysis_id: string;
   data_source: 'demo';
