@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useTripAnalysis, localTimestamp } from './useTripAnalysis';
 import * as api from '@/services/api';
 
@@ -46,6 +46,10 @@ const result = (id: string, recommended: string | null) => ({
 });
 
 describe('useTripAnalysis', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('submits valid fixtures and selects an owned checkpoint', async () => {
     const create = vi
       .spyOn(api, 'createTripAnalysis')

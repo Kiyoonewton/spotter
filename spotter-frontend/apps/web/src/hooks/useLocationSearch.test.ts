@@ -1,11 +1,16 @@
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useLocationSearch } from './useLocationSearch';
 import * as api from '@/services/api';
 
 const candidate = { provider_id: 'one', label: 'One', latitude: 1, longitude: 2, timezone: 'UTC' };
 
 describe('useLocationSearch', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   it('debounces input and ignores responses after clearing, disabling, mode changes, or unmount', async () => {
     vi.useFakeTimers();
     const deferred: Array<(value: (typeof candidate)[]) => void> = [];
