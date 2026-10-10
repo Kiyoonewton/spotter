@@ -7,6 +7,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
+  failOnFlakyTests: isCI,
   reporter: isCI ? 'html' : 'list',
 
   use: {
@@ -17,7 +18,10 @@ export default defineConfig({
   },
 
   webServer: {
+    // Run the same SSR-capable dev server locally and in CI; vite preview does not
+    // have the TanStack Start server bundle in this project configuration.
     command: 'yarn dev --host 127.0.0.1',
+    timeout: 120_000,
     url: 'http://127.0.0.1:5173',
     reuseExistingServer: !isCI,
   },
