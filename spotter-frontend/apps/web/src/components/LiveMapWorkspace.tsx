@@ -74,13 +74,17 @@ export function LiveMapWorkspace(props: Props) {
         <ToggleButton value="rain">Rain · in/hr</ToggleButton>
         <ToggleButton value="snow">Snow · in/hr</ToggleButton>
       </ToggleButtonGroup>
-      <Slider
-        aria-label="Forecast overlay opacity"
-        min={0}
-        max={100}
-        value={opacity}
-        onChange={(_, value) => setOpacity(value as number)}
-      />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px' }}>
+        <span style={{ whiteSpace: 'nowrap', fontSize: 12 }}>Overlay opacity</span>
+        <Slider
+          aria-label="Forecast overlay opacity"
+          min={0}
+          max={100}
+          value={opacity}
+          onChange={(_, value) => setOpacity(value as number)}
+        />
+        <span style={{ fontSize: 12 }}>{opacity}%</span>
+      </div>
       <ForecastTimeline
         variant="live"
         disabled={!data || loading}

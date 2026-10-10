@@ -92,7 +92,7 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
   );
   await expect(page.getByText('Route here-safe recommended')).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'Map route here-safe, High segment' }),
+    page.getByRole('button', { name: 'Map route here-safe, Low segment' }),
   ).toBeVisible();
   await testInfo.attach('live-corridor-forecast', {
     body: await page.screenshot({ fullPage: true }),
@@ -103,7 +103,7 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
     'data-value',
     'missing',
   );
-  await page.getByRole('button', { name: 'Map route here-fast, Low segment' }).press('Enter');
+  await page.getByRole('button', { name: 'Map route here-fast, High segment' }).press('Enter');
   await page.getByRole('button', { name: 'Map checkpoint 2 on route here-fast' }).press('Enter');
   await expect(page.getByText(/Route here-fast · Sample checkpoint 2/)).toBeVisible();
   await page

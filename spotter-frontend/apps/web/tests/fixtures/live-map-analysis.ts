@@ -5,7 +5,7 @@ export const liveMapAnalysis: TripAnalysis = {
   data_source: 'live',
   available_route_count: 2,
   routes: ['here-fast', 'here-safe'].map((id) => {
-    const risk = id === 'here-fast' ? 'Low' : 'High';
+    const risk = id === 'here-fast' ? 'High' : 'Low';
     return {
       id,
       name: id === 'here-fast' ? 'Fast' : 'Safe',
@@ -13,7 +13,7 @@ export const liveMapAnalysis: TripAnalysis = {
       duration_minutes: id === 'here-fast' ? 20 : 25,
       eligibility: 'eligible',
       risk_miles: { [risk]: id === 'here-fast' ? 10 : 12 },
-      average_risk: id === 'here-fast' ? 1 : 2,
+      average_risk: id === 'here-fast' ? 3 : 1,
       segments: [
         {
           id: id + '-segment',
@@ -37,7 +37,7 @@ export const liveMapAnalysis: TripAnalysis = {
           distance_from_origin_miles: 0,
           arrival_at: '2026-10-10T14:00:00Z',
           risk,
-          weather: { wind_mph: 10, rain_in_hr: 0, snow_in_hr: 0 },
+          weather: { wind_mph: 10, rain_in_hr: id === 'here-fast' ? 0.3 : 0, snow_in_hr: 0 },
           reasons: [],
         },
         {
@@ -47,7 +47,7 @@ export const liveMapAnalysis: TripAnalysis = {
           distance_from_origin_miles: id === 'here-fast' ? 10 : 12,
           arrival_at: '2026-10-10T14:25:00Z',
           risk,
-          weather: { wind_mph: 10, rain_in_hr: 0, snow_in_hr: 0 },
+          weather: { wind_mph: 10, rain_in_hr: id === 'here-fast' ? 0.3 : 0, snow_in_hr: 0 },
           reasons: [],
         },
       ],
