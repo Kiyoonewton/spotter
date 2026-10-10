@@ -18,18 +18,20 @@ export default defineConfig({
   },
 
   webServer: {
-    // CI serves prebuilt assets so cold Vite transforms cannot delay hydration.
-    command: isCI
-      ? 'yarn build && yarn preview --host 127.0.0.1 --port 5173'
-      : 'yarn dev --host 127.0.0.1',
-    timeout: 120_000,
+    command: 'yarn dev --host 127.0.0.1',
     url: 'http://127.0.0.1:5173',
     reuseExistingServer: !isCI,
   },
 
   projects: [
     {
+      name: 'startup',
+      testMatch: /readiness\.setup\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
       name: 'chromium',
+      dependencies: ['startup'],
       use: { ...devices['Desktop Chrome'] },
     },
   ],
