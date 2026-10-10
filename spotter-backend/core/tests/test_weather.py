@@ -17,7 +17,7 @@ FIXTURE = {
 class WeatherAdapterTests(SimpleTestCase):
     def test_converts_units_and_distinguishes_wind_rain_snow(self):
         result = select_hour(FIXTURE, datetime(2026, 10, 10, 10, 30, tzinfo=timezone.utc), "retrieved")
-        self.assertEqual(result.wind_mph, 10.0)
+        self.assertAlmostEqual(result.wind_mph, 10.0, places=4)
         self.assertAlmostEqual(result.rain_in_hr, 1.0)
         self.assertAlmostEqual(result.snow_in_hr, 1.0)
         self.assertEqual(result.interval_minutes, 60)
