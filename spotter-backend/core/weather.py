@@ -38,12 +38,19 @@ def _utc(value: datetime | str) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
+def _forecast_utc(value: str) -> datetime:
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
 def select_hour(payload: dict, arrival_at: datetime | str, retrieved_at: str = "") -> NormalizedWeather | None:
     try:
         hourly = payload["hourly"]
         times = hourly["time"]
         arrival = _utc(arrival_at)
-        parsed_times = [_utc(item) for item in times]
+        parsed_times = [_forecast_utc(item) for item in times]
         index = next((i for i, start in enumerate(parsed_times) if start <= arrival < start + timedelta(hours=1)), None)
         if index is None:
             return None
