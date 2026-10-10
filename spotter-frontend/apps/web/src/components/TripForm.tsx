@@ -1,15 +1,12 @@
 import { useEffect, useState, type FormEvent, type RefObject } from 'react';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
-import InputAdornment from '@mui/material/InputAdornment';
 import Button from '@mui/material/Button';
 import CalendarIcon from '@mui/icons-material/EventOutlined';
 import ScaleIcon from '@mui/icons-material/ScaleOutlined';
 import RouteIcon from '@mui/icons-material/RouteOutlined';
 import ArrowRightIcon from '@mui/icons-material/ArrowForwardRounded';
-import PlaceIcon from '@mui/icons-material/PlaceOutlined';
 import Autocomplete from '@mui/material/Autocomplete';
-import CircularProgress from '@mui/material/CircularProgress';
 import type { LocationCandidate } from '@/services/api';
 import type { AnalysisMode } from '@/hooks/useTripAnalysis';
 
@@ -57,8 +54,6 @@ export function TripForm(props: Props) {
     destinationCandidate = null,
     originOptions = [],
     destinationOptions = [],
-    originLoading = false,
-    destinationLoading = false,
     locationError = '',
     onOrigin,
     onDestination,
@@ -92,22 +87,6 @@ export function TripForm(props: Props) {
             label="Origin"
             error={Boolean(locationError)}
             helperText={locationError || undefined}
-            slotProps={{
-              input: {
-                ...params.slotProps?.input,
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <PlaceIcon sx={sx(18)} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <>
-                    {originLoading ? <CircularProgress size={18} /> : null}
-                    {params.slotProps?.input?.endAdornment}
-                  </>
-                ),
-              },
-            }}
           />
         )}
       />
@@ -132,22 +111,6 @@ export function TripForm(props: Props) {
             className="trip-field-mui"
             label="Destination"
             error={Boolean(locationError)}
-            slotProps={{
-              input: {
-                ...params.slotProps?.input,
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <PlaceIcon sx={sx(18)} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <>
-                    {destinationLoading ? <CircularProgress size={18} /> : null}
-                    {params.slotProps?.input?.endAdornment}
-                  </>
-                ),
-              },
-            }}
           />
         )}
       />

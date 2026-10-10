@@ -43,7 +43,8 @@ test("real trip journey submits through the frontend and keeps route ownership",
   expect(firstAnalysis.status()).toBe(200);
   const firstBody = await firstAnalysis.json();
   expect(firstBody.routes).toHaveLength(3);
-  await expect(page.getByText(/Route [ABC] recommended/)).toBeVisible();
+  const recommendedRoute = firstBody.recommendation.recommended_route_id;
+  await expect(page.getByText(`Route ${recommendedRoute} recommended`)).toBeVisible();
   await load.fill("42000");
   const [secondAnalysis] = await Promise.all([
     page.waitForResponse(
@@ -59,7 +60,8 @@ test("real trip journey submits through the frontend and keeps route ownership",
     firstBody.routes[0].risk_miles,
   );
   expect(secondBody.recommendation).toBeTruthy();
-  await expect(page.getByText(/Route [ABC] recommended/)).toBeVisible();
+  const secondRecommendedRoute = secondBody.recommendation.recommended_route_id;
+  await expect(page.getByText(`Route ${secondRecommendedRoute} recommended`)).toBeVisible();
   await page
     .getByRole("button", { name: /Route A/ })
     .first()
