@@ -91,8 +91,8 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
   });
   await page.goto('/');
   await page.getByRole('button', { name: 'Live' }).click();
-  const origin = page.getByRole('combobox', { name: 'Origin' });
-  const destination = page.getByRole('combobox', { name: 'Destination' });
+  const origin = page.locator('input[aria-label="Origin"]');
+  const destination = page.locator('input[aria-label="Destination"]');
   await origin.fill('New');
   await page.getByText('New York, NY').click();
   await destination.fill('Boston');
