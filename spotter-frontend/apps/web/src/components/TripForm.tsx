@@ -91,6 +91,7 @@ export function TripForm(props: Props) {
             label="Origin"
             error={Boolean(locationError)}
             helperText={locationError || undefined}
+            slotProps={{ htmlInput: { disabled: !ready } }}
           />
         )}
       />
@@ -115,6 +116,7 @@ export function TripForm(props: Props) {
             className="trip-field-mui"
             label="Destination"
             error={Boolean(locationError)}
+            slotProps={{ htmlInput: { disabled: !ready } }}
           />
         )}
       />
