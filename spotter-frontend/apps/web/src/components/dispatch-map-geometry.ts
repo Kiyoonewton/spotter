@@ -4,5 +4,4 @@ export const ROUTE_PATHS = {
   C: 'M145 214 L166 302 L216 392 L325 429 L460 445 L588 439 L709 436 L800 352',
 } as const;
 
-export const ILLUSTRATIVE_MAP_LABEL =
-  'Illustrative interactive Chicago to Pittsburgh route map';
+export const ILLUSTRATIVE_MAP_LABEL = 'Illustrative interactive Chicago to Pittsburgh route map';
