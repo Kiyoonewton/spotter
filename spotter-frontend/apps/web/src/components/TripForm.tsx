@@ -19,6 +19,7 @@ type Props = {
   origin: string;
   destination: string;
   departure: string;
+  timezone?: string;
   weight: string;
   spacing: string;
   departureRef: RefObject<HTMLInputElement | null>;
@@ -48,6 +49,7 @@ export function TripForm(props: Props) {
     origin,
     destination,
     departure,
+    timezone = 'Select timezone',
     weight,
     spacing,
     departureRef,
@@ -127,7 +129,7 @@ export function TripForm(props: Props) {
       <TextField
         disabled={!ready}
         className="trip-field-mui"
-        label="Departure · CDT"
+        label={`Departure · ${timezone}`}
         type="datetime-local"
         value={departure}
         onChange={(e) => onDeparture(e.target.value)}

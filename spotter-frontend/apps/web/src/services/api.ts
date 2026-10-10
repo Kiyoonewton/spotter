@@ -28,9 +28,14 @@ export type LocationCandidate = {
   timezone: string | null;
 };
 
-export async function searchLocations(query: string, mode: 'demo' | 'live' = 'demo') {
+export async function searchLocations(
+  query: string,
+  mode: 'demo' | 'live' = 'demo',
+  signal?: AbortSignal,
+) {
   const response = await fetch(
     `${apiUrl('/locations/')}?q=${encodeURIComponent(query)}&mode=${mode}`,
+    { signal },
   );
   const body = (await response.json().catch(() => ({}))) as {
     results?: LocationCandidate[];

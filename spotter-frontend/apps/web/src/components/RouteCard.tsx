@@ -17,7 +17,7 @@ export type RouteView = {
   minutes: number;
   severe: number;
   high: number;
-  average: number;
+  average: number | null;
   risk_miles?: Record<string, number>;
   eligibility?: string;
 };
@@ -95,8 +95,8 @@ export function RouteCard({
           <div>
             <span>Average risk</span>
             <strong>
-              {blocked || missing ? '—' : route.average.toFixed(1)}
-              <small>{!blocked && !missing ? ' / 5' : ''}</small>
+              {blocked || missing || route.average == null ? '—' : route.average.toFixed(1)}
+              <small>{!blocked && !missing && route.average != null ? ' / 5' : ''}</small>
             </strong>
           </div>
           <div>

@@ -93,7 +93,7 @@ function Index() {
       minutes: route.duration_minutes,
       severe: route.risk_miles['Severe'] ?? 0,
       high: route.risk_miles['High'] ?? 0,
-      average: route.average_risk ?? 0,
+      average: route.average_risk,
       roads: route.name,
     })) ?? [];
   const recommended =
@@ -174,6 +174,9 @@ function Index() {
           origin={origin}
           destination={destination}
           departure={departure}
+          timezone={
+            originCandidate?.timezone ?? (mode === 'demo' ? 'America/Chicago' : 'Select timezone')
+          }
           weight={weight}
           spacing={spacing}
           departureRef={departureRef}

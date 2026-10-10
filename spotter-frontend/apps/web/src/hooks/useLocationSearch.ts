@@ -8,20 +8,28 @@ export function useLocationSearch(mode: AnalysisMode, value: string, enabled = t
   const [error, setError] = useState('');
   const sequence = useRef(0);
   useEffect(() => {
+    sequence.current += 1;
+    const requestSequence = sequence.current;
+    const controller = new AbortController();
     const query = value.trim();
-    if (!enabled) return;
+    if (!enabled) {
+      setOptions([]);
+      setLoading(false);
+      setError('');
+      return () => controller.abort();
+    }
     if (query.length < 2) {
       setOptions([]);
       setLoading(false);
       setError('');
       return;
     }
-    const id = ++sequence.current;
+    const id = requestSequence;
     const timer = window.setTimeout(async () => {
       setLoading(true);
       setError('');
       try {
-        const result = await searchLocations(query, mode);
+        const result = await searchLocations(query, mode, controller.signal);
         if (id === sequence.current) setOptions(result);
       } catch (requestError) {
         if (id === sequence.current) {
@@ -36,7 +44,11 @@ export function useLocationSearch(mode: AnalysisMode, value: string, enabled = t
         if (id === sequence.current) setLoading(false);
       }
     }, 300);
-    return () => window.clearTimeout(timer);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+      sequence.current += 1;
+    };
   }, [enabled, mode, value]);
   return { options, loading, error };
 }
