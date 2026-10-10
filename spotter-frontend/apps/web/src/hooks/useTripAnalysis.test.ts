@@ -135,7 +135,7 @@ describe('useTripAnalysis', () => {
         mode: 'live',
         origin: 'New York, NY',
         destination: 'Boston, MA',
-        timezone: undefined,
+        timezone: '',
         originCandidate: {
           provider_id: 'o',
           label: 'New York, NY',
