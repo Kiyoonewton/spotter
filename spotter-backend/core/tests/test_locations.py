@@ -4,9 +4,20 @@ from unittest.mock import patch
 from io import BytesIO
 
 from core.providers import ProviderError, search_locations
+from rest_framework.test import APIClient
 
 
 class LocationSearchTests(SimpleTestCase):
+    @patch("core.views.search_locations", side_effect=ProviderError("https://provider.test?key=fake-secret internal detail"))
+    def test_api_hides_location_provider_error(self, search):
+        response = APIClient().get("/api/locations/", {"q": "Chicago", "mode": "live"})
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.data["code"], "location_search_unavailable")
+        self.assertEqual(response.data["error"], "Location search is temporarily unavailable.")
+        self.assertRegex(response.data["request_id"], r"^[0-9a-f-]{36}$")
+        self.assertNotIn("fake-secret", str(response.data))
+        self.assertNotIn("internal detail", str(response.data))
+        search.assert_called_once()
     def test_demo_search_returns_normalized_candidates(self):
         result = search_locations("chicago")
         self.assertEqual(result[0].provider_id, "demo:chicago")

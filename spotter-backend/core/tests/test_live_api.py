@@ -1,6 +1,7 @@
 from unittest.mock import patch
 from rest_framework.test import APITestCase
 from core.views import trip_analyses
+from core.providers import ProviderError
 
 
 class LiveAnalysisApiTests(APITestCase):
@@ -61,4 +62,15 @@ class LiveAnalysisApiTests(APITestCase):
         response = self.client.post("/api/trip-analyses/", payload, format="json")
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.data["code"], "live_analysis_failed")
+
+    @patch("core.views.analyze_live", side_effect=ProviderError("https://here.test?apiKey=fake-secret internal detail"))
+    def test_live_provider_error_is_not_exposed(self, analyze):
+        response = self.client.post("/api/trip-analyses/", self._payload(), format="json")
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.data["error"], "Live analysis is temporarily unavailable.")
+        self.assertEqual(response.data["code"], "live_analysis_failed")
+        self.assertRegex(response.data["request_id"], r"^[0-9a-f-]{36}$")
+        self.assertNotIn("fake-secret", str(response.data))
+        self.assertNotIn("internal detail", str(response.data))
+        analyze.assert_called_once()
 

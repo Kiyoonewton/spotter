@@ -1,5 +1,6 @@
 from uuid import uuid4
 import math
+import logging
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -10,6 +11,8 @@ from .providers import ProviderError, search_locations
 from .live_analysis import LiveAnalysisError, analyze_live
 from .routing import RoutingProviderError
 from .weather import WeatherProviderError
+
+logger = logging.getLogger(__name__)
 
 
 @api_view(["GET"])
@@ -30,7 +33,9 @@ def locations(request):
     try:
         candidates = search_locations(query, mode=mode)
     except ProviderError as error:
-        return Response({"error": str(error)}, status=503)
+        request_id = str(uuid4())
+        logger.warning("location search unavailable request_id=%s category=%s", request_id, type(error).__name__)
+        return Response({"error": "Location search is temporarily unavailable.", "code": "location_search_unavailable", "request_id": request_id}, status=503)
     return Response({"results": [candidate.__dict__ for candidate in candidates]})
 
 
@@ -78,7 +83,9 @@ def trip_analyses(request):
         try:
             return Response(analyze_live(request_data), status=200)
         except (LiveAnalysisError, ProviderError, RoutingProviderError, WeatherProviderError) as error:
-            return Response({"error": str(error), "code": "live_analysis_failed", "request_id": str(uuid4())}, status=503)
+            request_id = str(uuid4())
+            logger.warning("live analysis unavailable request_id=%s category=%s", request_id, type(error).__name__)
+            return Response({"error": "Live analysis is temporarily unavailable.", "code": "live_analysis_failed", "request_id": request_id}, status=503)
     result = analyze_trip(request_data)
     result["data_source"] = "demo"
     return Response(result, status=200)
