@@ -53,7 +53,10 @@ def _decode_flexible_polyline(encoded: str) -> list[tuple[float, float]]:
         raise RoutingProviderError("HERE returned truncated flexible polyline data.")
 
     header = varint()
-    precision, third_dim = header & 15, (header >> 7) & 7
+    version = header & 7
+    precision, third_dim = (header >> 3) & 15, (header >> 6) & 7
+    if version != 1:
+        raise RoutingProviderError("HERE returned an unsupported flexible polyline version.")
     if third_dim:
         raise RoutingProviderError("Three-dimensional HERE geometry is unsupported.")
     factor = 10 ** precision
@@ -90,8 +93,9 @@ def normalize_routes(payload: dict) -> list[NormalizedRoute]:
             if shape in seen_shapes:
                 continue
             seen_shapes.add(shape)
-            summary = route["sections"][0]["summary"]
-            distance, duration = float(summary["length"],), int(summary["duration"])
+            summaries = [section["summary"] for section in sections]
+            distance = sum(float(summary["length"]) for summary in summaries)
+            duration = sum(int(summary["duration"]) for summary in summaries)
             if distance <= 0 or duration <= 0:
                 raise ValueError
             normalized.append(NormalizedRoute(str(route["id"]), coordinates, distance, duration, sections))
