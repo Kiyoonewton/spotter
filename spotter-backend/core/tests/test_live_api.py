@@ -1,6 +1,5 @@
 from unittest.mock import patch
-from rest_framework.request import Request
-from rest_framework.test import APIRequestFactory, APITestCase
+from rest_framework.test import APITestCase
 from core.views import trip_analyses
 
 
@@ -17,9 +16,10 @@ class LiveAnalysisApiTests(APITestCase):
         return payload
 
     def _view_response(self, payload):
-        request = Request(APIRequestFactory().post("/api/trip-analyses/", data=b"{}", content_type="application/json"))
-        request._full_data = payload
-        return trip_analyses(request)
+        class ParsedRequest:
+            data = payload
+
+        return trip_analyses.cls.post(None, ParsedRequest())
 
     @patch("core.views.analyze_live", return_value={"data_source": "live", "routes": []})
     def test_live_non_demo_locations_reach_orchestration(self, analyze):
