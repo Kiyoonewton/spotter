@@ -60,6 +60,8 @@ def select_hour(payload: dict, arrival_at: datetime | str, retrieved_at: str = "
         if units and (units.get("rain") not in {"mm", "mm (millimetre)", "mm (millimeters)"} or units.get("showers") not in {"mm", "mm (millimetre)", "mm (millimeters)"} or units.get("snowfall") not in {"cm", "cm (centimeters)"} or units.get("wind_speed_10m") not in {"km/h", "km/h (kilometres per hour)"}):
             raise WeatherProviderError("Open-Meteo returned unexpected weather units.")
         wind_index = min(range(len(parsed_times)), key=lambda i: abs((parsed_times[i] - arrival).total_seconds()))
+        if abs((parsed_times[wind_index] - arrival).total_seconds()) > 3600:
+            return None
         if hourly.get("wind_speed_10m", [None] * len(times))[wind_index] is None:
             wind = None
         else:

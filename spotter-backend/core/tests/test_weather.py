@@ -39,3 +39,8 @@ class WeatherAdapterTests(SimpleTestCase):
     def test_requires_offset_aware_eta(self):
         with self.assertRaises(WeatherProviderError):
             select_hour(FIXTURE, "2026-10-10T10:00:00")
+
+    def test_missing_nearest_wind_is_not_replaced_by_distant_sample(self):
+        fixture = {"hourly": {"time": ["2026-10-10T09:00", "2026-10-10T10:00", "2026-10-10T11:00"], "wind_speed_10m": [20, None, 40], "rain": [0, 1, 1], "showers": [0, 1, 1], "snowfall": [0, 0, 0]}}
+        result = select_hour(fixture, "2026-10-10T10:05:00Z")
+        self.assertIsNone(result.wind_mph)
