@@ -1,10 +1,15 @@
-import { render, screen } from '@testing-library/react';
-import App from '../../src/App';
+import { renderToString } from 'react-dom/server';
+import { createMemoryHistory, RouterProvider } from '@tanstack/react-router';
+import { getRouter } from '../../src/router';
 
 describe('App', () => {
-  it('renders the application', () => {
-    render(<App />);
+  it('renders the dispatch workspace', async () => {
+    const router = getRouter();
+    router.update({ history: createMemoryHistory({ initialEntries: ['/'] }) });
+    await router.load();
 
-    expect(screen.getByRole('heading', { name: /spotter/i })).toBeInTheDocument();
+    const html = renderToString(<RouterProvider router={router} />);
+    expect(html).toContain('Weather-aware routing');
+    expect(html).toContain('Route B recommended');
   });
 });
