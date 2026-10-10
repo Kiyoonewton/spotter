@@ -91,6 +91,17 @@ class CorridorForecastTests(SimpleTestCase):
         self.assertNotIn("frames", response.data)
 
     @patch("core.corridor_forecast.fetch_forecasts")
+    def test_malformed_weather_is_not_cached(self, fetch):
+        invalid = payload()
+        invalid["hourly"]["wind_speed_10m"][1] = float("nan")
+        fetch.side_effect = [([invalid], "retrieved"), ([payload()], "retrieved")]
+        with self.assertRaises(WeatherProviderError):
+            corridor_forecast(request_data())
+        result = corridor_forecast(request_data())
+        self.assertEqual(len(result["frames"]), 49)
+        self.assertEqual(fetch.call_count, 2)
+
+    @patch("core.corridor_forecast.fetch_forecasts")
     def test_batches_are_bounded(self, fetch):
         fetch.side_effect = lambda points: ([payload()] * len(points), "retrieved")
         data = request_data()

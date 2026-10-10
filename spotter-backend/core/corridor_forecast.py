@@ -59,7 +59,7 @@ def validate_forecast(data):
 
 def _payloads(points, start):
     coordinates = list(dict.fromkeys((p["coordinates"]["lat"], p["coordinates"]["lon"]) for p in points))
-    results, retrieved = {}, []
+    results, retrieved, pending_cache = {}, [], []
     for offset in range(0, len(coordinates), BATCH_SIZE):
         batch = coordinates[offset:offset + BATCH_SIZE]
         digest = sha256(json.dumps(batch, separators=(",", ":")).encode()).hexdigest()
@@ -67,16 +67,16 @@ def _payloads(points, start):
         result = cache.get(key)
         if result is None:
             result = fetch_forecasts([WeatherCheckpoint(lat, lon, start) for lat, lon in batch])
-            cache.set(key, result, CACHE_SECONDS)
+            pending_cache.append((key, result))
         payloads, timestamp = result
         retrieved.append(timestamp)
         results.update(zip(batch, payloads))
-    return results, min(retrieved)
+    return results, min(retrieved), pending_cache
 
 
 def corridor_forecast(data):
     start, load, points = validate_forecast(data)
-    payloads, retrieved = _payloads(points, start)
+    payloads, retrieved, pending_cache = _payloads(points, start)
     frames = []
     for hour in range(49):
         instant = start + timedelta(hours=hour)
@@ -91,6 +91,8 @@ def corridor_forecast(data):
             risks.update({reason["condition"]: reason["severity"] for reason in reasons})
             samples.append({"id": point["id"], "route_id": point["route_id"], "weather": weather, "risk": risk, "risks": risks})
         frames.append({"hour": hour, "valid_at": instant.isoformat().replace("+00:00", "Z"), "samples": samples})
+    for key, result in pending_cache:
+        cache.set(key, result, CACHE_SECONDS)
     return {
         "data_source": "live", "provider": "open-meteo",
         "retrieved_at": retrieved, "start_at": start.isoformat().replace("+00:00", "Z"),
