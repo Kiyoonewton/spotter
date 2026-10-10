@@ -7,6 +7,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
+  failOnFlakyTests: isCI,
   reporter: isCI ? 'html' : 'list',
 
   use: {
@@ -24,7 +25,13 @@ export default defineConfig({
 
   projects: [
     {
+      name: 'startup',
+      testMatch: /readiness\.setup\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
       name: 'chromium',
+      dependencies: ['startup'],
       use: { ...devices['Desktop Chrome'] },
     },
   ],
