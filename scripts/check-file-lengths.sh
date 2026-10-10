@@ -4,7 +4,7 @@ set -euo pipefail
 status=0
 while IFS= read -r -d '' file; do
   case "$file" in
-    */node_modules/*|*/.output/*|*/.wrangler/*|*/dist/*|*/routeTree.gen.ts|*/components/ui/*|*/routes/index.tsx|*/components/dispatch-map.tsx|*.lock|*/migrations/*) continue ;;
+    */node_modules/*|*/.output/*|*/.wrangler/*|*/dist/*|*/routeTree.gen.ts|*/components/ui/*|*.lock|*/migrations/*) continue ;;
   esac
   lines=$(wc -l < "$file")
   if (( lines > 300 )); then

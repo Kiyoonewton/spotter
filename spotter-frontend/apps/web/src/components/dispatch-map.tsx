@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Minus, Plus, LocateFixed, Layers, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { checkpoints, type DemoState, type RouteId } from '@/lib/dispatch-data';
+import { ILLUSTRATIVE_MAP_LABEL, ROUTE_PATHS } from './dispatch-map-geometry';
 
 type Props = {
   selected: RouteId;
@@ -26,15 +27,10 @@ export function DispatchMap({
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
   const blocked = state === 'blocked';
   const missing = state === 'missing';
-  const paths = {
-    A: 'M145 214 L205 212 L287 202 L390 208 L490 200 L592 209 L694 236 L800 352',
-    B: 'M145 214 L194 228 L302 249 L413 295 L490 304 L575 319 L652 315 L734 293 L800 352',
-    C: 'M145 214 L166 302 L216 392 L325 429 L460 445 L588 439 L709 436 L800 352',
-  };
   return (
     <div
       className="map-canvas"
-      aria-label="Illustrative interactive Chicago to Pittsburgh route map"
+      aria-label={ILLUSTRATIVE_MAP_LABEL}
     >
       <svg
         viewBox="0 0 940 590"
@@ -199,12 +195,12 @@ export function DispatchMap({
             >
               {selected === id && (
                 <>
-                  <path d={paths[id]} fill="none" stroke="var(--foreground)" strokeWidth="13" />
-                  <path d={paths[id]} fill="none" stroke="var(--background)" strokeWidth="10" />
+                  <path d={ROUTE_PATHS[id]} fill="none" stroke="var(--foreground)" strokeWidth="13" />
+                  <path d={ROUTE_PATHS[id]} fill="none" stroke="var(--background)" strokeWidth="10" />
                 </>
               )}
               <path
-                d={paths[id]}
+                d={ROUTE_PATHS[id]}
                 fill="none"
                 stroke={blocked ? 'var(--risk-no-travel)' : 'var(--risk-low)'}
                 strokeWidth="6"
@@ -256,7 +252,7 @@ export function DispatchMap({
                   strokeWidth="6"
                 />
               )}
-              <path d={paths[id]} fill="none" stroke="transparent" strokeWidth="26" />
+              <path d={ROUTE_PATHS[id]} fill="none" stroke="transparent" strokeWidth="26" />
               <g
                 transform={`translate(${id === 'A' ? 540 : id === 'B' ? 555 : 493} ${id === 'A' ? 205 : id === 'B' ? 317 : 446})`}
               >

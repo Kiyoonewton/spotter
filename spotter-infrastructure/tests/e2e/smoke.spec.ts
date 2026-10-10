@@ -23,10 +23,17 @@ test('real trip journey submits through the frontend and keeps route ownership',
   await expect(page.getByRole('heading', { name: /weather-aware routing/i })).toBeVisible();
   const load = page.getByLabel('Load weight');
   await load.fill('30000');
+  const firstAnalysis = page.waitForResponse((response) => response.url().includes('/api/trip-analyses/') && response.request().method() === 'POST');
   await page.getByRole('button', { name: /compare routes/i }).click();
+  const firstBody = await (await firstAnalysis).json();
+  expect(firstBody.routes).toHaveLength(3);
   await expect(page.getByText(/Route [ABC] recommended/)).toBeVisible();
   await load.fill('42000');
+  const secondAnalysis = page.waitForResponse((response) => response.url().includes('/api/trip-analyses/') && response.request().method() === 'POST');
   await page.getByRole('button', { name: /compare routes/i }).click();
+  const secondBody = await (await secondAnalysis).json();
+  expect(secondBody.routes[0].risk_miles).not.toEqual(firstBody.routes[0].risk_miles);
+  expect(secondBody.recommendation).toBeTruthy();
   await expect(page.getByText(/Route [ABC] recommended/)).toBeVisible();
   await page.getByRole('button', { name: /Route A/ }).first().click();
   await expect(page.getByText(/Route A · Sample checkpoint/)).toBeVisible();
