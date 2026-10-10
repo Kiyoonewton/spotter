@@ -4,7 +4,7 @@ test.describe('UI through Nginx', () => {
   test('loads the frontend application', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { name: /spotter/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /weather-aware routing/i })).toBeVisible();
   });
 });
 
