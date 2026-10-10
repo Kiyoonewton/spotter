@@ -74,8 +74,8 @@ function Index() {
     setCheckpointIndex: setCheckpoint,
     reset,
   } = useTripAnalysis();
-  const originSearch = useLocationSearch(mode, origin);
-  const destinationSearch = useLocationSearch(mode, destination);
+  const originSearch = useLocationSearch(mode, origin, !originCandidate);
+  const destinationSearch = useLocationSearch(mode, destination, !destinationCandidate);
   useEffect(() => {
     if (!playing) return;
     const timer = setInterval(() => setForecast((value) => (value >= 48 ? 0 : value + 1)), 900);

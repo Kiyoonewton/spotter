@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { searchLocations, type LocationCandidate } from '@/services/api';
 import type { AnalysisMode } from './useTripAnalysis';
 
-export function useLocationSearch(mode: AnalysisMode, value: string) {
+export function useLocationSearch(mode: AnalysisMode, value: string, enabled = true) {
   const [options, setOptions] = useState<LocationCandidate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const sequence = useRef(0);
   useEffect(() => {
     const query = value.trim();
+    if (!enabled) return;
     if (query.length < 2) {
       setOptions([]);
       setLoading(false);
@@ -36,6 +37,6 @@ export function useLocationSearch(mode: AnalysisMode, value: string) {
       }
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [mode, value]);
+  }, [enabled, mode, value]);
   return { options, loading, error };
 }
