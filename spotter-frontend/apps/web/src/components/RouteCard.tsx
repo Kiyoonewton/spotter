@@ -7,10 +7,10 @@ import InfoIcon from '@mui/icons-material/InfoOutlined';
 import ShieldIcon from '@mui/icons-material/GppGoodOutlined';
 import WarningIcon from '@mui/icons-material/WarningAmberRounded';
 import { RiskMileageBar } from './risk-mileage-bar';
-import type { Risk, RouteId } from '@/lib/dispatch-data';
+import type { Risk } from '@/lib/dispatch-data';
 
 export type RouteView = {
-  id: RouteId;
+  id: string;
   name: string;
   roads: string;
   miles: number;
@@ -26,12 +26,12 @@ const sx = (fontSize: number) => ({ fontSize });
 type Props = {
   route: RouteView;
   rank: number;
-  selected: RouteId;
-  recommended: RouteId;
+  selected: string;
+  recommended: string;
   blocked: boolean;
   missing: boolean;
   spacing: number;
-  onSelect: (id: RouteId) => void;
+  onSelect: (id: string) => void;
 };
 export function RouteCard({
   route,

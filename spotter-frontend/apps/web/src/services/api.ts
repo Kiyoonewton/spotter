@@ -9,12 +9,15 @@ export function apiUrl(path: string): string {
 }
 
 export type TripAnalysisRequest = {
+  mode?: 'demo' | 'live';
   origin: string;
   destination: string;
   departure_at: string;
   departure_timezone: string;
   load_weight_lb: number;
   checkpoint_spacing_miles: number;
+  origin_coordinates?: { lat: number; lon: number };
+  destination_coordinates?: { lat: number; lon: number };
 };
 
 export type LocationCandidate = {
@@ -29,17 +32,23 @@ export async function searchLocations(query: string, mode: 'demo' | 'live' = 'de
   const response = await fetch(
     `${apiUrl('/locations/')}?q=${encodeURIComponent(query)}&mode=${mode}`,
   );
-  if (!response.ok) throw new Error('Location search is unavailable.');
-  const body = (await response.json()) as { results: LocationCandidate[] };
-  return body.results;
+  const body = (await response.json().catch(() => ({}))) as { results?: LocationCandidate[]; error?: string; code?: string; request_id?: string };
+  if (!response.ok) {
+    const error = new Error(body.error ?? 'Location search is temporarily unavailable.') as Error & { code?: string; requestId?: string };
+    error.code = body.code;
+    error.requestId = body.request_id;
+    throw error;
+  }
+  return body.results ?? [];
 }
 
 export type TripAnalysis = {
   analysis_id: string;
-  data_source: 'demo';
-  demo_notice: string;
+  data_source: 'demo' | 'live';
+  demo_notice?: string;
+  available_route_count?: number;
   routes: Array<{
-    id: 'A' | 'B' | 'C';
+    id: string;
     name: string;
     distance_miles: number;
     duration_minutes: number;
@@ -52,7 +61,7 @@ export type TripAnalysis = {
       distance_from_origin_miles: number;
       arrival_at: string;
       risk: string;
-      weather: { wind_mph: number | null; rain_in_hr: number | null; snow_in_hr: number | null };
+      weather: { wind_mph: number | null; rain_in_hr: number | null; snow_in_hr: number | null; forecast_valid_at?: string; interval_start?: string; interval_end?: string } | null;
       reasons: Array<{ explanation: string }>;
     }>;
   }>;
@@ -67,9 +76,10 @@ export async function createTripAnalysis(input: TripAnalysisRequest): Promise<Tr
   });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(
-      body.errors ? Object.values(body.errors).map(String).join(' ') : 'Trip analysis failed.',
-    );
+    const error = new Error(body.errors ? Object.values(body.errors).map(String).join(' ') : body.error ?? 'Trip analysis failed.') as Error & { code?: string; requestId?: string };
+    error.code = body.code;
+    error.requestId = body.request_id;
+    throw error;
   }
   return response.json() as Promise<TripAnalysis>;
 }

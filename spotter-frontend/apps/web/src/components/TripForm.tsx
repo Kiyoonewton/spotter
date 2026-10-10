@@ -8,10 +8,15 @@ import ScaleIcon from '@mui/icons-material/ScaleOutlined';
 import RouteIcon from '@mui/icons-material/RouteOutlined';
 import ArrowRightIcon from '@mui/icons-material/ArrowForwardRounded';
 import PlaceIcon from '@mui/icons-material/PlaceOutlined';
+import Autocomplete from '@mui/material/Autocomplete';
+import CircularProgress from '@mui/material/CircularProgress';
+import type { LocationCandidate } from '@/services/api';
+import type { AnalysisMode } from '@/hooks/useTripAnalysis';
 
 const sx = (fontSize: number) => ({ fontSize });
 
 type Props = {
+  mode?: AnalysisMode;
   origin: string;
   destination: string;
   departure: string;
@@ -19,12 +24,21 @@ type Props = {
   spacing: string;
   departureRef: RefObject<HTMLInputElement | null>;
   error: string;
+  originCandidate?: LocationCandidate | null;
+  destinationCandidate?: LocationCandidate | null;
+  originOptions?: LocationCandidate[];
+  destinationOptions?: LocationCandidate[];
+  originLoading?: boolean;
+  destinationLoading?: boolean;
+  locationError?: string;
   onOrigin: (value: string) => void;
   onDestination: (value: string) => void;
   onDeparture: (value: string) => void;
   onWeight: (value: string) => void;
   onSpacing: (value: string) => void;
   onSubmit: (event: FormEvent) => void;
+  onOriginCandidate?: (candidate: LocationCandidate | null) => void;
+  onDestinationCandidate?: (candidate: LocationCandidate | null) => void;
 };
 
 export function TripForm(props: Props) {
@@ -39,48 +53,51 @@ export function TripForm(props: Props) {
     spacing,
     departureRef,
     error,
+    originCandidate = null,
+    destinationCandidate = null,
+    originOptions = [],
+    destinationOptions = [],
+    originLoading = false,
+    destinationLoading = false,
+    locationError = '',
     onOrigin,
     onDestination,
     onDeparture,
     onWeight,
     onSpacing,
     onSubmit,
+    onOriginCandidate = () => undefined,
+    onDestinationCandidate = () => undefined,
   } = props;
   return (
     <form className="trip-form" onSubmit={onSubmit}>
-      <TextField
-        disabled={!ready}
-        className="trip-field-mui"
-        label="Origin"
-        value={origin}
-        onChange={(e) => onOrigin(e.target.value)}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <PlaceIcon sx={sx(18)} />
-              </InputAdornment>
-            ),
-          },
-        }}
+      <Autocomplete
+        options={originOptions}
+        value={originCandidate}
+        inputValue={origin}
+        onInputChange={(_, value) => onOrigin(value)}
+        onChange={(_, value) => { onOriginCandidate(value); onOrigin(value?.label ?? ''); }}
+        getOptionLabel={(option) => option.label}
+        isOptionEqualToValue={(option, value) => option.provider_id === value.provider_id}
+        loading={originLoading}
+        noOptionsText={origin.length < 2 ? 'Type at least 2 characters' : 'No locations found'}
+        renderInput={(params) => <TextField {...params} disabled={!ready} className="trip-field-mui" label="Origin" error={Boolean(locationError)} helperText={locationError || undefined} InputProps={{ ...params.InputProps, startAdornment: <InputAdornment position="start"><PlaceIcon sx={sx(18)} /></InputAdornment>, endAdornment: <>{originLoading ? <CircularProgress size={18} /> : null}{params.InputProps.endAdornment}</> }} />}
       />
       <ArrowRightIcon className="trip-arrow" sx={sx(18)} />
-      <TextField
-        disabled={!ready}
-        className="trip-field-mui"
-        label="Destination"
-        value={destination}
-        onChange={(e) => onDestination(e.target.value)}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <PlaceIcon sx={sx(18)} />
-              </InputAdornment>
-            ),
-          },
-        }}
+      <Autocomplete
+        options={destinationOptions}
+        value={destinationCandidate}
+        inputValue={destination}
+        onInputChange={(_, value) => onDestination(value)}
+        onChange={(_, value) => { onDestinationCandidate(value); onDestination(value?.label ?? ''); }}
+        getOptionLabel={(option) => option.label}
+        isOptionEqualToValue={(option, value) => option.provider_id === value.provider_id}
+        loading={destinationLoading}
+        noOptionsText={destination.length < 2 ? 'Type at least 2 characters' : 'No locations found'}
+        renderInput={(params) => <TextField {...params} disabled={!ready} className="trip-field-mui" label="Destination" error={Boolean(locationError)} InputProps={{ ...params.InputProps, startAdornment: <InputAdornment position="start"><PlaceIcon sx={sx(18)} /></InputAdornment>, endAdornment: <>{destinationLoading ? <CircularProgress size={18} /> : null}{params.InputProps.endAdornment}</> }} />}
       />
+      {/* The mode label keeps the selected provider context visible to keyboard and screen-reader users. */}
+      <span className="sr-only">{props.mode === 'live' ? 'Live provider locations' : 'Demo locations'}</span>
       <TextField
         disabled={!ready}
         className="trip-field-mui"

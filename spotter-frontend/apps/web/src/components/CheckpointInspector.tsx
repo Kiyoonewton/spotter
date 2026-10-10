@@ -8,7 +8,7 @@ import RainIcon from '@mui/icons-material/WaterDropOutlined';
 import SnowIcon from '@mui/icons-material/AcUnitRounded';
 import WarningIcon from '@mui/icons-material/WarningAmberRounded';
 import WindIcon from '@mui/icons-material/AirRounded';
-import type { Risk, RouteId } from '@/lib/dispatch-data';
+import type { Risk } from '@/lib/dispatch-data';
 
 export type InspectorCheckpoint = {
   city: string;
@@ -23,7 +23,7 @@ export type InspectorCheckpoint = {
 };
 type Props = {
   checkpoint: InspectorCheckpoint;
-  route: RouteId;
+  route: string;
   index: number;
   total: number;
   departure: string;
