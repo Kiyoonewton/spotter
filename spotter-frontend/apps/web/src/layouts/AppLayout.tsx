@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { Outlet } from '@tanstack/react-router';
 import './AppLayout.css';
 
 const navItems = [
@@ -14,14 +14,9 @@ function AppLayout() {
           <span className="app-header__brand">Spotter</span>
           <nav className="app-nav">
             {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) => 'app-nav__link' + (isActive ? ' is-active' : '')}
-              >
+              <a key={item.to} href={item.to} className="app-nav__link">
                 {item.label}
-              </NavLink>
+              </a>
             ))}
           </nav>
         </div>
