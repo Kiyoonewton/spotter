@@ -57,6 +57,11 @@ jobs:
         working-directory: spotter-infrastructure
         run: docker compose -f docker-compose.prod.yml build webserver spotter-frontend
 
+      - name: Validate built Nginx configurations
+        run: |
+          docker run --rm --add-host spotter-backend:127.0.0.1 --add-host spotter-frontend:127.0.0.1 spotter-webserver:development nginx -t
+          docker run --rm --add-host spotter-backend:127.0.0.1 --add-host spotter-frontend:127.0.0.1 spotter-webserver:prod nginx -t
+
       - name: Start built production stack
         working-directory: spotter-infrastructure
         run: docker compose -f docker-compose.prod.yml up -d --build --wait
