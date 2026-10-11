@@ -10,8 +10,29 @@ services:
     ports:
       - "80:80"
     depends_on:
+      spotter-frontend:
+        condition: service_healthy
       spotter-backend:
         condition: service_healthy
+    restart: unless-stopped
+
+  spotter-frontend:
+    build:
+      context: ..
+      dockerfile: ./spotter-infrastructure/webserver/Dockerfile.prod
+      target: frontend-runtime
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+    image: spotter-frontend:development
+    environment:
+      HOST: 0.0.0.0
+      PORT: "3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     restart: unless-stopped
 
   spotter-backend:
