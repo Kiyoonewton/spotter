@@ -5,7 +5,7 @@ from hashlib import sha256
 import json
 import math
 
-from django.core.cache import cache
+from .forecast_cache import read_forecast, write_forecast
 from .analysis import Weather, classify_weather
 from .weather import WeatherCheckpoint, fetch_forecasts, select_hour
 
@@ -64,7 +64,7 @@ def _payloads(points, start):
         batch = coordinates[offset:offset + BATCH_SIZE]
         digest = sha256(json.dumps(batch, separators=(",", ":")).encode()).hexdigest()
         key = "corridor-hourly-v1:" + digest
-        result = cache.get(key)
+        result = read_forecast(key)
         if result is None:
             result = fetch_forecasts([WeatherCheckpoint(lat, lon, start) for lat, lon in batch])
             pending_cache.append((key, result))
@@ -92,7 +92,7 @@ def corridor_forecast(data):
             samples.append({"id": point["id"], "route_id": point["route_id"], "weather": weather, "risk": risk, "risks": risks})
         frames.append({"hour": hour, "valid_at": instant.isoformat().replace("+00:00", "Z"), "samples": samples})
     for key, result in pending_cache:
-        cache.set(key, result, CACHE_SECONDS)
+        write_forecast(key, result, CACHE_SECONDS)
     return {
         "data_source": "live", "provider": "open-meteo",
         "retrieved_at": retrieved, "start_at": start.isoformat().replace("+00:00", "Z"),

@@ -83,3 +83,16 @@ CORS_ALLOWED_ORIGINS = [
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
 }
+
+# Redis shares validated hourly payloads across Gunicorn workers. Local/test
+# installations without REDIS_URL retain the bounded in-process cache.
+REDIS_URL = os.environ.get("REDIS_URL", "").strip()
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache" if REDIS_URL else "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": REDIS_URL or "spotter-forecast",
+        "KEY_PREFIX": "spotter",
+        "TIMEOUT": 300,
+        **({"OPTIONS": {"socket_connect_timeout": 1, "socket_timeout": 1}} if REDIS_URL else {}),
+    }
+}
