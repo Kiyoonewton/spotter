@@ -52,7 +52,13 @@ export function RouteCard({
         aria-pressed={selected === route.id}
       >
         <div className="route-card-top">
-          <span className="route-id">{route.id}</span>
+          <span
+            className="route-id"
+            title={route.id}
+            style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          >
+            {route.id}
+          </span>
           <div className="route-name">
             <strong>Route {route.id}</strong>
             <span>{route.name}</span>

@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { corridorFixture } from '../fixtures/corridor-forecast';
+import type { ForecastPoint } from '../../src/services/corridor-forecast';
 import { liveMapAnalysis } from '../fixtures/live-map-analysis';
 
 test('loads the dispatch workspace before an analysis is submitted', async ({ page }) => {
@@ -12,7 +14,7 @@ test('loads the dispatch workspace before an analysis is submitted', async ({ pa
 
 test('mocked live contract journey sends coordinates and hides illustrative map', async ({
   page,
-}) => {
+}, testInfo) => {
   await page.route(/\/api\/locations\/?\?/, async (route) => {
     const query = new URL(route.request().url()).searchParams.get('q') ?? '';
     const candidate = query.toLowerCase().startsWith('new')
@@ -38,6 +40,11 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
       body: '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"/>',
     }),
   );
+  await page.route('**/api/corridor-forecasts/', async (route) => {
+    const body = route.request().postDataJSON() as { points: ForecastPoint[]; start_at: string };
+    expect(body.start_at).toBe('2026-10-10T14:00:00.000Z');
+    await route.fulfill({ json: corridorFixture(body.points, body.start_at) });
+  });
   let requestBody: Record<string, unknown> | undefined;
   await page.route('**/api/trip-analyses/', async (route) => {
     requestBody = JSON.parse(route.request().postData() ?? '{}');
@@ -66,7 +73,37 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
   expect(requestBody?.departure_at).toBe('2026-10-10T14:00:00.000Z');
   await expect(page.getByText('Route here-safe recommended')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Geographic route map' })).toBeVisible();
-  await page.getByRole('button', { name: 'Map route here-fast, Low segment' }).press('Enter');
+  const forecastHour = page.getByRole('slider', {
+    name: 'Corridor forecast hours after departure',
+  });
+  await expect(forecastHour).toBeEnabled();
+  await expect(page.getByTestId('forecast-here-safe-here-safe-start')).toHaveAttribute(
+    'data-value',
+    '10',
+  );
+  await forecastHour.press('ArrowRight');
+  await expect(page.getByTestId('forecast-here-safe-here-safe-start')).toHaveAttribute(
+    'data-hour',
+    '1',
+  );
+  await expect(page.getByTestId('forecast-here-safe-here-safe-start')).toHaveAttribute(
+    'data-value',
+    '60',
+  );
+  await expect(page.getByText('Route here-safe recommended')).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Map route here-safe, Low segment' }),
+  ).toBeVisible();
+  await testInfo.attach('live-corridor-forecast', {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: 'image/png',
+  });
+  await page.getByRole('button', { name: 'Snow · in/hr', exact: true }).click();
+  await expect(page.getByTestId('forecast-here-safe-here-safe-start')).toHaveAttribute(
+    'data-value',
+    'missing',
+  );
+  await page.getByRole('button', { name: 'Map route here-fast, High segment' }).press('Enter');
   await page.getByRole('button', { name: 'Map checkpoint 2 on route here-fast' }).press('Enter');
   await expect(page.getByText(/Route here-fast · Sample checkpoint 2/)).toBeVisible();
   await page

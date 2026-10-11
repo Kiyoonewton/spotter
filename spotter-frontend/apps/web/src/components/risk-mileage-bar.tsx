@@ -19,9 +19,9 @@ export function RiskMileageBar({ miles, route, riskMiles }: Props) {
         preserveAspectRatio="none"
         className="risk-mileage-bar"
         role="img"
-        aria-label={`Route ${route} illustrative mileage: ${portions.map((p) => `${p.miles} ${p.risk} miles`).join(', ')}`}
+        aria-label={`Route ${route} risk mileage: ${portions.map((p) => `${p.miles} ${p.risk} miles`).join(', ')}`}
       >
-        <title>Illustrative weather exposure by mileage</title>
+        <title>Returned weather exposure by mileage</title>
         {portions.map((p) => {
           const x = start;
           const width = (p.miles / miles) * 1000;
@@ -40,7 +40,7 @@ export function RiskMileageBar({ miles, route, riskMiles }: Props) {
       </svg>
       <div className="mileage-caption">
         <span>Weather exposure</span>
-        <span>{`${miles.toLocaleString()} mi · illustrative geography`}</span>
+        <span>{`${miles.toLocaleString()} mi route distance`}</span>
       </div>
     </div>
   );

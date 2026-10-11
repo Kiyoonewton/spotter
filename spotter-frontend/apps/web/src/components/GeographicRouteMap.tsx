@@ -4,6 +4,8 @@ import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import { MapControls } from './MapControls';
+import { CorridorForecastOverlay } from './CorridorForecastOverlay';
+import type { ForecastFrame, ForecastVariable } from '@/services/corridor-forecast';
 import {
   fitRoutes,
   MAP_HEIGHT,
@@ -19,6 +21,9 @@ import {
 type Props = {
   routes: readonly MapRoute[];
   selected: string;
+  forecastFrame?: ForecastFrame;
+  forecastVariable?: ForecastVariable;
+  forecastOpacity?: number;
   checkpoint: number;
   onRoute: (id: string) => void;
   onCheckpoint: (index: number) => void;
@@ -77,6 +82,16 @@ export function GeographicRouteMap(props: Props) {
               aria-hidden="true"
             />
           ))}
+          {props.forecastFrame && (
+            <CorridorForecastOverlay
+              routes={props.routes}
+              selected={props.selected}
+              frame={props.forecastFrame}
+              variable={props.forecastVariable ?? 'wind'}
+              opacity={props.forecastOpacity ?? 45}
+              project={view.point}
+            />
+          )}
           {displayRoutes.map((route) =>
             ownedSegments(route).map((segment) => {
               const points = segment.coordinates
@@ -177,8 +192,8 @@ export function GeographicRouteMap(props: Props) {
       </div>
       <div style={{ padding: '8px 16px', fontSize: 12 }}>
         © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>
-        {' · '}Risk colours use checkpoint arrival forecasts. Corridor forecast playback is not
-        available yet.
+        {' · '}Route lines use checkpoint arrival-time risk. Forecast samples are shown separately
+        when available.
       </div>
     </section>
   );

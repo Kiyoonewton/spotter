@@ -266,6 +266,9 @@ function Index() {
               state={state}
               dataSource={analysis.data_source}
               analysis={analysis}
+              startAt={applied.resolvedDepartureAt}
+              timezone={applied.timezone}
+              loadWeight={applied.weight}
               onDrawer={() => setDrawer(!drawer)}
               onTab={(tab) => {
                 setActiveTab(tab);

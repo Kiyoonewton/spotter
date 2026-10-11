@@ -44,3 +44,12 @@ class WeatherAdapterTests(SimpleTestCase):
         fixture = {"hourly": {"time": ["2026-10-10T09:00", "2026-10-10T10:00", "2026-10-10T11:00"], "wind_speed_10m": [20, None, 40], "rain": [0, 1, 1], "showers": [0, 1, 1], "snowfall": [0, 0, 0]}}
         result = select_hour(fixture, "2026-10-10T10:05:00Z")
         self.assertIsNone(result.wind_mph)
+
+    def test_gap_in_hourly_coverage_is_not_extrapolated(self):
+        fixture = {"hourly": {"time": ["2026-10-10T10:00", "2026-10-10T13:00"]}}
+        self.assertIsNone(select_hour(fixture, "2026-10-10T11:00:00Z"))
+
+    def test_non_finite_measurement_is_malformed_not_zero(self):
+        fixture = {"hourly": {"time": FIXTURE["hourly"]["time"], "wind_speed_10m": [float("nan"), 1, 1]}}
+        with self.assertRaises(WeatherProviderError):
+            select_hour(fixture, "2026-10-10T10:00:00Z")

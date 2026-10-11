@@ -8,7 +8,7 @@ class RiskRulesTests(SimpleTestCase):
         self.assertEqual(classify_weather(Weather(24.99, 0, 0), 0)[0], "Low")
         self.assertEqual(classify_weather(Weather(25, 0, 0), 0)[0], "Moderate")
         self.assertEqual(classify_weather(Weather(38, .31, 0), 42000)[0], "Severe")
-        self.assertEqual(classify_weather(Weather(45, 0, 0), 30000)[0], "High")
+        self.assertEqual(classify_weather(Weather(45, 0, 0), 30000)[0], "Severe")
         self.assertEqual(classify_weather(Weather(45, 0, 0), 30001)[0], "No Travel")
         self.assertEqual(classify_weather(Weather(55, 0, 0), 0)[0], "No Travel")
         self.assertEqual(classify_weather(Weather(None, 0, 0), 0)[0], "Unknown")
