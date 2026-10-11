@@ -17,6 +17,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Test deployment gate and rollout behavior
+        run: |
+          node --test scripts/deployment-gate.test.cjs
+          python -m unittest discover -s spotter-infrastructure/tests/deployment -v
+          bash -n spotter-infrastructure/scripts/deploy-development.sh
+          bash -n spotter-infrastructure/scripts/sync-development.sh
+
       - name: Create placeholder .env files
         run: |
           touch spotter-backend/.env
@@ -95,3 +102,25 @@ jobs:
         if: always()
         working-directory: spotter-infrastructure
         run: docker compose -f docker-compose.prod.yml down --volumes
+
+      - name: Exercise complete development rollout twice
+        run: |
+          bash spotter-infrastructure/scripts/deploy-development.sh "$GITHUB_WORKSPACE"
+          bash spotter-infrastructure/scripts/deploy-development.sh "$GITHUB_WORKSPACE"
+
+      - name: Verify database backup restores to a disposable database
+        working-directory: spotter-infrastructure
+        run: |
+          backup=$(ls -t ../backups/development-*.sql | head -1)
+          test "$(stat -c '%a' "$backup")" = 600
+          docker compose --env-file .env.development -f docker-compose.development.yml exec -T postgres \
+            sh -ec 'createdb -U "$POSTGRES_USER" spotter_ci_restore'
+          docker compose --env-file .env.development -f docker-compose.development.yml exec -T postgres \
+            sh -ec 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d spotter_ci_restore' < "$backup" >/dev/null
+          docker compose --env-file .env.development -f docker-compose.development.yml exec -T postgres \
+            sh -ec 'test "$(psql -tAc "SELECT count(*) FROM django_migrations" -U "$POSTGRES_USER" -d spotter_ci_restore)" -gt 0; dropdb -U "$POSTGRES_USER" spotter_ci_restore'
+
+      - name: Stop development test stack
+        if: always()
+        working-directory: spotter-infrastructure
+        run: docker compose --env-file .env.development -f docker-compose.development.yml down --volumes

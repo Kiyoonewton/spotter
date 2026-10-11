@@ -1,0 +1,4 @@
+# Server database dumps must never be committed.
+/backups/
+# Generated Docker build-context allowlist.
+/.dockerignore
