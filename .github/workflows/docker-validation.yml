@@ -64,7 +64,7 @@ jobs:
 
       - name: Start built production stack
         working-directory: spotter-infrastructure
-        run: docker compose -f docker-compose.prod.yml up -d --build --wait
+        run: docker compose -f docker-compose.prod.yml up -d --build --wait --wait-timeout 120
 
       - uses: actions/setup-node@v4
         with:

@@ -14,6 +14,12 @@ services:
         condition: service_healthy
       spotter-backend:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ && wget -q -O /dev/null http://127.0.0.1/api/health"]
+      interval: 5s
+      timeout: 10s
+      retries: 12
+      start_period: 10s
     restart: unless-stopped
 
   spotter-frontend:
