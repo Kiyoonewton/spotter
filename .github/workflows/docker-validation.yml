@@ -51,8 +51,47 @@ jobs:
 
       - name: Build Development webserver image
         working-directory: spotter-infrastructure
-        run: docker compose -f docker-compose.development.yml --env-file .env.development build webserver
+        run: docker compose -f docker-compose.development.yml --env-file .env.development build webserver spotter-frontend
 
       - name: Build Production webserver image
         working-directory: spotter-infrastructure
-        run: docker compose -f docker-compose.prod.yml build webserver
+        run: docker compose -f docker-compose.prod.yml build webserver spotter-frontend
+
+      - name: Validate built Nginx configurations
+        run: |
+          docker run --rm --add-host spotter-backend:127.0.0.1 --add-host spotter-frontend:127.0.0.1 spotter-webserver:development nginx -t
+          docker run --rm --add-host spotter-backend:127.0.0.1 --add-host spotter-frontend:127.0.0.1 spotter-webserver:prod nginx -t
+
+      - name: Start built production stack
+        working-directory: spotter-infrastructure
+        run: docker compose -f docker-compose.prod.yml up -d --build --wait --wait-timeout 120
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: spotter-infrastructure/yarn.lock
+
+      - name: Install production browser checks
+        working-directory: spotter-infrastructure
+        run: |
+          yarn install --frozen-lockfile
+          yarn playwright install --with-deps chromium
+
+      - name: Verify built application through Nginx
+        working-directory: spotter-infrastructure
+        env:
+          E2E_BASE_URL: http://127.0.0.1
+          E2E_BUILT_FRONTEND: 'true'
+          CI: 'true'
+        run: yarn test:e2e --retries=0
+
+      - name: Production logs on failure
+        if: failure()
+        working-directory: spotter-infrastructure
+        run: docker compose -f docker-compose.prod.yml logs --tail=100
+
+      - name: Stop production test stack
+        if: always()
+        working-directory: spotter-infrastructure
+        run: docker compose -f docker-compose.prod.yml down --volumes
