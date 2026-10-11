@@ -36,8 +36,12 @@ approval; configure those in GitHub as appropriate.
 ## Rollout behavior
 
 Pushes to develop retain automatic deployment; workflow_dispatch is also
-available on develop. The gate waits for all nine required checks on the exact
+available on develop. The gate waits for all eight required checks on the exact
 commit, including both CodeQL analyses, Docker runtime tests and browser tests.
+The PR-only CodeQL aggregate is checked when present but is not required on
+branch pushes. The gate also reads published CodeQL analyses for both languages
+at the exact SHA/ref and requires zero open CodeQL alerts on develop. Failed API
+access or stale/missing security results cannot authorize deployment.
 It refuses failed/missing/neutral checks and rejects a stale rollout if develop
 advanced while waiting for environment approval. In-progress rollouts are not
 cancelled by later pushes, so migrations are not interrupted.
