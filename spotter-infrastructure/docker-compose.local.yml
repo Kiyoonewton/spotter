@@ -82,6 +82,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
     container_name: spotter-redis
     volumes:
       - spotter_redis_data:/data

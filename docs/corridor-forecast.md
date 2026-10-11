@@ -8,7 +8,7 @@ Coordinates are deduplicated across routes, while point ownership is preserved.
 Provider batches contain at most 50 coordinates. Raw hourly responses are cached
 for five minutes through Django's cache backend; risk is recomputed for the
 requested load. The default cache is process-local, not a claim of Redis deployment.
-A shared Django cache backend is suitable for a future multi-worker deployment.
+Setting REDIS_URL selects the shared Redis backend; leaving it unset uses local memory.
 
 Open-Meteo wind is instantaneous and uses the nearest scheduled sample, earlier
 on ties. Missing nearest wind stays missing. Rain is rain + showers only when
@@ -33,3 +33,32 @@ Forecast start/load are the successfully applied trip values, not unsubmitted ed
 Open-Meteo reference: https://open-meteo.com/en/docs
 The public endpoint's usage terms should be reviewed for production deployment.
 Live end-to-end HERE verification still requires configured routing credentials.
+
+## Shared cache and readiness
+
+Set server-only `REDIS_URL=redis://redis:6379/0` to share the five-minute
+validated provider payload cache across Django workers. Without it, local
+memory remains available for standalone development. Redis is already present
+in the local Compose stack; do not publish its port on the deployment server.
+Configure eviction (for example `maxmemory 128mb` and `allkeys-lru`) so cache
+storage remains bounded. This cache is disposable, not a source of truth.
+
+Redis socket/connect timeouts are one second. A cache connection outage logs
+only operation and exception category, then fetches fresh provider data.
+Provider failures retain the existing safe 503 response, with no demo fallback.
+Malformed provider payloads are not cached. Load-dependent classification is
+recomputed, rather than reusing another truck's recommendation.
+
+`GET /api/health` is process liveness. `GET /api/ready` checks database access
+and cache write/read/delete, returning dependency states and a request ID.
+It returns 503 when either dependency is unavailable, with no connection
+strings, exception messages or credentials in responses/logs. Readiness failure
+must not trigger automatic container restarts during a Redis outage, because
+fresh forecast requests can still succeed.
+
+CI starts real Redis and verifies that a separate Python process reads the
+same cache entry and that its expiry is bounded. Unit tests verify outage
+behavior and safe readiness failures. This does not establish server deployment
+or full live HERE verification. Production frontend serving and HTTPS remain
+separate deployment work; the current static production image has not been
+verified as a complete TanStack Start runtime.
