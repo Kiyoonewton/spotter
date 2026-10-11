@@ -57,3 +57,23 @@ jobs:
       - run: yarn typecheck
       - run: yarn test
       - run: yarn build
+
+  deployment-security-contract:
+    name: Deployment security contract
+    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'develop'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      checks: read
+      security-events: read
+    steps:
+      - uses: actions/checkout@v4
+      - run: node --test scripts/deployment-gate.test.cjs
+      - name: Verify gate against actual merged develop security results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { waitForChecks } = require('./scripts/deployment-gate.cjs');
+            const target = { repo: context.repo, sha: context.payload.pull_request.base.sha, ref: 'refs/heads/develop' };
+            await waitForChecks({ github, core, context: target });

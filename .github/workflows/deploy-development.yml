@@ -20,6 +20,10 @@ jobs:
     if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    permissions:
+      contents: read
+      checks: read
+      security-events: read
     steps:
       - uses: actions/checkout@v4
       - name: Require successful CI for this exact commit
