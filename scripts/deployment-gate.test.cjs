@@ -9,6 +9,8 @@ function fakeGithub(checks = green(), security = analyses(), alerts = []) {
   return {
     rest: { checks: { listForRef: 'checks-endpoint' } },
     paginate: async (endpoint, options) => {
+      assert.equal(options.owner, context.repo.owner);
+      assert.equal(options.repo, context.repo.repo);
       if (endpoint === 'checks-endpoint') {
         assert.equal(options.ref, context.sha);
         return checks;

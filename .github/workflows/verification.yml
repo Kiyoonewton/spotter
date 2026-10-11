@@ -75,5 +75,5 @@ jobs:
         with:
           script: |
             const { waitForChecks } = require('./scripts/deployment-gate.cjs');
-            const target = { ...context, sha: context.payload.pull_request.base.sha, ref: 'refs/heads/develop' };
+            const target = { repo: context.repo, sha: context.payload.pull_request.base.sha, ref: 'refs/heads/develop' };
             await waitForChecks({ github, core, context: target });

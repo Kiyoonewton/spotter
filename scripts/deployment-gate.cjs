@@ -35,6 +35,7 @@ async function waitForChecks({ github, core, context, maxAttempts = 120,
   sleep = () => new Promise(resolve => setTimeout(resolve, 10000)) }) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     let result;
+    let operation = 'CI checks';
     try {
       const checks = await github.paginate(github.rest.checks.listForRef, {
         ...context.repo, ref: context.sha, per_page: 100, filter: 'latest',
@@ -42,12 +43,14 @@ async function waitForChecks({ github, core, context, maxAttempts = 120,
       result = evaluateChecks(checks);
       if (result.state === 'ready') {
         const options = { ...context.repo, ref: context.ref, tool_name: 'CodeQL', per_page: 100 };
+        operation = 'CodeQL analyses';
         const analyses = await github.paginate('GET /repos/{owner}/{repo}/code-scanning/analyses', options);
+        operation = 'CodeQL alerts';
         const alerts = await github.paginate('GET /repos/{owner}/{repo}/code-scanning/alerts', { ...options, state: 'open' });
         result = evaluateSecurity(analyses, alerts, context);
       }
     } catch (error) {
-      core.setFailed(`Unable to verify deployment checks/security (HTTP ${Number.isInteger(error.status) ? error.status : 'unknown'})`);
+      core.setFailed(`Unable to verify ${operation} (HTTP ${Number.isInteger(error.status) ? error.status : 'unknown'})`);
       return;
     }
     if (result.state === 'failed') {
