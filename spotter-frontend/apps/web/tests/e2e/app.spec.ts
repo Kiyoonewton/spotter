@@ -71,7 +71,7 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
   expect(requestBody?.origin_coordinates).toEqual({ lat: 40.7, lon: -74 });
   expect(requestBody?.destination_coordinates).toEqual({ lat: 42.3, lon: -71.1 });
   expect(requestBody?.departure_at).toBe('2026-10-10T14:00:00.000Z');
-  await expect(page.getByText('Route here-safe recommended')).toBeVisible();
+  await expect(page.getByText('Route 2 recommended')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Geographic route map' })).toBeVisible();
   const forecastHour = page.getByRole('slider', {
     name: 'Corridor forecast hours after departure',
@@ -90,7 +90,7 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
     'data-value',
     '60',
   );
-  await expect(page.getByText('Route here-safe recommended')).toBeVisible();
+  await expect(page.getByText('Route 2 recommended')).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Map route here-safe, Low segment' }),
   ).toBeVisible();
@@ -105,17 +105,17 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
   );
   await page.getByRole('button', { name: 'Map route here-fast, High segment' }).press('Enter');
   await page.getByRole('button', { name: 'Map checkpoint 2 on route here-fast' }).press('Enter');
-  await expect(page.getByText(/Route here-fast · Sample checkpoint 2/)).toBeVisible();
+  await expect(page.getByText(/Route 1 · Sample checkpoint 2/)).toBeVisible();
   await page
-    .getByRole('button', { name: /Route here-safe/ })
+    .getByRole('button', { name: /Route 2/ })
     .first()
     .click();
-  await expect(page.getByText(/Route here-safe · Sample checkpoint 1/)).toBeVisible();
+  await expect(page.getByText(/Route 2 · Sample checkpoint 1/)).toBeVisible();
   await page
-    .getByRole('button', { name: /Route here-fast/ })
+    .getByRole('button', { name: /Route 1/ })
     .first()
     .click();
-  await expect(page.getByText(/Route here-fast · Sample checkpoint/)).toBeVisible();
+  await expect(page.getByText(/Route 1 · Sample checkpoint/)).toBeVisible();
   await origin.fill('New Y');
   await expect(page.getByRole('button', { name: /Compare routes/i })).toBeDisabled();
   await expect(page.locator('svg.route-map')).toHaveCount(0);

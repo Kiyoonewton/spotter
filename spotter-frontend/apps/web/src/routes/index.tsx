@@ -1,3 +1,5 @@
+import { DispatchIntro } from '@/components/DispatchIntro';
+import { presentExplanation, presentRoutes } from '@/lib/result-presentation';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
 import Chip from '@mui/material/Chip';
@@ -87,16 +89,7 @@ function Index() {
     const timer = setInterval(() => setProgress((value) => (value >= 92 ? 38 : value + 7)), 650);
     return () => clearInterval(timer);
   }, [pending]);
-  const routes =
-    analysis?.routes.map((route) => ({
-      ...route,
-      miles: route.distance_miles,
-      minutes: route.duration_minutes,
-      severe: route.risk_miles['Severe'] ?? 0,
-      high: route.risk_miles['High'] ?? 0,
-      average: route.average_risk,
-      roads: route.name,
-    })) ?? [];
+  const routes = presentRoutes(analysis);
   const rankedRoutes = rankRoutes(routes);
   const selectedRoute = routes.find((route) => route.id === selected) ?? routes[0];
   const apiCheckpoint = selectedRoute?.checkpoints[checkpoint];
@@ -148,8 +141,9 @@ function Index() {
   return (
     <div className={`dispatch-app ${state === 'mobile' ? 'mobile-preview' : ''}`}>
       <WorkspaceHeader />
-      <main>
-        <div className="page-heading">
+      <main className={!analysis ? 'has-intro' : undefined}>
+        {!analysis && <DispatchIntro />}
+        <div className="page-heading" id="trip-planning">
           <div>
             <div className="eyebrow">DISPATCH PLANNING</div>
             <h1>Weather-aware routing</h1>
@@ -242,7 +236,11 @@ function Index() {
                       : 'incomplete'
               }
               recommendedRouteId={analysis.recommendation.recommended_route_id}
-              explanation={analysis.recommendation.explanation}
+              recommendedRouteLabel={
+                routes.find((route) => route.id === analysis.recommendation.recommended_route_id)
+                  ?.displayId
+              }
+              explanation={presentExplanation(analysis)}
               onChangeDeparture={() => departureRef.current?.focus()}
             />
             <ResultsWorkspace

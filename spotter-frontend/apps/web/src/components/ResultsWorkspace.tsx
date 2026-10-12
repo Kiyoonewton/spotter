@@ -47,7 +47,7 @@ type Props = {
 export function ResultsWorkspace(props: Props) {
   return (
     <div className="workspace-grid">
-      <aside className={`route-panel ${props.drawer ? 'drawer-open' : ''}`}>
+      <aside className={`route-panel panel-tab-${props.tab} ${props.drawer ? 'drawer-open' : ''}`}>
         <IconButton
           className="drawer-handle"
           aria-label={props.drawer ? 'Collapse route drawer' : 'Expand route drawer'}
@@ -66,6 +66,17 @@ export function ResultsWorkspace(props: Props) {
           <ToggleButton value="routes">Routes</ToggleButton>
           <ToggleButton value="checkpoint">Checkpoint {props.checkpoint + 1}</ToggleButton>
         </ToggleButtonGroup>
+        <CheckpointInspector
+          checkpoint={props.inspectorCheckpoint}
+          route={
+            props.routes.find((route) => route.id === props.selected)?.displayId ?? props.selected
+          }
+          index={props.checkpoint}
+          total={props.checkpointTotal}
+          departure={props.departure}
+          onPrevious={() => props.onCheckpoint(props.checkpoint - 1)}
+          onNext={() => props.onCheckpoint(props.checkpoint + 1)}
+        />
         <RouteComparison
           routes={props.routes}
           selected={props.selected}
@@ -76,15 +87,6 @@ export function ResultsWorkspace(props: Props) {
           progress={props.progress}
           spacing={props.spacing}
           onSelect={props.onRoute}
-        />
-        <CheckpointInspector
-          checkpoint={props.inspectorCheckpoint}
-          route={props.selected}
-          index={props.checkpoint}
-          total={props.checkpointTotal}
-          departure={props.departure}
-          onPrevious={() => props.onCheckpoint(props.checkpoint - 1)}
-          onNext={() => props.onCheckpoint(props.checkpoint + 1)}
         />
       </aside>
       {props.dataSource === 'live' &&

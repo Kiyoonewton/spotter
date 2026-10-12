@@ -10,7 +10,7 @@ describe('CheckpointInspector', () => {
           city: 'Test',
           miles: 25,
           minutes: 0,
-          wind: 22,
+          wind: 22.123456,
           rain: null,
           snow: 0.2,
           risk: 'Unknown',
@@ -25,7 +25,7 @@ describe('CheckpointInspector', () => {
         onNext={() => undefined}
       />,
     );
-    expect(screen.getByText('22')).toBeInTheDocument();
+    expect(screen.getByText('22.1')).toBeInTheDocument();
     expect(screen.getByText('0.20')).toBeInTheDocument();
     expect(screen.getByText(/UTC|GMT/)).toBeInTheDocument();
     expect(screen.getByText(/Known measurements are shown/)).toBeInTheDocument();

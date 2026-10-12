@@ -8,6 +8,7 @@ import WarningIcon from '@mui/icons-material/WarningAmberRounded';
 type Props = {
   status: 'loading' | 'recommended' | 'blocked' | 'incomplete' | 'error';
   recommendedRouteId: string | null;
+  recommendedRouteLabel?: string | undefined;
   explanation: string;
   onChangeDeparture: () => void;
 };
@@ -17,6 +18,7 @@ const sx = (fontSize: number) => ({ fontSize });
 export function RecommendationBanner({
   status,
   recommendedRouteId,
+  recommendedRouteLabel,
   explanation,
   onChangeDeparture,
 }: Props) {
@@ -32,7 +34,7 @@ export function RecommendationBanner({
         ? 'Recommendation unavailable — incomplete forecast'
         : error
           ? 'Trip analysis unavailable'
-          : `Route ${recommendedRouteId ?? '—'} recommended`;
+          : `Route ${recommendedRouteLabel ?? recommendedRouteId ?? '—'} recommended`;
   return (
     <div
       className={`recommendation ${blocked ? 'recommendation-blocked' : incomplete ? 'recommendation-missing' : ''}`}

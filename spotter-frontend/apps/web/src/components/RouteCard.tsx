@@ -7,10 +7,12 @@ import InfoIcon from '@mui/icons-material/InfoOutlined';
 import ShieldIcon from '@mui/icons-material/GppGoodOutlined';
 import WarningIcon from '@mui/icons-material/WarningAmberRounded';
 import { RiskMileageBar } from './risk-mileage-bar';
+import { formatMeasurement } from '@/lib/result-presentation';
 import type { Risk } from '@/lib/dispatch-data';
 
 export type RouteView = {
   id: string;
+  displayId?: string;
   name: string;
   roads: string;
   miles: number;
@@ -57,10 +59,10 @@ export function RouteCard({
             title={route.id}
             style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
           >
-            {route.id}
+            {route.displayId ?? route.id}
           </span>
           <div className="route-name">
-            <strong>Route {route.id}</strong>
+            <strong>Route {route.displayId ?? route.id}</strong>
             <span>{route.name}</span>
           </div>
           {!blocked && !missing && route.id === recommended ? (
@@ -80,10 +82,10 @@ export function RouteCard({
         </div>
         <div className="route-road">
           {route.roads}
-          <span>{route.miles} mi</span>
+          <span>{formatMeasurement(route.miles)} mi</span>
         </div>
         <RiskMileageBar
-          route={route.id}
+          route={route.displayId ?? route.id}
           miles={route.miles}
           riskMiles={riskMiles as Partial<Record<Risk, number>>}
         />
@@ -91,14 +93,14 @@ export function RouteCard({
           <div>
             <span>Severe miles</span>
             <strong>
-              {blocked ? '—' : route.severe}
+              {blocked ? '—' : formatMeasurement(route.severe)}
               <small>{!blocked ? ' mi' : ''}</small>
             </strong>
           </div>
           <div>
             <span>High miles</span>
             <strong>
-              {blocked ? '—' : route.high}
+              {blocked ? '—' : formatMeasurement(route.high)}
               <small>{!blocked ? ' mi' : ''}</small>
             </strong>
           </div>

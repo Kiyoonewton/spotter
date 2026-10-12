@@ -47,7 +47,7 @@ export function LiveMapWorkspace(props: Props) {
     timeZoneName: 'short',
   }).format(new Date(frame?.valid_at ?? props.startAt));
   return (
-    <div>
+    <div className="live-map-workspace">
       <GeographicRouteMap
         routes={props.analysis.routes}
         selected={props.selected}
