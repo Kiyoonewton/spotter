@@ -40,6 +40,9 @@ export function DepartureComparisonPanel({ analysis }: { analysis: TripAnalysis 
       style={{
         gridColumn: '1 / -1',
         minWidth: 0,
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
         padding: 16,
         borderRadius: 12,
         background: '#fff',
@@ -53,7 +56,12 @@ export function DepartureComparisonPanel({ analysis }: { analysis: TripAnalysis 
         Compare weather at the planned departure, +2h, +4h and +6h on saved routes. Original results
         stay unchanged.
       </p>
-      <Button variant="outlined" disabled={pending} onClick={() => void compare()}>
+      <Button
+        startIcon={<ScheduleIcon />}
+        variant="outlined"
+        disabled={pending}
+        onClick={() => void compare()}
+      >
         {data ? 'Refresh departure comparison' : 'Compare departure windows'}
       </Button>
       {pending && <LinearProgress aria-label="Loading departure comparison" />}
