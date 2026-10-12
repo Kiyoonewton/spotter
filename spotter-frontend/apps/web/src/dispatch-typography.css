@@ -1,0 +1,62 @@
+/* Shared, already-loaded fonts; no proprietary brand font dependency. */
+.dispatch-app {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  line-height: 1.5;
+}
+.dispatch-app h1,
+.dispatch-app h2,
+.dispatch-app h3,
+.dispatch-app .route-name strong {
+  font-family: Manrope, system-ui, sans-serif;
+  letter-spacing: -0.025em;
+}
+.dispatch-app .route-metrics strong,
+.dispatch-app .weather-metrics strong,
+.dispatch-app .checkpoint-eta strong {
+  font-variant-numeric: tabular-nums;
+}
+.dispatch-app .route-metrics > div > span,
+.dispatch-app .route-name > span,
+.dispatch-app .route-road,
+.dispatch-app .checkpoint-place > div > span,
+.dispatch-app .mileage-caption {
+  font-size: 11px;
+  line-height: 1.5;
+}
+.dispatch-app .panel-heading h3 {
+  font-size: 14px;
+}
+.dispatch-app .weather-metrics strong {
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+.dispatch-app .weather-metrics small {
+  padding-left: 3px;
+  font-size: 10px;
+}
+.dispatch-app .trip-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(190px, 1.2fr) repeat(
+      2,
+      minmax(0, 0.8fr)
+    ) auto;
+}
+.dispatch-app .trip-arrow {
+  display: none;
+}
+.dispatch-app .trip-form .trip-field-mui {
+  min-width: 0;
+}
+@media (max-width: 1100px) {
+  .dispatch-app .trip-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .dispatch-app .trip-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dispatch-app .weather-metrics strong {
+    font-size: 18px;
+  }
+}

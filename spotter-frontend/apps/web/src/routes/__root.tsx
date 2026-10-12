@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from 'react';
 
 import appCss from '../styles.css?url';
 import responsiveCss from '../responsive-results.css?url';
+import typographyCss from '../dispatch-typography.css?url';
 import { reportLovableError } from '../lib/lovable-error-reporting';
 import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { muiTheme } from '../lib/mui-theme';
@@ -91,6 +92,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: 'stylesheet', href: appCss },
       { rel: 'stylesheet', href: responsiveCss },
+      { rel: 'stylesheet', href: typographyCss },
       { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
       {
         rel: 'stylesheet',

@@ -10,9 +10,7 @@
   --border: #dce6e1;
   --primary-gradient: linear-gradient(135deg, #087c75, #076761);
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse at 8% 5%, #dcefe6 0, transparent 42%),
-    radial-gradient(ellipse at 94% 18%, #e8eefb 0, transparent 38%), #f5f7f4;
+  background: linear-gradient(180deg, #102f38 0, #1b424e 300px, #f0f5f2 300px, #f5f7f4 100%);
 }
 .dispatch-app header {
   background: #0d2b34;
