@@ -64,3 +64,17 @@
   padding: 20px;
   border-radius: 16px;
 }
+
+.dispatch-intro .intro-motion-toggle {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  color: #ffffff;
+  background: #102f38c9;
+  border: 1px solid #64868d;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dispatch-intro .intro-motion-toggle {
+    display: none;
+  }
+}
