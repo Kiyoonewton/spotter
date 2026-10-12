@@ -108,6 +108,11 @@ jobs:
           bash spotter-infrastructure/scripts/deploy-development.sh "$GITHUB_WORKSPACE"
           bash spotter-infrastructure/scripts/deploy-development.sh "$GITHUB_WORKSPACE"
 
+      - name: Verify published development gateway port
+        run: |
+          curl -fsS -H 'Host: dev.spotter.com' http://127.0.0.1:8085/api/health | python -c 'import json,sys; assert json.load(sys.stdin)["status"] == "ok"'
+          curl -fsS http://127.0.0.1:8085/ | python -c 'import sys; assert "Weather-aware routing" in sys.stdin.read()'
+
       - name: Verify database backup restores to a disposable database
         working-directory: spotter-infrastructure
         run: |

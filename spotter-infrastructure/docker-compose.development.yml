@@ -10,7 +10,7 @@ services:
     environment:
       PUBLIC_HOST: ${PUBLIC_HOST:-dev.spotter.com}
     ports:
-      - "80:80"
+      - "${HTTP_BIND_ADDRESS:-0.0.0.0}:${HTTP_PORT:-8085}:80"
     depends_on:
       spotter-frontend:
         condition: service_healthy
