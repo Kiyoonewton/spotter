@@ -16,7 +16,7 @@ describe('LiveMapWorkspace', () => {
     const analysis: TripAnalysis = {
       analysis_id: 'immutable',
       data_source: 'live',
-      routes: [route],
+      routes: [route, { ...route, id: 'longest', duration_minutes: 522 }],
       recommendation: { status: 'unavailable', recommended_route_id: null, explanation: 'Missing' },
     };
     const before = JSON.stringify(analysis);
@@ -35,7 +35,7 @@ describe('LiveMapWorkspace', () => {
     });
     const onRoute = vi.fn();
     const onCheckpoint = vi.fn();
-    render(
+    const { rerender } = render(
       <LiveMapWorkspace
         analysis={analysis}
         selected={route.id}
@@ -47,6 +47,10 @@ describe('LiveMapWorkspace', () => {
         onCheckpoint={onCheckpoint}
       />,
     );
+    expect(
+      screen.getByRole('slider', { name: 'Corridor forecast hours after departure' }),
+    ).toHaveAttribute('max', '9');
+    expect(screen.getByText('Weather through the longest journey')).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Play forecast' })).not.toBeInTheDocument();
     fireEvent.change(
       screen.getByRole('slider', { name: 'Corridor forecast hours after departure' }),
@@ -61,6 +65,21 @@ describe('LiveMapWorkspace', () => {
     expect(JSON.stringify(analysis)).toBe(before);
     expect(onRoute).not.toHaveBeenCalled();
     expect(onCheckpoint).not.toHaveBeenCalled();
+    rerender(
+      <LiveMapWorkspace
+        analysis={analysis}
+        selected="longest"
+        checkpoint={0}
+        startAt="2026-10-11T00:00:00Z"
+        timezone="America/New_York"
+        load={30000}
+        onRoute={onRoute}
+        onCheckpoint={onCheckpoint}
+      />,
+    );
+    expect(
+      screen.getByRole('slider', { name: 'Corridor forecast hours after departure' }),
+    ).toHaveAttribute('max', '9');
     expect(screen.getByText(/America\/New_York/)).toBeVisible();
   });
 });

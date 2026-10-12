@@ -48,6 +48,29 @@ class CorridorForecastTests(SimpleTestCase):
         self.assertEqual(fetch.call_count, 1)
 
     @patch("core.corridor_forecast.fetch_forecasts")
+    def test_requested_journey_window_and_longer_than_48_hours(self, fetch):
+        fetch.return_value = ([payload()], "2026-10-11T00:00:00Z")
+        for hours in (1, 9, 60):
+            response = self.client.post("/api/corridor-forecasts/",
+                                        {**request_data(), "horizon_hours": hours}, format="json")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data["horizon_hours"], hours)
+            self.assertEqual(len(response.data["frames"]), hours + 1)
+            self.assertEqual(response.data["frames"][-1]["hour"], hours)
+            expected = datetime(2026, 10, 11, tzinfo=timezone.utc) + timedelta(hours=hours)
+            self.assertEqual(response.data["frames"][-1]["valid_at"], expected.isoformat().replace("+00:00", "Z"))
+        self.assertIsNone(response.data["frames"][-1]["samples"][0]["weather"])
+        self.assertEqual(fetch.call_count, 1)
+
+    @patch("core.corridor_forecast.fetch_forecasts")
+    def test_invalid_horizon_does_not_call_weather(self, fetch):
+        for hours in (True, 0, -1, 1.5, "9", 721, None):
+            response = self.client.post("/api/corridor-forecasts/",
+                                        {**request_data(), "horizon_hours": hours}, format="json")
+            self.assertEqual(response.status_code, 400)
+        fetch.assert_not_called()
+
+    @patch("core.corridor_forecast.fetch_forecasts")
     def test_horizon_and_independently_missing_values(self, fetch):
         fixture = payload()
         fixture["hourly"]["wind_speed_10m"][1] = None

@@ -2,7 +2,14 @@
 
 POST /api/corridor-forecasts/ accepts an offset-aware start_at, load_weight_lb,
 and 1 to 200 points with id, route_id, and coordinates {lat, lon}.
-It returns 49 hourly frames, inclusive of departure +0h through +48h.
+Optional `horizon_hours` is an integer from 1 to 720 (default 48 for older clients).
+It returns `horizon_hours + 1` hourly frames, including departure and the final hour.
+The UI requests the longest returned route duration rounded up to an hour, across
+all alternatives, independent of route selection. For example, 8h42m requests
+9 hours and 10 frames. The 720-hour API budget prevents unbounded response work;
+out-of-budget requests fail validation rather than silently shortening a journey.
+This window does not extend provider coverage: unavailable future weather remains
+Unknown, with no extrapolation or clamping.
 
 Coordinates are deduplicated across routes, while point ownership is preserved.
 Provider batches contain at most 50 coordinates. Raw hourly responses are cached
@@ -22,7 +29,7 @@ The live map shows sampled checkpoint circles, not radar or a continuous weather
 field. Variable controls select wind, rain, or snow; dashed outlines indicate
 missing values. Circles use the selected variable's risk category for the applied
 load. Route lines and checkpoint inspection retain arrival-time risk.
-Changing hours, variable, opacity, or playback cannot mutate ranking,
+Changing hours, variable, opacity, or the manual time selection cannot mutate ranking,
 recommendation, or checkpoint arrival weather.
 
 Times use the applied origin IANA timezone. Provider retrieval time and cache

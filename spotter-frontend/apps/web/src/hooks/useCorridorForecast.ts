@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { journeyHorizon } from '@/lib/journey-horizon';
 import { validCoordinate } from '@/lib/geographic-map';
 import type { TripAnalysis } from '@/services/api';
 import { fetchCorridorForecast, type CorridorForecast } from '@/services/corridor-forecast';
@@ -25,7 +26,13 @@ export function useCorridorForecast(analysis: TripAnalysis, startAt: string, loa
       setError('No geographic forecast points are available.');
       return () => controller.abort();
     }
-    void fetchCorridorForecast(points, startAt, load, controller.signal)
+    void fetchCorridorForecast(
+      points,
+      startAt,
+      load,
+      controller.signal,
+      journeyHorizon(analysis.routes),
+    )
       .then((result) => {
         if (id === sequence.current && !controller.signal.aborted) setData(result);
       })

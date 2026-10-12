@@ -32,8 +32,14 @@ for (const width of [320, 390, 768, 1280]) {
       }),
     );
     await page.route('**/api/corridor-forecasts/', (route) => {
-      const body = route.request().postDataJSON() as { points: ForecastPoint[]; start_at: string };
-      return route.fulfill({ json: corridorFixture(body.points, body.start_at) });
+      const body = route.request().postDataJSON() as {
+        points: ForecastPoint[];
+        start_at: string;
+        horizon_hours: number;
+      };
+      return route.fulfill({
+        json: corridorFixture(body.points, body.start_at, body.horizon_hours),
+      });
     });
     await page.goto('/');
     await expect(page.getByLabel('Load weight in lbs')).toBeEnabled();
