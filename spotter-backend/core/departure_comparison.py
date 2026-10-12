@@ -56,7 +56,7 @@ def _scenario_route(route, offset, load, payloads, retrieved, demo):
         segments.append({"id": segment["id"], "risk": risk})
     covered = route["distance_miles"] - miles["Unknown"]
     average = sum(miles[name] * RISK_ORDER[name] for name in RISK_ORDER if name != "Unknown") / covered if covered > 0 else None
-    eligibility = "blocked" if miles["No Travel"] > 0 else "incomplete" if miles["Unknown"] > 0 else "eligible"
+    eligibility = "blocked" if route.get("routing_eligible") is False or miles["No Travel"] > 0 else "incomplete" if miles["Unknown"] > 0 else "eligible"
     return {"id": route["id"], "distance_miles": route["distance_miles"],
             "duration_minutes": route["duration_minutes"], "arrival_at": checkpoints[-1]["arrival_at"],
             "risk_miles": miles, "average_risk": average, "eligibility": eligibility,

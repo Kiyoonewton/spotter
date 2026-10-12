@@ -57,8 +57,9 @@ verification are distinct evidence; a passing build does not prove weather accur
 
 Live checkpoint timing interpolates validated HERE speed-change span durations,
 with an explicit distance-proportional fallback ([timing policy](docs/route-timing.md)); driver
-breaks are not modeled. Truck mode does not yet accept a configurable vehicle
-profile. Missing forecasts remain Unknown, and blocked/incomplete routes cannot
+breaks are not modeled. Live mode supports an optional [physical truck profile](docs/truck-profile.md),
+with dimensions, actual/rated weights and heaviest axle weight. Critical provider
+notices exclude routes from recommendation. Missing forecasts remain Unknown, and blocked/incomplete routes cannot
 win eligible ranking. Map weather circles are sampled forecasts, not radar.
 Completed browser analyses can be restored or shared through seven-day token links,
 with a printable driver briefing. See [saved analysis behavior](docs/saved-analyses.md).

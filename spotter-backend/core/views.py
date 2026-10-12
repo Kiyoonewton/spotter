@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from .truck_profile import TruckProfileError, validate_truck_profile
 from .snapshots import save_analysis
 from .analysis import SPACING, analyze_trip
 from .providers import ProviderError, search_locations
@@ -79,8 +80,15 @@ def trip_analyses(request):
         spacing = int(data["checkpoint_spacing_miles"])
         if spacing not in SPACING: raise ValueError
     except (TypeError, ValueError): errors["checkpoint_spacing_miles"] = "Checkpoint spacing must be 10, 25, or 50 miles."
+    profile = None
+    if "truck_profile" in data:
+        if mode != "live": errors["truck_profile"] = "Truck profiles are only supported in live mode."
+        elif "load_weight_lb" not in errors:
+            try: profile = validate_truck_profile(data["truck_profile"], weight)
+            except TruckProfileError: errors["truck_profile"] = "Enter all six valid vehicle measurements. Loaded weight must exceed cargo, stay within rated gross weight, and include a valid heaviest axle weight."
     if errors: return Response({"errors": errors}, status=400)
     request_data = {"origin": data["origin"].strip(), "destination": data["destination"].strip(), "departure_at": departure.isoformat(), "departure_timezone": data["departure_timezone"], "load_weight_lb": weight, "checkpoint_spacing_miles": spacing}
+    if profile is not None: request_data["truck_profile"] = profile
     if mode == "live":
         request_data.update({"origin_coordinates": data["origin_coordinates"], "destination_coordinates": data["destination_coordinates"], "origin_label": data["origin"].strip(), "destination_label": data["destination"].strip()})
         try:

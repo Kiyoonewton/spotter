@@ -1,3 +1,4 @@
+import type { TruckProfile } from './truck-profile';
 import { env } from '../env';
 
 export const API_BASE_URL = env.VITE_API_BASE_URL;
@@ -9,6 +10,7 @@ export function apiUrl(path: string): string {
 }
 
 export type TripAnalysisRequest = {
+  truck_profile?: TruckProfile;
   save_snapshot?: boolean;
   mode?: 'demo' | 'live';
   origin: string;
@@ -78,6 +80,8 @@ export type TripAnalysis = {
   applied_request?: TripAnalysisRequest;
   analysis_id: string;
   data_source: 'demo' | 'live';
+  truck_profile?: TruckProfile | null;
+  routing_profile_notice?: string;
   demo_notice?: string;
   available_route_count?: number;
   routes: Array<{
@@ -88,6 +92,8 @@ export type TripAnalysis = {
     timing_method?: string;
     timing_span_count?: number;
     timing_notice?: string;
+    routing_eligible?: boolean;
+    routing_notice?: string | null;
     eligibility: string;
     risk_miles: Record<string, number>;
     average_risk: number | null;

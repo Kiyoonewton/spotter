@@ -72,7 +72,9 @@ categories logged server-side. Readiness checks database and cache dependencies.
 - Checkpoint timing interpolates validated HERE span durations with an explicit
   distance-proportional fallback, with no modeled driver breaks. See
   [timing policy](../../../docs/route-timing.md).
-- Truck routing does not yet accept a configurable physical vehicle profile.
+- Optional physical truck profiles support six explicit measurements; critical
+  routing notices exclude routes. Permits, hazmat and axle groups are not modeled.
+  See [truck profile policy](../../../docs/truck-profile.md).
 - Successful browser analyses request server-side immutable snapshots with seven-day
   token links. Refresh/share restoration preserves arrival weather and applied trip
   inputs. Saved links are bearer access; there is no user-account history list.
