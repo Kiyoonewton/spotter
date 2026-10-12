@@ -1,3 +1,4 @@
+import { EstimatedTruckMarker } from './EstimatedTruckMarker';
 import { useState } from 'react';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
@@ -22,6 +23,7 @@ type Props = {
   routes: readonly MapRoute[];
   selected: string;
   forecastFrame?: ForecastFrame;
+  previewAt?: string;
   forecastVariable?: ForecastVariable;
   forecastOpacity?: number;
   checkpoint: number;
@@ -159,6 +161,13 @@ export function GeographicRouteMap(props: Props) {
               </circle>
             );
           })}
+          {selectedRoute && props.previewAt && (
+            <EstimatedTruckMarker
+              route={selectedRoute}
+              selectedAt={props.previewAt}
+              project={view.point}
+            />
+          )}
         </svg>
         <MapControls
           onZoomIn={() => setZoomOffset((value) => Math.min(17 - fit.zoom, value + 1))}

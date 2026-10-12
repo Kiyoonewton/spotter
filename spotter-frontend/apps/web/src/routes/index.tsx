@@ -59,7 +59,6 @@ function Index() {
   const [spacing, setSpacing] = useState('25');
   const [forecast, setForecast] = useState(4);
   const [opacity, setOpacity] = useState(45);
-  const [playing, setPlaying] = useState(false);
   const [drawer, setDrawer] = useState(true);
   const [progress, setProgress] = useState(38);
   const [activeTab, setActiveTab] = useState<'routes' | 'checkpoint'>('routes');
@@ -79,11 +78,6 @@ function Index() {
   } = useTripAnalysis();
   const originSearch = useLocationSearch(mode, origin, !originCandidate);
   const destinationSearch = useLocationSearch(mode, destination, !destinationCandidate);
-  useEffect(() => {
-    if (!playing) return;
-    const timer = setInterval(() => setForecast((value) => (value >= 48 ? 0 : value + 1)), 900);
-    return () => clearInterval(timer);
-  }, [playing]);
   useEffect(() => {
     if (!pending) return;
     const timer = setInterval(() => setProgress((value) => (value >= 92 ? 38 : value + 7)), 650);
@@ -260,7 +254,6 @@ function Index() {
               departure={applied.departure}
               opacity={opacity}
               forecast={forecast}
-              playing={playing}
               state={state}
               dataSource={analysis.data_source}
               analysis={analysis}
@@ -276,7 +269,6 @@ function Index() {
               onCheckpoint={setCheckpoint}
               onOpacity={setOpacity}
               onForecast={setForecast}
-              onPlaying={setPlaying}
             />
           </>
         )}

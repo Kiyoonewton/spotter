@@ -72,7 +72,7 @@ export function TripForm(props: Props) {
     onDestinationCandidate = () => undefined,
   } = props;
   return (
-    <form className="trip-form" onSubmit={onSubmit}>
+    <form id="trip-form" className="trip-form" onSubmit={onSubmit}>
       <Autocomplete
         disabled={!ready}
         filterOptions={(options) => options}

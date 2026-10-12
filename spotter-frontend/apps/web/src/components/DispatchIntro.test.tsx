@@ -11,9 +11,6 @@ describe('DispatchIntro', () => {
     expect(image?.getAttribute('src')).toBe('/dispatch-intro-static.svg');
     fireEvent.click(screen.getByRole('button', { name: 'Play intro animation' }));
     expect(image?.getAttribute('src')).toContain('background.gif');
-    expect(screen.getByRole('link', { name: 'Plan a trip' })).toHaveAttribute(
-      'href',
-      '#trip-planning',
-    );
+    expect(screen.getByRole('link', { name: 'Plan a trip' })).toHaveAttribute('href', '#trip-form');
   });
 });
