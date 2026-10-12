@@ -76,7 +76,9 @@ categories logged server-side. Readiness checks database and cache dependencies.
   inputs. Saved links are bearer access; there is no user-account history list.
   Hourly preview frames are not saved or fetched again when reopening a snapshot.
 - Driver briefings print the inspected route’s arrival itinerary and recommendation
-  status; they are not certified driver logs. Departure-window optimization remains future work.
+  status; they are not certified driver logs. Route × Departure comparison evaluates
+  four weather-only windows on saved geometry/timing; full time-dependent rerouting
+  and HOS remain future work.
 - The live overlay does not yet sample a wider corridor grid.
 - Provider forecast coverage and rate limits can leave weather unavailable.
 - React Native companion and accuracy backtesting remain future work.

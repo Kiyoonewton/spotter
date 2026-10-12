@@ -55,6 +55,9 @@
   margin: 4px 0;
 }
 @media print {
+  .scenario-preview-map {
+    display: none !important;
+  }
   html,
   body {
     background: #fff !important;

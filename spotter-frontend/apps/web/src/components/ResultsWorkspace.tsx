@@ -1,3 +1,4 @@
+import { DepartureComparisonPanel } from './DepartureComparisonPanel';
 import { SavedTripTools } from './SavedTripTools';
 import { journeyHorizon } from '@/lib/journey-horizon';
 import IconButton from '@mui/material/IconButton';
@@ -53,6 +54,9 @@ export function ResultsWorkspace(props: Props) {
           analysis={props.analysis}
           selected={props.selected}
         />
+      )}
+      {props.analysis?.snapshot && (
+        <DepartureComparisonPanel key={props.analysis.analysis_id} analysis={props.analysis} />
       )}
       <aside className={`route-panel panel-tab-${props.tab} ${props.drawer ? 'drawer-open' : ''}`}>
         <IconButton

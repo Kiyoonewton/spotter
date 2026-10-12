@@ -61,4 +61,6 @@ profile. Missing forecasts remain Unknown, and blocked/incomplete routes cannot
 win eligible ranking. Map weather circles are sampled forecasts, not radar.
 Completed browser analyses can be restored or shared through seven-day token links,
 with a printable driver briefing. See [saved analysis behavior](docs/saved-analyses.md).
-Departure optimization and a React Native companion remain future milestones.
+Weather-only [Route × Departure comparison](docs/departure-comparison.md) evaluates
+four departure windows without altering the saved result. Full time-dependent
+rerouting and a React Native companion remain future milestones.
