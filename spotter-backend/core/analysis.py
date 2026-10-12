@@ -75,7 +75,10 @@ def _route(route_id: str, name: str, distance: float, minutes: int, weather_zone
 
 def analyze_trip(request: dict) -> dict:
     zones = [Weather(18, .02, 0), Weather(38, .31, 0), Weather(None, None, None), Weather(28, .12, 0), Weather(12, .01, 0)]
-    routes = [_route("A", "Northern corridor", 468, 462, zones, request), _route("B", "Central corridor", 482, 480, zones[1:] + zones[:1], request), _route("C", "Southern corridor", 526, 522, [Weather(50, .02, 0), Weather(58, .01, 0), Weather(40, .2, 0), Weather(15, .01, 0), Weather(12, 0, 0)], request)]
+    # Keep one complete corridor for the default recommendation journey.
+    # Route B retains the missing-weather scenario; Route C remains blocked.
+    complete_zones = [zones[0], zones[1], Weather(22, .04, 0), *zones[3:]]
+    routes = [_route("A", "Northern corridor", 468, 462, complete_zones, request), _route("B", "Central corridor", 482, 480, zones[1:] + zones[:1], request), _route("C", "Southern corridor", 526, 522, [Weather(50, .02, 0), Weather(58, .01, 0), Weather(40, .2, 0), Weather(15, .01, 0), Weather(12, 0, 0)], request)]
     eligible = [r for r in routes if r["eligibility"] == "eligible"]
     eligible.sort(key=lambda r: (r["risk_miles"]["Severe"], r["risk_miles"]["High"], r["average_risk"], r["duration_minutes"], r["id"]))
     for rank, route in enumerate(eligible, 1): route["rank"] = rank
