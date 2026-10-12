@@ -78,6 +78,11 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
   expect(requestBody?.destination_coordinates).toEqual({ lat: 42.3, lon: -71.1 });
   expect(requestBody?.departure_at).toBe('2026-10-10T14:00:00.000Z');
   await expect(page.getByText('Route 2 recommended')).toBeVisible();
+  await page.getByRole('button', { name: 'Why this route?' }).click();
+  const comparison = page.getByRole('table', { name: 'Recommendation criteria in priority order' });
+  await expect(comparison.getByText('Deciding criterion')).toBeVisible();
+  await expect(page.getByText(/5 extra driving minutes; 2 more miles/)).toBeVisible();
+  await page.getByRole('button', { name: 'Why this route?' }).click();
   await expect(page.getByTestId('estimated-truck')).toHaveAttribute('data-route-id', 'here-safe');
   await expect(page.getByRole('region', { name: 'Geographic route map' })).toBeVisible();
   const forecastHour = page.getByRole('slider', {
