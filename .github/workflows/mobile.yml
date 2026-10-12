@@ -1,0 +1,35 @@
+name: React Native companion
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+permissions:
+  contents: read
+jobs:
+  mobile:
+    name: Native quality and bundles
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: spotter-mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: spotter-mobile/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run export:native
+        env:
+          CI: '1'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-javascript-bundles
+          path: spotter-mobile/dist
+          retention-days: 7
