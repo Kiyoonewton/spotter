@@ -61,7 +61,7 @@ def validate_forecast(data):
     return start, load, validated, horizon
 
 
-def _payloads(points, start):
+def forecast_payloads(points, start):
     coordinates = list(dict.fromkeys((p["coordinates"]["lat"], p["coordinates"]["lon"]) for p in points))
     results, retrieved, pending_cache = {}, [], []
     for offset in range(0, len(coordinates), BATCH_SIZE):
@@ -80,7 +80,7 @@ def _payloads(points, start):
 
 def corridor_forecast(data):
     start, load, points, horizon = validate_forecast(data)
-    payloads, retrieved, pending_cache = _payloads(points, start)
+    payloads, retrieved, pending_cache = forecast_payloads(points, start)
     frames = []
     for hour in range(horizon + 1):
         instant = start + timedelta(hours=hour)
