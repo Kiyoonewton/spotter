@@ -184,7 +184,11 @@ test('parent results flow preserves null recommendations and eligibility banners
   await expect(page.getByText(/Route alpha · Sample checkpoint 1/)).toBeVisible();
   await expect(page.getByText('Recommendation unavailable — incomplete forecast')).toBeVisible();
   await expect(page.getByText('Recommended', { exact: true })).toHaveCount(0);
-  await expect(page.getByText(/Route .* recommended/)).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: /^Route .* recommended$/ })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Why this route?' }).click();
+  await expect(page.getByText(/No route is recommended by this analysis/)).toBeVisible();
+  await expect(page.getByText('Deciding criterion', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Why this route?' }).click();
   await page
     .getByRole('button', { name: /Route beta/ })
     .first()
