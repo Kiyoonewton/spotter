@@ -9,6 +9,7 @@ export function apiUrl(path: string): string {
 }
 
 export type TripAnalysisRequest = {
+  save_snapshot?: boolean;
   mode?: 'demo' | 'live';
   origin: string;
   destination: string;
@@ -66,6 +67,15 @@ export type RouteSegment = {
 };
 
 export type TripAnalysis = {
+  snapshot?: {
+    token: string;
+    created_at: string;
+    expires_at: string;
+    policy_version: string;
+    restored?: boolean;
+  };
+  snapshot_notice?: string;
+  applied_request?: TripAnalysisRequest;
   analysis_id: string;
   data_source: 'demo' | 'live';
   demo_notice?: string;
@@ -90,6 +100,8 @@ export type TripAnalysis = {
         wind_mph: number | null;
         rain_in_hr: number | null;
         snow_in_hr: number | null;
+        provider?: string;
+        retrieved_at?: string;
         forecast_valid_at?: string;
         interval_start?: string;
         interval_end?: string;
@@ -104,7 +116,7 @@ export async function createTripAnalysis(input: TripAnalysisRequest): Promise<Tr
   const response = await fetch(apiUrl('/trip-analyses/'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
+    body: JSON.stringify({ save_snapshot: true, ...input }),
   });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));

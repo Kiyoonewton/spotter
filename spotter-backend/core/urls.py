@@ -1,10 +1,12 @@
 from django.urls import path
 
+from .snapshots import restore_analysis
 from . import views
 from .readiness import readiness
 from .forecast_views import corridor_forecasts
 
 urlpatterns = [
+    path("saved-analyses/restore/", restore_analysis, name="restore-analysis"),
     path("health", views.health, name="health"),
     path("ready", readiness, name="readiness"),
     path("locations/", views.locations, name="locations"),

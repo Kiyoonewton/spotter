@@ -1,3 +1,4 @@
+import { SavedTripTools } from './SavedTripTools';
 import { journeyHorizon } from '@/lib/journey-horizon';
 import IconButton from '@mui/material/IconButton';
 import ToggleButton from '@mui/material/ToggleButton';
@@ -46,6 +47,13 @@ type Props = {
 export function ResultsWorkspace(props: Props) {
   return (
     <div className="workspace-grid">
+      {props.analysis && (
+        <SavedTripTools
+          key={props.analysis.analysis_id}
+          analysis={props.analysis}
+          selected={props.selected}
+        />
+      )}
       <aside className={`route-panel panel-tab-${props.tab} ${props.drawer ? 'drawer-open' : ''}`}>
         <IconButton
           className="drawer-handle"
@@ -90,6 +98,7 @@ export function ResultsWorkspace(props: Props) {
       </aside>
       {props.dataSource === 'live' &&
       props.analysis &&
+      !props.analysis.snapshot?.restored &&
       props.startAt &&
       props.timezone &&
       props.loadWeight !== undefined ? (

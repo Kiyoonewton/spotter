@@ -1,0 +1,106 @@
+.saved-trip-tools {
+  padding: 16px;
+  border: 1px solid #dbe5e0;
+  border-radius: 12px;
+  background: #fff;
+}
+.saved-trip-tools p {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+.saved-trip-tools small {
+  display: block;
+  margin-top: 8px;
+  color: #526862;
+}
+#driver-briefing {
+  color: #173b3a;
+  font-size: 13px;
+}
+#driver-briefing h1 {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 12px;
+}
+#driver-briefing h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+#driver-briefing h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 16px 0 8px;
+}
+#driver-briefing p {
+  line-height: 1.45;
+  margin: 6px 0;
+}
+#driver-briefing {
+  overflow-wrap: anywhere;
+}
+#driver-briefing table {
+  width: 100%;
+  border-collapse: collapse;
+}
+#driver-briefing th,
+#driver-briefing td {
+  padding: 8px;
+  text-align: left;
+  border: 1px solid #dbe5e0;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+#driver-briefing td p {
+  margin: 4px 0;
+}
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  body > * {
+    display: none !important;
+  }
+  body > .briefing-dialog {
+    display: block !important;
+    position: static !important;
+  }
+  .briefing-dialog .MuiBackdrop-root,
+  .briefing-dialog .MuiDialogTitle-root,
+  .briefing-dialog .MuiDialogActions-root {
+    display: none !important;
+  }
+  .briefing-dialog .MuiDialog-container {
+    display: block !important;
+    height: auto !important;
+  }
+  .briefing-dialog .MuiDialog-paper,
+  .briefing-dialog .MuiDialogContent-root {
+    position: static !important;
+    margin: 0 !important;
+    max-height: none !important;
+    max-width: none !important;
+    width: 100% !important;
+    overflow: visible !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  #driver-briefing {
+    font-size: 10pt;
+    color: #000;
+  }
+  #driver-briefing thead {
+    display: table-header-group;
+  }
+  #driver-briefing tr {
+    break-inside: avoid;
+  }
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}
