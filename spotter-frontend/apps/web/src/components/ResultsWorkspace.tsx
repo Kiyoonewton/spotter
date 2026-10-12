@@ -47,7 +47,7 @@ type Props = {
 export function ResultsWorkspace(props: Props) {
   return (
     <div className="workspace-grid">
-      <aside className={`route-panel ${props.drawer ? 'drawer-open' : ''}`}>
+      <aside className={`route-panel panel-tab-${props.tab} ${props.drawer ? 'drawer-open' : ''}`}>
         <IconButton
           className="drawer-handle"
           aria-label={props.drawer ? 'Collapse route drawer' : 'Expand route drawer'}

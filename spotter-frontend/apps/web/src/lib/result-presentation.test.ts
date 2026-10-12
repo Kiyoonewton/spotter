@@ -9,8 +9,8 @@ describe('result presentation', () => {
     const routes = presentRoutes(liveMapAnalysis);
     const ranked = rankRoutes(routes);
     expect(ranked[0]?.id).toBe('here-safe');
-    expect(ranked[0]?.displayId).toBe('B');
-    expect(ranked[1]?.displayId).toBe('A');
+    expect(ranked[0]?.displayId).toBe('2');
+    expect(ranked[1]?.displayId).toBe('1');
     expect(routes[0]?.checkpoints[0]?.route_id).toBe('here-fast');
     expect(JSON.stringify(liveMapAnalysis)).toBe(before);
   });
@@ -38,7 +38,7 @@ describe('result presentation', () => {
         explanation: `${id} has the best eligible risk ranking.`,
       },
     };
-    expect(presentExplanation(analysis)).toBe('Route A has the best eligible risk ranking.');
+    expect(presentExplanation(analysis)).toBe('Route 1 has the best eligible risk ranking.');
     expect(analysis.recommendation.recommended_route_id).toBe(id);
   });
   it('rounds display measurements while retaining zero and grouping miles', () => {

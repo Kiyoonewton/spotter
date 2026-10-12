@@ -8,7 +8,7 @@ export function presentRoutes(analysis: TripAnalysis | null) {
   return (
     analysis?.routes.map((route, index) => ({
       ...route,
-      displayId: analysis.data_source === 'live' ? String.fromCharCode(65 + index) : route.id,
+      displayId: analysis.data_source === 'live' ? String(index + 1) : route.id,
       name: analysis.data_source === 'live' ? `Truck alternative ${index + 1}` : route.name,
       roads: analysis.data_source === 'live' ? 'HERE truck route' : route.name,
       miles: route.distance_miles,
