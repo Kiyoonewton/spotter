@@ -36,10 +36,9 @@
 }
 .dispatch-app .trip-form {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(190px, 1.2fr) repeat(
-      2,
-      minmax(0, 0.8fr)
-    ) auto;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr)) minmax(190px, 1.2fr) repeat(2, minmax(0, 0.8fr))
+    auto;
 }
 .dispatch-app .trip-arrow {
   display: none;
