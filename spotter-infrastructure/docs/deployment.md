@@ -79,3 +79,13 @@ copy them off-server and define retention; this workflow does not delete them.
 Production secret/host hardening, TLS, monitoring, staging and full live HERE
 verification remain outstanding. No real server deployment is established by
 this documentation or by mocked SSH-free tests.
+
+## Slow dependency downloads
+
+The built frontend uses a persistent BuildKit Yarn cache with a shared lock,
+a ten-minute download timeout and two concurrent network requests. This limits
+simultaneous large downloads and retains completed package downloads after a
+failed install. Frozen lockfile and package integrity verification remain active.
+The cache is build-only and contains public dependencies, not application secrets.
+A persistent registry outage can still fail a build; this is not an offline build.
+Failed builds occur before service restart or migrations.

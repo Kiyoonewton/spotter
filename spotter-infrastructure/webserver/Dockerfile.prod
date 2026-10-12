@@ -6,7 +6,11 @@ WORKDIR /app
 RUN npm install -g corepack && corepack enable
 
 COPY spotter-frontend/apps/web/package.json spotter-frontend/apps/web/yarn.lock ./
-RUN yarn install --frozen-lockfile
+# Persist successful downloads across failed builds. Lock the shared cache
+# while the frontend/runtime and gateway targets build in parallel.
+RUN --mount=type=cache,id=spotter-yarn,target=/usr/local/share/.cache/yarn,sharing=locked \
+    yarn install --frozen-lockfile --cache-folder /usr/local/share/.cache/yarn \
+    --network-timeout 600000 --network-concurrency 2
 
 COPY spotter-frontend/apps/web/ ./
 
