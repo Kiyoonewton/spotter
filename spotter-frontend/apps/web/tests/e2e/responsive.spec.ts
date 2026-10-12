@@ -35,7 +35,9 @@ for (const width of [320, 390, 768, 1280]) {
       return route.fulfill({ json: corridorFixture(body.points, body.start_at) });
     });
     await page.goto('/');
+    await expect(page.getByLabel('Load weight in lbs')).toBeEnabled();
     await page.getByRole('button', { name: 'Live', exact: true }).click();
+    await expect(page.getByText('Live provider analysis', { exact: true })).toBeVisible();
     for (const name of ['Origin', 'Destination']) {
       await page.getByRole('combobox', { name, exact: true }).fill('Chicago');
       await page.getByRole('option', { name: 'Chicago, IL', exact: true }).click();
