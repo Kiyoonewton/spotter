@@ -2,7 +2,8 @@
 
 Development runs the built React/TanStack Node frontend, Django/Gunicorn,
 Nginx, Postgres and Redis through `docker-compose.development.yml`.
-Only Nginx publishes port 80. HTTPS termination must be configured separately.
+Only the Spotter gateway publishes HTTP_PORT (default 8085). Its container
+listens on port 80. The existing Nginx Proxy Manager handles public HTTPS.
 This workflow does not provision or deploy staging/production.
 
 ## Server setup
@@ -98,3 +99,30 @@ still fails instead of hanging indefinitely. This prevents an idle connection
 from expiring while a Docker dependency download produces no log output.
 Pinned host-key checking remains enabled. A disconnected build is not evidence
 of successful rollout; readiness must be confirmed afterward.
+
+## Nginx Proxy Manager integration
+
+Development gateway host binding defaults to 0.0.0.0:8085. Set HTTP_PORT in
+server .env.development if that port is occupied. HTTP_BIND_ADDRESS can select
+a private host interface reachable from your NPM container. Container services
+and internal gateway port 80 are unchanged; existing NPM ports 80/443 remain
+untouched. Production standalone Compose is unchanged.
+
+In NPM, create or edit only the Spotter proxy host:
+
+- Domain: spotter.kiyoo.online (or your actual PUBLIC_HOST).
+- Scheme: http.
+- Forward hostname/IP: the Docker host address reachable from NPM.
+- Forward port: the configured HTTP_PORT, normally 8085.
+- SSL: select a valid certificate covering the public domain and enable HTTPS.
+
+For Cloudflare Full (strict), use a valid public CA or Cloudflare Origin CA
+certificate installed in NPM. An Origin CA certificate is trusted by Cloudflare,
+not ordinary browsers connecting directly to the origin. Keep its private key
+in NPM/server storage, never Git or frontend assets. Cloudflare 526 indicates
+origin certificate validation failed; changing the app port alone cannot fix it.
+Do not disable certificate validation to claim HTTPS readiness.
+
+CI starts the development stack on its dedicated host port, verifies HTTP
+readiness and restores the protected database backup. Public-domain verification
+must additionally exercise NPM/Cloudflare and the real browser/API journey.
