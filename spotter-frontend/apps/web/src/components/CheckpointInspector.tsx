@@ -8,6 +8,7 @@ import RainIcon from '@mui/icons-material/WaterDropOutlined';
 import SnowIcon from '@mui/icons-material/AcUnitRounded';
 import WarningIcon from '@mui/icons-material/WarningAmberRounded';
 import WindIcon from '@mui/icons-material/AirRounded';
+import { formatMeasurement } from '@/lib/result-presentation';
 import type { Risk } from '@/lib/dispatch-data';
 
 export type InspectorCheckpoint = {
@@ -52,7 +53,7 @@ export function CheckpointInspector({
       : new Date(new Date(`${departure}:00Z`).getTime() + cp.minutes * 60000),
   );
   return (
-    <div className="checkpoint-panel">
+    <div className="checkpoint-panel" style={{ marginBottom: 20, borderTop: 'none' }}>
       <div className="panel-heading">
         <h3>Checkpoint inspector</h3>
         <div className="checkpoint-nav">
@@ -71,13 +72,17 @@ export function CheckpointInspector({
         <div>
           <strong>{cp.city}</strong>
           <span>
-            Route {route} · Sample checkpoint {index + 1} · Mile {cp.miles}
+            Route {route} · Sample checkpoint {index + 1} · Mile {formatMeasurement(cp.miles)}
           </span>
         </div>
         <Chip
           size="small"
           className={`risk-chip risk-${cp.risk.toLowerCase().replace(' ', '-')}`}
           label={cp.risk}
+          sx={{
+            bgcolor: 'color-mix(in oklch, var(--risk-color) 13%, var(--card))',
+            color: 'color-mix(in oklch, var(--risk-color) 70%, var(--foreground))',
+          }}
         />
       </div>
       <div className="checkpoint-eta">
@@ -89,7 +94,7 @@ export function CheckpointInspector({
         <div>
           <WindIcon sx={sx(20)} />
           <strong>
-            {cp.wind == null ? '—' : cp.wind}
+            {cp.wind == null ? '—' : formatMeasurement(cp.wind)}
             <small>mph</small>
           </strong>
           <span>Wind</span>
