@@ -9,7 +9,7 @@ not cached by browsers (`Cache-Control: no-store`).
 ## Scope: weather-only scenarios
 
 The four departures are the saved departure, +2h, +4h and +6h. Every returned
-route is evaluated in each window. Saved road geometry and distance-proportional
+route is evaluated in each window. Saved road geometry and recorded checkpoint
 driving times remain fixed: checkpoint arrivals shift by the departure offset.
 Routing, traffic, closures, physical truck restrictions and HOS are not recalculated.
 The UI labels these assumptions and asks for a new full trip analysis before adopting

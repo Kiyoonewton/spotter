@@ -40,7 +40,7 @@ The MUI driver-briefing dialog prints the inspected route, not an invented
 recommended route. It labels eligibility and whether that route was recommended,
 then lists route-owned checkpoint arrivals, weather, reasons, sample/accumulation
 intervals and available provider retrieval provenance. Missing measurements remain
-Unavailable. Demo data, timezone, distance-proportional timing and absence of
+Unavailable. Demo data, timezone, recorded timing provenance and absence of
 modeled driver breaks are explicit. Browser Print / Save PDF uses a print layout
 that hides the workspace, repeats table headers and permits multiple pages.
 

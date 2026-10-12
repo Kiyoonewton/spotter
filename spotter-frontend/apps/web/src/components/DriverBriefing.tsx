@@ -1,3 +1,4 @@
+import { timingDescription } from '@/lib/timing-presentation';
 import type { TripAnalysis } from '@/services/api';
 import { formatMeasurement, presentRoutes, presentExplanation } from '@/lib/result-presentation';
 
@@ -37,7 +38,7 @@ export function DriverBriefing({ analysis, selected }: Props) {
       </h3>
       <p>
         {formatMeasurement(route.miles)} miles · {formatMeasurement(route.minutes)} driving minutes.
-        Timing is a distance-proportional estimate; driver breaks are not modeled.
+        {timingDescription(analysis.routes.find((candidate) => candidate.id === selected))}
       </p>
       {analysis.recommendation.recommended_route_id === route.id ? (
         <p>Recommended by this analysis.</p>

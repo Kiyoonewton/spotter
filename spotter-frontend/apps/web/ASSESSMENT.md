@@ -69,7 +69,9 @@ categories logged server-side. Readiness checks database and cache dependencies.
 
 ## Current limitations and next milestones
 
-- Checkpoint timing remains distance-proportional, with no modeled driver breaks.
+- Checkpoint timing interpolates validated HERE span durations with an explicit
+  distance-proportional fallback, with no modeled driver breaks. See
+  [timing policy](../../../docs/route-timing.md).
 - Truck routing does not yet accept a configurable physical vehicle profile.
 - Successful browser analyses request server-side immutable snapshots with seven-day
   token links. Refresh/share restoration preserves arrival weather and applied trip
