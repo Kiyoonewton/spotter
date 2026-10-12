@@ -39,7 +39,16 @@ export function DispatchIntro() {
         </p>
         <Button
           component="a"
-          href="#trip-planning"
+          href="#trip-form"
+          onClick={(event) => {
+            event.preventDefault();
+            const form = document.getElementById('trip-form');
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            form?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
+            form
+              ?.querySelector<HTMLInputElement>('input:not([disabled])')
+              ?.focus({ preventScroll: true });
+          }}
           variant="contained"
           endIcon={<ArrowForwardIcon />}
         >

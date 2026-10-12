@@ -32,10 +32,8 @@ export function ForecastTimeline({
       <div className="forecast-heading">
         <div>
           <CloudIcon sx={sx(20)} />
-          <strong>Corridor forecast</strong>
-          <span>
-            {variant === 'live' ? 'Sampled hourly weather' : 'Illustrative radar & heatmap'}
-          </span>
+          <strong>Weather over the next 48 hours</strong>
+          <span>{variant === 'live' ? 'Hourly route weather' : 'Illustrative demo weather'}</span>
         </div>
         <span className="forecast-timestamp">
           <span className="snapshot-dot" />
@@ -81,9 +79,10 @@ export function ForecastTimeline({
       <div className="forecast-note">
         <InfoIcon sx={sx(14)} />
         {variant === 'live'
-          ? 'Live forecast samples. '
-          : 'Illustrative forecast visualization only. '}
-        The slider does not change route ranking or checkpoint arrival-time weather.
+          ? 'Move the slider to see weather along the route at that time. '
+          : 'Demo animation only; these are illustrative weather shapes. '}
+        +6h means six hours after departure. Route recommendations use weather at each checkpoint’s
+        truck arrival time and do not change when you move this slider.
       </div>
     </div>
   );
