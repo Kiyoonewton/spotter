@@ -1,0 +1,21 @@
+.dispatch-app .results-map {
+  width: 100%;
+  min-width: 0;
+}
+.dispatch-app .workspace-grid > .saved-trip-tools,
+.dispatch-app .workspace-grid > .departure-comparison-panel {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+@media (max-width: 900px) {
+  .dispatch-app .workspace-grid > .results-map {
+    order: -1;
+  }
+  .dispatch-app .workspace-grid > .saved-trip-tools {
+    order: 2;
+  }
+  .dispatch-app .workspace-grid > .departure-comparison-panel {
+    order: 3;
+  }
+}

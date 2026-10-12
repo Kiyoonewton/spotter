@@ -21,6 +21,21 @@ export function presentRoutes(analysis: TripAnalysis | null) {
 }
 
 export function presentExplanation(analysis: TripAnalysis) {
+  const recordedAt = analysis.snapshot?.created_at;
+  const forecastStart = recordedAt ? Date.parse(recordedAt.slice(0, 10) + 'T00:00:00Z') : NaN;
+  if (
+    analysis.data_source === 'live' &&
+    !analysis.recommendation.recommended_route_id &&
+    analysis.routes.some(
+      (route) =>
+        route.eligibility === 'incomplete' &&
+        route.checkpoints.some(
+          (point) => point.weather === null && Date.parse(point.arrival_at) < forecastStart,
+        ),
+    )
+  )
+    return 'Some checkpoint arrivals are in the past, outside the current forecast coverage. Choose a current or future departure and compare routes again. Missing weather remains Unknown.';
+
   return presentRoutes(analysis).reduce(
     (text, route) =>
       analysis.data_source === 'live' && route.id.length >= 16

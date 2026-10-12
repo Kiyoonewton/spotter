@@ -16,6 +16,7 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
   page,
 }, testInfo) => {
   test.setTimeout(60_000);
+  await page.clock.setFixedTime(new Date('2026-10-10T12:00:00Z'));
   await page.route(/\/api\/locations\/?\?/, async (route) => {
     const query = new URL(route.request().url()).searchParams.get('q') ?? '';
     const candidate = query.toLowerCase().startsWith('new')
@@ -65,6 +66,7 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
   await page.getByRole('option', { name: 'New York, NY', exact: true }).click();
   await destination.fill('Boston');
   await page.getByRole('option', { name: 'Boston, MA', exact: true }).click();
+  await page.getByLabel('Departure date and time').fill('2026-10-10T10:00');
   await page.getByRole('button', { name: /Compare routes/i }).click();
   await expect
     .poll(() => requestBody)

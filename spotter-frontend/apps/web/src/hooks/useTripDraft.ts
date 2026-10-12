@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { upcomingDeparture } from '@/lib/departure-time';
+import { useEffect, useRef, useState } from 'react';
 import type { LocationCandidate, TripAnalysis } from '@/services/api';
 import type { AnalysisMode } from './useTripAnalysis';
 const demoOrigin: LocationCandidate = {
@@ -24,9 +25,22 @@ export function useTripDraft(analysis: TripAnalysis | null) {
   const [destinationCandidate, setDestinationCandidate] = useState<LocationCandidate | null>(
     demoDestination,
   );
-  const [departure, setDeparture] = useState('2026-10-10T10:00');
+  const [departure, updateDeparture] = useState('');
+  const departureEdited = useRef(false);
+  const setDeparture = (value: string) => {
+    departureEdited.current = true;
+    updateDeparture(value);
+  };
   const [weight, setWeight] = useState('42000');
   const [spacing, setSpacing] = useState('25');
+  useEffect(() => {
+    if (analysis?.snapshot?.restored || departureEdited.current) return;
+    try {
+      updateDeparture(upcomingDeparture(originCandidate?.timezone ?? 'America/Chicago'));
+    } catch {
+      /* Submission validation handles invalid provider timezones. */
+    }
+  }, [originCandidate?.timezone, analysis?.snapshot?.restored]);
   useEffect(() => {
     const input = analysis?.applied_request;
     if (!analysis?.snapshot?.restored || !input) return;

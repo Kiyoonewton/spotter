@@ -48,16 +48,6 @@ type Props = {
 export function ResultsWorkspace(props: Props) {
   return (
     <div className="workspace-grid">
-      {props.analysis && (
-        <SavedTripTools
-          key={props.analysis.analysis_id}
-          analysis={props.analysis}
-          selected={props.selected}
-        />
-      )}
-      {props.analysis?.snapshot && (
-        <DepartureComparisonPanel key={props.analysis.analysis_id} analysis={props.analysis} />
-      )}
       <aside className={`route-panel panel-tab-${props.tab} ${props.drawer ? 'drawer-open' : ''}`}>
         <IconButton
           className="drawer-handle"
@@ -100,61 +90,76 @@ export function ResultsWorkspace(props: Props) {
           onSelect={props.onRoute}
         />
       </aside>
-      {props.dataSource === 'live' &&
-      props.analysis &&
-      !props.analysis.snapshot?.restored &&
-      props.startAt &&
-      props.timezone &&
-      props.loadWeight !== undefined ? (
-        <LiveMapWorkspace
-          key={props.analysis.analysis_id}
+      <div className="results-map">
+        {props.dataSource === 'live' &&
+        props.analysis &&
+        !props.analysis.snapshot?.restored &&
+        props.startAt &&
+        props.timezone &&
+        props.loadWeight !== undefined ? (
+          <LiveMapWorkspace
+            key={props.analysis.analysis_id}
+            analysis={props.analysis}
+            startAt={props.startAt}
+            timezone={props.timezone}
+            load={props.loadWeight}
+            selected={props.selected}
+            checkpoint={props.checkpoint}
+            onRoute={props.onRoute}
+            onCheckpoint={(index) => {
+              props.onCheckpoint(index);
+              props.onTab('checkpoint');
+            }}
+          />
+        ) : props.dataSource === 'live' ? (
+          <GeographicRouteMap
+            key={props.analysis?.analysis_id}
+            routes={props.analysis?.routes ?? []}
+            selected={props.selected}
+            checkpoint={props.checkpoint}
+            onRoute={props.onRoute}
+            onCheckpoint={(index) => {
+              props.onCheckpoint(index);
+              props.onTab('checkpoint');
+            }}
+          />
+        ) : (
+          <MapWorkspace
+            selected={props.selected}
+            checkpoint={props.checkpoint}
+            pending={props.pending}
+            progress={props.progress}
+            opacity={props.opacity}
+            forecast={props.forecast}
+            horizonHours={journeyHorizon(
+              props.routes.map((route) => ({ duration_minutes: route.minutes })),
+            )}
+            state={props.state}
+            departure={props.departure}
+            spacing={props.spacing}
+            missing={props.missing}
+            onSelect={props.onRoute}
+            onCheckpoint={(index) => {
+              props.onCheckpoint(index);
+              props.onTab('checkpoint');
+              props.onDrawer();
+            }}
+            onOpacity={props.onOpacity}
+            onForecast={props.onForecast}
+          />
+        )}
+      </div>
+      {props.analysis && (
+        <SavedTripTools
+          key={`saved-${props.analysis.analysis_id}`}
           analysis={props.analysis}
-          startAt={props.startAt}
-          timezone={props.timezone}
-          load={props.loadWeight}
           selected={props.selected}
-          checkpoint={props.checkpoint}
-          onRoute={props.onRoute}
-          onCheckpoint={(index) => {
-            props.onCheckpoint(index);
-            props.onTab('checkpoint');
-          }}
         />
-      ) : props.dataSource === 'live' ? (
-        <GeographicRouteMap
-          key={props.analysis?.analysis_id}
-          routes={props.analysis?.routes ?? []}
-          selected={props.selected}
-          checkpoint={props.checkpoint}
-          onRoute={props.onRoute}
-          onCheckpoint={(index) => {
-            props.onCheckpoint(index);
-            props.onTab('checkpoint');
-          }}
-        />
-      ) : (
-        <MapWorkspace
-          selected={props.selected}
-          checkpoint={props.checkpoint}
-          pending={props.pending}
-          progress={props.progress}
-          opacity={props.opacity}
-          forecast={props.forecast}
-          horizonHours={journeyHorizon(
-            props.routes.map((route) => ({ duration_minutes: route.minutes })),
-          )}
-          state={props.state}
-          departure={props.departure}
-          spacing={props.spacing}
-          missing={props.missing}
-          onSelect={props.onRoute}
-          onCheckpoint={(index) => {
-            props.onCheckpoint(index);
-            props.onTab('checkpoint');
-            props.onDrawer();
-          }}
-          onOpacity={props.onOpacity}
-          onForecast={props.onForecast}
+      )}
+      {props.analysis?.snapshot && (
+        <DepartureComparisonPanel
+          key={`departure-${props.analysis.analysis_id}`}
+          analysis={props.analysis}
         />
       )}
     </div>

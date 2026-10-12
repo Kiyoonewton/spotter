@@ -1,4 +1,6 @@
 import { useEffect, useState, type FormEvent, type RefObject } from 'react';
+import Alert from '@mui/material/Alert';
+import { departureIsPast, upcomingDeparture } from '@/lib/departure-time';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -71,6 +73,7 @@ export function TripForm(props: Props) {
     onOriginCandidate = () => undefined,
     onDestinationCandidate = () => undefined,
   } = props;
+  const pastDeparture = ready && props.mode === 'live' && departureIsPast(departure, timezone);
   return (
     <form id="trip-form" className="trip-form" onSubmit={onSubmit}>
       <Autocomplete
@@ -214,6 +217,7 @@ export function TripForm(props: Props) {
         className="calculate-button-mui"
         disabled={
           !ready ||
+          !departure ||
           props.pending ||
           (props.mode === 'live' && (!originCandidate || !destinationCandidate))
         }
@@ -225,6 +229,25 @@ export function TripForm(props: Props) {
       >
         Compare routes
       </Button>
+      {pastDeparture && (
+        <Alert
+          severity="warning"
+          sx={{
+            gridColumn: '1 / -1',
+            width: '100%',
+            boxSizing: 'border-box',
+            flexDirection: { xs: 'column', sm: 'row' },
+          }}
+          action={
+            <Button onClick={() => onDeparture(upcomingDeparture(timezone))}>
+              Use upcoming departure
+            </Button>
+          }
+        >
+          This departure is in the past. Current forecasts may not cover those arrival times. Choose
+          a current or future departure and compare routes again.
+        </Alert>
+      )}
     </form>
   );
 }
