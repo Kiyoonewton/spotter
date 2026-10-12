@@ -116,7 +116,7 @@ export async function createTripAnalysis(input: TripAnalysisRequest): Promise<Tr
   const response = await fetch(apiUrl('/trip-analyses/'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...input, save_snapshot: true }),
+    body: JSON.stringify({ save_snapshot: true, ...input }),
   });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));

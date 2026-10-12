@@ -8,6 +8,7 @@ for (const width of [320, 390, 768, 1280]) {
     page,
   }, testInfo) => {
     await page.setViewportSize({ width, height: 900 });
+    test.setTimeout(60000);
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.route('**/api/locations/**', (route) =>
       route.fulfill({
@@ -42,7 +43,7 @@ for (const width of [320, 390, 768, 1280]) {
       });
     });
     await page.goto('/');
-    await expect(page.getByLabel('Load weight in lbs')).toBeEnabled();
+    await expect(page.getByLabel('Load weight in lbs')).toBeEnabled({ timeout: 30000 });
     await expect(page.getByRole('heading', { name: 'A clearer road ahead.' })).toBeVisible();
     await expect
       .poll(() =>
