@@ -1,3 +1,4 @@
+import { RouteDecisionComparison } from './RouteDecisionComparison';
 import LinearProgress from '@mui/material/LinearProgress';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
 import { RouteCard, type RouteView } from './RouteCard';
@@ -49,6 +50,7 @@ export function RouteComparison({
           />
         ))
       )}
+      {!loading && <RouteDecisionComparison routes={routes} recommended={recommended} />}
       <div className="ranking-note">
         <InfoIcon />
         <span>Ranked by Severe miles, High miles, average risk, then travel time.</span>

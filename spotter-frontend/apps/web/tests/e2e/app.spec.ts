@@ -78,6 +78,11 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
   expect(requestBody?.destination_coordinates).toEqual({ lat: 42.3, lon: -71.1 });
   expect(requestBody?.departure_at).toBe('2026-10-10T14:00:00.000Z');
   await expect(page.getByText('Route 2 recommended')).toBeVisible();
+  await page.getByRole('button', { name: 'Why this route?' }).click();
+  const comparison = page.getByRole('table', { name: 'Recommendation criteria in priority order' });
+  await expect(comparison.getByText('Deciding criterion')).toBeVisible();
+  await expect(page.getByText(/5 extra driving minutes; 2 more miles/)).toBeVisible();
+  await page.getByRole('button', { name: 'Why this route?' }).click();
   await expect(page.getByTestId('estimated-truck')).toHaveAttribute('data-route-id', 'here-safe');
   await expect(page.getByRole('region', { name: 'Geographic route map' })).toBeVisible();
   const forecastHour = page.getByRole('slider', {
@@ -179,7 +184,11 @@ test('parent results flow preserves null recommendations and eligibility banners
   await expect(page.getByText(/Route alpha · Sample checkpoint 1/)).toBeVisible();
   await expect(page.getByText('Recommendation unavailable — incomplete forecast')).toBeVisible();
   await expect(page.getByText('Recommended', { exact: true })).toHaveCount(0);
-  await expect(page.getByText(/Route .* recommended/)).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: /^Route .* recommended$/ })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Why this route?' }).click();
+  await expect(page.getByText(/No route is recommended by this analysis/)).toBeVisible();
+  await expect(page.getByText('Deciding criterion', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Why this route?' }).click();
   await page
     .getByRole('button', { name: /Route beta/ })
     .first()
