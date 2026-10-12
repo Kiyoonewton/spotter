@@ -68,6 +68,18 @@ for (const width of [320, 390, 768, 1280]) {
     await expect(page.getByText('Route 2 recommended', { exact: true })).toBeVisible();
     await expect(page.getByRole('region', { name: 'Dispatch introduction' })).toHaveCount(0);
     await expect(page.getByRole('region', { name: 'Geographic route map' })).toBeVisible();
+    await page.getByRole('button', { name: 'Why this route?' }).click();
+    await expect(
+      page.getByRole('table', { name: 'Recommendation criteria in priority order' }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
+    ).toBe(true);
+    await testInfo.attach(`comparison-${width}`, {
+      body: await page.screenshot({ fullPage: true }),
+      contentType: 'image/png',
+    });
+    await page.getByRole('button', { name: 'Why this route?' }).click();
     if (width <= 900) {
       await expect(page.getByRole('heading', { name: 'Checkpoint inspector' })).not.toBeVisible();
       await page.getByRole('button', { name: 'Checkpoint 1', exact: true }).click();
