@@ -115,6 +115,9 @@ export function RouteDecisionComparison({ routes, recommended }: Props) {
             </TableBody>
           </Table>
         </TableContainer>
+        <Typography variant="caption" component="p" sx={{ mt: 1, color: 'text.secondary' }}>
+          Scroll sideways in the table to compare all alternatives.
+        </Typography>
         {decision?.fastest && (
           <Typography variant="body2" sx={{ mt: 1.5 }}>
             Compared with the fastest eligible option, {label(decision.fastest)}:{' '}
