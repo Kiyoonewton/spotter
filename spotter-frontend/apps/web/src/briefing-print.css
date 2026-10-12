@@ -33,6 +33,11 @@
   margin: 4px 0;
 }
 @media print {
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+  }
   body > * {
     display: none !important;
   }

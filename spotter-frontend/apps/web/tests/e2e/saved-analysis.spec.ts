@@ -6,7 +6,7 @@ import type { ForecastPoint } from '../../src/services/corridor-forecast';
 test('saved trip restores without provider calls and produces a printable owned briefing', async ({
   page,
   context,
-}) => {
+}, testInfo) => {
   let analyses = 0;
   let forecasts = 0;
   const saved = {
@@ -82,6 +82,8 @@ test('saved trip restores without provider calls and produces a printable owned 
   await expect(
     page.getByRole('slider', { name: 'Corridor forecast hours after departure' }),
   ).toBeEnabled();
+  const initialForecasts = forecasts;
+  expect(initialForecasts).toBeGreaterThan(0);
   await page.getByRole('button', { name: 'Copy saved trip link' }).click();
   await expect(page.getByLabel('Saved trip link')).toHaveValue(/#analysis=a{64}$/);
   const url = await page.getByLabel('Saved trip link').inputValue();
@@ -96,7 +98,7 @@ test('saved trip restores without provider calls and produces a printable owned 
   await expect(page.getByLabel('Departure date and time')).toHaveValue('2026-10-10T10:00');
   await expect(page.getByText('Route 2 recommended', { exact: true })).toBeVisible();
   expect(analyses).toBe(1);
-  expect(forecasts).toBe(1);
+  expect(forecasts).toBe(initialForecasts);
   await expect(
     page.getByRole('slider', { name: 'Corridor forecast hours after departure' }),
   ).toHaveCount(0);
@@ -108,6 +110,13 @@ test('saved trip restores without provider calls and produces a printable owned 
   await expect(
     page.getByRole('heading', { name: 'Weather-aware routing', exact: true }),
   ).not.toBeVisible();
+  await testInfo.attach('driver-briefing-print', {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: 'image/png',
+  });
+  const pdf = await page.pdf({ format: 'A4', printBackground: true });
+  expect(pdf.subarray(0, 4).toString()).toBe('%PDF');
+  await testInfo.attach('driver-briefing-pdf', { body: pdf, contentType: 'application/pdf' });
   await page.emulateMedia({ media: 'screen' });
   await page.getByRole('button', { name: 'Close', exact: true }).click();
 });
