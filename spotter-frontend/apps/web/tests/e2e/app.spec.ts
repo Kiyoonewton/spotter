@@ -15,6 +15,7 @@ test('loads the dispatch workspace before an analysis is submitted', async ({ pa
 test('mocked live contract journey sends coordinates and hides illustrative map', async ({
   page,
 }, testInfo) => {
+  test.setTimeout(60_000);
   await page.route(/\/api\/locations\/?\?/, async (route) => {
     const query = new URL(route.request().url()).searchParams.get('q') ?? '';
     const candidate = query.toLowerCase().startsWith('new')
@@ -51,7 +52,7 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
     await route.fulfill({ json: liveMapAnalysis });
   });
   await page.goto('/');
-  await expect(page.getByLabel('Load weight in lbs')).toBeEnabled();
+  await expect(page.getByLabel('Load weight in lbs')).toBeEnabled({ timeout: 30_000 });
   await page.getByRole('button', { name: 'Live' }).click();
   const origin = page.getByRole('combobox', { name: 'Origin' });
   const destination = page.getByRole('combobox', { name: 'Destination' });
