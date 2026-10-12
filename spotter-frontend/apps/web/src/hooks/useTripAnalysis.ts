@@ -1,3 +1,4 @@
+import { readTruckProfile, type TruckProfileDraft } from '@/services/truck-profile';
 import { localTimestamp } from '@/lib/departure-time';
 export { localTimestamp } from '@/lib/departure-time';
 import { useSavedTripRestore } from './useSavedTripRestore';
@@ -7,6 +8,7 @@ import { createTripAnalysis, type LocationCandidate, type TripAnalysis } from '@
 
 export type AnalysisMode = 'demo' | 'live';
 export type EditableTrip = {
+  truckProfile?: TruckProfileDraft;
   mode?: AnalysisMode;
   origin: string;
   destination: string;
@@ -93,6 +95,9 @@ export function useTripAnalysis(): Result {
         departure_timezone: timezone,
         load_weight_lb: weight,
         checkpoint_spacing_miles: spacing,
+        ...(mode === 'live' && trip.truckProfile
+          ? { truck_profile: readTruckProfile(trip.truckProfile, weight) }
+          : {}),
         ...(mode === 'live' && trip.originCandidate && trip.destinationCandidate
           ? {
               origin_coordinates: {

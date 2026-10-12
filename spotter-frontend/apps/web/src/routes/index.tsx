@@ -1,3 +1,5 @@
+import { TruckProfileForm } from '@/components/TruckProfileForm';
+import { useTruckProfile } from '@/hooks/useTruckProfile';
 import { DispatchIntro } from '@/components/DispatchIntro';
 import { presentExplanation, presentRoutes } from '@/lib/result-presentation';
 import { createFileRoute } from '@tanstack/react-router';
@@ -70,6 +72,7 @@ function Index() {
     spacing,
     setSpacing,
   } = useTripDraft(analysis);
+  const truck = useTruckProfile(analysis);
   const originSearch = useLocationSearch(mode, origin, !originCandidate);
   const destinationSearch = useLocationSearch(mode, destination, !destinationCandidate);
   useEffect(() => {
@@ -109,6 +112,7 @@ function Index() {
           timezone: originCandidate?.timezone ?? (mode === 'demo' ? 'America/Chicago' : ''),
           weight,
           spacing,
+          ...(mode === 'live' && truck.enabled ? { truckProfile: truck.draft } : {}),
         },
         event,
       );
@@ -185,6 +189,12 @@ function Index() {
           onWeight={setWeight}
           onSpacing={setSpacing}
           onSubmit={calculate}
+        />
+        <TruckProfileForm
+          {...truck.formProps}
+          mode={mode}
+          pending={pending}
+          analysisId={analysis?.analysis_id}
         />
         {error && (
           <div role="alert" className="form-error">

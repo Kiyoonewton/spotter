@@ -33,6 +33,20 @@ export function DriverBriefing({ analysis, selected }: Props) {
         Departure: {date(input.departure_at)} · Cargo: {formatMeasurement(input.load_weight_lb)} lb
         · Sampling: {input.checkpoint_spacing_miles} mi
       </p>
+      {input.truck_profile && (
+        <p>
+          Vehicle measurements: {input.truck_profile.height_ft} ft high ·{' '}
+          {input.truck_profile.width_ft} ft wide · {input.truck_profile.length_ft} ft long · actual
+          loaded weight {input.truck_profile.current_weight_lb} lb · rated gross weight{' '}
+          {input.truck_profile.gross_weight_lb} lb · heaviest axle{' '}
+          {input.truck_profile.weight_per_axle_lb} lb.
+        </p>
+      )}
+      <p>
+        {analysis.routing_profile_notice ??
+          'Physical vehicle restrictions are not established by this snapshot.'}
+      </p>
+      {route.routing_notice && <p>{route.routing_notice}</p>}
       <h3>
         Inspected Route {route.displayId ?? route.id} · {route.eligibility}
       </h3>

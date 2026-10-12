@@ -21,6 +21,7 @@ export type RouteView = {
   high: number;
   average: number | null;
   risk_miles?: Record<string, number>;
+  routing_notice?: string | null;
   eligibility?: string;
 };
 const sx = (fontSize: number) => ({ fontSize });
@@ -127,7 +128,7 @@ export function RouteCard({
         {blocked ? (
           <div className="blocked-rule">
             <WarningIcon sx={sx(14)} />
-            No Travel — see returned blocking reasons
+            {route.routing_notice ?? 'No Travel — see returned blocking reasons'}
           </div>
         ) : missing ? (
           <div className="blocked-rule">
