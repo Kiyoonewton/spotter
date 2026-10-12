@@ -1,3 +1,5 @@
+import { useSavedTripRestore } from './useSavedTripRestore';
+import { rememberSnapshot, forgetSnapshot } from '@/services/saved-analyses';
 import { useCallback, useRef, useState } from 'react';
 import { createTripAnalysis, type LocationCandidate, type TripAnalysis } from '@/services/api';
 
@@ -99,6 +101,7 @@ export function useTripAnalysis(): Result {
   const sequence = useRef(0);
   const pendingGuard = useRef(false);
   const reset = useCallback(() => {
+    forgetSnapshot();
     sequence.current += 1;
     pendingGuard.current = false;
     setAnalysis(null);
@@ -157,6 +160,8 @@ export function useTripAnalysis(): Result {
       const fallback =
         result.routes.find((route) => route.eligibility === 'eligible') ?? result.routes[0];
       setAnalysis(result);
+      forgetSnapshot();
+      rememberSnapshot(result.snapshot?.token);
       setApplied({
         mode,
         origin: trip.origin,
@@ -182,6 +187,24 @@ export function useTripAnalysis(): Result {
       }
     }
   }, []);
+  useSavedTripRestore(
+    useCallback((saved, trip) => {
+      if (sequence.current !== 0) return false;
+      setAnalysis(saved);
+      setApplied(trip);
+      setSelectedRouteId(
+        saved.recommendation.recommended_route_id ??
+          saved.routes.find((route) => route.eligibility === 'eligible')?.id ??
+          saved.routes[0]?.id ??
+          '',
+      );
+      setCheckpointIndex(0);
+      return true;
+    }, []),
+    useCallback((message) => {
+      if (sequence.current === 0) setError(message);
+    }, []),
+  );
   return {
     analysis,
     applied,

@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from .snapshots import save_analysis
 from .analysis import SPACING, analyze_trip
 from .providers import ProviderError, search_locations
 from .live_analysis import LiveAnalysisError, analyze_live
@@ -43,6 +44,8 @@ def locations(request):
 def trip_analyses(request):
     data = request.data if isinstance(request.data, dict) else {}
     mode = data.get("mode", "demo")
+    if not isinstance(data.get("save_snapshot", False), bool):
+        return Response({"errors": {"save_snapshot": "Use a boolean."}}, status=400)
     if mode not in {"demo", "live"}:
         return Response({"errors": {"mode": "mode must be demo or live."}}, status=400)
     errors = {}
@@ -81,11 +84,16 @@ def trip_analyses(request):
     if mode == "live":
         request_data.update({"origin_coordinates": data["origin_coordinates"], "destination_coordinates": data["destination_coordinates"], "origin_label": data["origin"].strip(), "destination_label": data["destination"].strip()})
         try:
-            return Response(analyze_live(request_data), status=200)
+            result = analyze_live(request_data)
+            if data.get("save_snapshot"):
+                result = save_analysis(result, {**request_data, "mode": mode})
+            return Response(result, status=200)
         except (LiveAnalysisError, ProviderError, RoutingProviderError, WeatherProviderError) as error:
             request_id = str(uuid4())
             logger.warning("live analysis unavailable request_id=%s category=%s", request_id, type(error).__name__)
             return Response({"error": "Live analysis is temporarily unavailable.", "code": "live_analysis_failed", "request_id": request_id}, status=503)
     result = analyze_trip(request_data)
     result["data_source"] = "demo"
+    if data.get("save_snapshot"):
+        result = save_analysis(result, {**request_data, "mode": mode})
     return Response(result, status=200)

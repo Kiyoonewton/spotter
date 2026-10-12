@@ -16,7 +16,7 @@ import { RecommendationBanner } from '@/components/RecommendationBanner';
 import { WorkspaceHeader } from '@/components/WorkspaceHeader';
 import { useLocationSearch } from '@/hooks/useLocationSearch';
 import { useTripAnalysis, type AnalysisMode } from '@/hooks/useTripAnalysis';
-import type { LocationCandidate } from '@/services/api';
+import { useTripDraft } from '@/hooks/useTripDraft';
 import type { DemoState, Risk } from '@/lib/dispatch-data';
 import { rankRoutes } from '@/lib/route-ranking';
 
@@ -30,33 +30,9 @@ export const Route = createFileRoute('/')({
   component: Index,
 });
 const sx = (fontSize: number) => ({ fontSize });
-const demoOrigin: LocationCandidate = {
-  provider_id: 'demo:chicago',
-  label: 'Chicago, IL',
-  latitude: 41.8781,
-  longitude: -87.6298,
-  timezone: 'America/Chicago',
-};
-const demoDestination: LocationCandidate = {
-  provider_id: 'demo:pittsburgh',
-  label: 'Pittsburgh, PA',
-  latitude: 40.4406,
-  longitude: -79.9959,
-  timezone: 'America/New_York',
-};
 
 function Index() {
   const [state, setState] = useState<DemoState>('results');
-  const [mode, setMode] = useState<AnalysisMode>('demo');
-  const [origin, setOrigin] = useState(demoOrigin.label);
-  const [destination, setDestination] = useState(demoDestination.label);
-  const [originCandidate, setOriginCandidate] = useState<LocationCandidate | null>(demoOrigin);
-  const [destinationCandidate, setDestinationCandidate] = useState<LocationCandidate | null>(
-    demoDestination,
-  );
-  const [departure, setDeparture] = useState('2026-10-10T10:00');
-  const [weight, setWeight] = useState('42000');
-  const [spacing, setSpacing] = useState('25');
   const [forecast, setForecast] = useState(4);
   const [opacity, setOpacity] = useState(45);
   const [drawer, setDrawer] = useState(true);
@@ -76,6 +52,24 @@ function Index() {
     setCheckpointIndex: setCheckpoint,
     reset,
   } = useTripAnalysis();
+  const {
+    mode,
+    setMode,
+    origin,
+    setOrigin,
+    destination,
+    setDestination,
+    originCandidate,
+    setOriginCandidate,
+    destinationCandidate,
+    setDestinationCandidate,
+    departure,
+    setDeparture,
+    weight,
+    setWeight,
+    spacing,
+    setSpacing,
+  } = useTripDraft(analysis);
   const originSearch = useLocationSearch(mode, origin, !originCandidate);
   const destinationSearch = useLocationSearch(mode, destination, !destinationCandidate);
   useEffect(() => {

@@ -1,3 +1,4 @@
+import briefingPrint from '../briefing-print.css?url';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   Outlet,
@@ -91,6 +92,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: 'twitter:card', content: 'summary_large_image' },
     ],
     links: [
+      { rel: 'stylesheet', href: briefingPrint },
       { rel: 'stylesheet', href: appCss },
       { rel: 'stylesheet', href: responsiveCss },
       { rel: 'stylesheet', href: typographyCss },

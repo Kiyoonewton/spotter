@@ -59,5 +59,6 @@ Live checkpoint timing uses a distance-proportional driving estimate; driver
 breaks are not modeled. Truck mode does not yet accept a configurable vehicle
 profile. Missing forecasts remain Unknown, and blocked/incomplete routes cannot
 win eligible ranking. Map weather circles are sampled forecasts, not radar.
-Completed analyses are not yet persisted or shareable. Departure optimization,
-printable briefings and a React Native companion are future milestones.
+Completed browser analyses can be restored or shared through seven-day token links,
+with a printable driver briefing. See [saved analysis behavior](docs/saved-analyses.md).
+Departure optimization and a React Native companion remain future milestones.
