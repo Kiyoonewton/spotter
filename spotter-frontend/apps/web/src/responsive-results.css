@@ -284,3 +284,15 @@
   min-width: 0;
   flex-wrap: wrap;
 }
+@media (max-width: 600px) {
+  .dispatch-app .app-header {
+    padding-inline: 16px;
+    gap: 12px;
+  }
+  .dispatch-app .header-status-mui {
+    display: none;
+  }
+  .dispatch-app .header-right {
+    gap: 8px;
+  }
+}
