@@ -5,6 +5,7 @@ import type { ForecastPoint } from '../../src/services/corridor-forecast';
 
 test('saved trip restores without provider calls and produces a printable owned briefing', async ({
   page,
+  context,
 }) => {
   let analyses = 0;
   let forecasts = 0;

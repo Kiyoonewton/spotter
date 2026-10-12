@@ -74,9 +74,9 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
       destination: 'Boston, MA',
       departure_timezone: 'America/New_York',
     });
-  expect(requestBody?.origin_coordinates).toEqual({ lat: 40.7, lon: -74 });
-  expect(requestBody?.destination_coordinates).toEqual({ lat: 42.3, lon: -71.1 });
-  expect(requestBody?.departure_at).toBe('2026-10-10T14:00:00.000Z');
+  expect(requestBody?.['origin_coordinates']).toEqual({ lat: 40.7, lon: -74 });
+  expect(requestBody?.['destination_coordinates']).toEqual({ lat: 42.3, lon: -71.1 });
+  expect(requestBody?.['departure_at']).toBe('2026-10-10T14:00:00.000Z');
   await expect(page.getByText('Route 2 recommended')).toBeVisible();
   await page.getByRole('button', { name: 'Why this route?' }).click();
   const comparison = page.getByRole('table', { name: 'Recommendation criteria in priority order' });

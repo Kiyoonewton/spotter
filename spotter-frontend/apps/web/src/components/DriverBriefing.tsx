@@ -40,7 +40,7 @@ export function DriverBriefing({ analysis, selected }: Props) {
         Timing is a distance-proportional estimate; driver breaks are not modeled.
       </p>
       {analysis.recommendation.recommended_route_id === route.id ? (
-        <p>Recommended by the saved analysis.</p>
+        <p>Recommended by this analysis.</p>
       ) : (
         <p>
           This inspected route is not recommended by the analysis. Inspection is not approval to
