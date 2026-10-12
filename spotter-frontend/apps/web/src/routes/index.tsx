@@ -1,3 +1,4 @@
+import { DispatchIntro } from '@/components/DispatchIntro';
 import { presentExplanation, presentRoutes } from '@/lib/result-presentation';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
@@ -140,8 +141,9 @@ function Index() {
   return (
     <div className={`dispatch-app ${state === 'mobile' ? 'mobile-preview' : ''}`}>
       <WorkspaceHeader />
-      <main>
-        <div className="page-heading">
+      <main className={!analysis ? 'has-intro' : undefined}>
+        {!analysis && <DispatchIntro />}
+        <div className="page-heading" id="trip-planning">
           <div>
             <div className="eyebrow">DISPATCH PLANNING</div>
             <h1>Weather-aware routing</h1>

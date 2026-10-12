@@ -8,6 +8,7 @@ for (const width of [320, 390, 768, 1280]) {
     page,
   }, testInfo) => {
     await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.route('**/api/locations/**', (route) =>
       route.fulfill({
         json: {
@@ -36,6 +37,20 @@ for (const width of [320, 390, 768, 1280]) {
     });
     await page.goto('/');
     await expect(page.getByLabel('Load weight in lbs')).toBeEnabled();
+    await expect(page.getByRole('heading', { name: 'A clearer road ahead.' })).toBeVisible();
+    await expect
+      .poll(() =>
+        page.locator('.intro-art img').evaluate((image) => (image as HTMLImageElement).currentSrc),
+      )
+      .toContain('/dispatch-intro-static.svg');
+    await testInfo.attach(`intro-${width}`, {
+      body: await page.screenshot({ fullPage: true }),
+      contentType: 'image/png',
+    });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
+    ).toBe(true);
+    await page.getByRole('link', { name: 'Plan a trip' }).click();
     await page.getByRole('button', { name: 'Live', exact: true }).click();
     await expect(page.getByText('Live provider analysis', { exact: true })).toBeVisible();
     for (const name of ['Origin', 'Destination']) {
@@ -44,6 +59,7 @@ for (const width of [320, 390, 768, 1280]) {
     }
     await page.getByRole('button', { name: /Compare routes/i }).click();
     await expect(page.getByText('Route 2 recommended', { exact: true })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Dispatch introduction' })).toHaveCount(0);
     await expect(page.getByRole('region', { name: 'Geographic route map' })).toBeVisible();
     if (width <= 900) {
       await expect(page.getByRole('heading', { name: 'Checkpoint inspector' })).not.toBeVisible();
