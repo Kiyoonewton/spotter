@@ -120,6 +120,11 @@ test('physical profile validates before submit, preserves cargo, excludes restri
   await expect(
     page.getByRole('spinbutton', { name: 'Total height (ft)', exact: true }),
   ).toHaveValue('13.5');
+  await expect(
+    page.locator('.MuiCollapse-entered').filter({
+      has: page.getByRole('spinbutton', { name: 'Heaviest axle weight (lb)', exact: true }),
+    }),
+  ).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
     true,
   );
