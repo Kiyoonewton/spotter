@@ -1,19 +1,13 @@
-import IconButton from '@mui/material/IconButton';
 import Slider from '@mui/material/Slider';
-import Tooltip from '@mui/material/Tooltip';
 import CloudIcon from '@mui/icons-material/FilterDramaOutlined';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
-import PauseIcon from '@mui/icons-material/PauseRounded';
-import PlayIcon from '@mui/icons-material/PlayArrowRounded';
 
 type Props = {
   variant?: 'demo' | 'live';
   disabled?: boolean;
   forecastHour: number;
   timestamp: string;
-  playing: boolean;
   onForecastHour: (hour: number) => void;
-  onPlaying: (playing: boolean) => void;
 };
 
 const sx = (fontSize: number) => ({ fontSize });
@@ -23,9 +17,7 @@ export function ForecastTimeline({
   disabled = false,
   forecastHour,
   timestamp,
-  playing,
   onForecastHour,
-  onPlaying,
 }: Props) {
   return (
     <div className="forecast-panel">
@@ -38,21 +30,10 @@ export function ForecastTimeline({
         <span className="forecast-timestamp">
           <span className="snapshot-dot" />
           Depart +{forecastHour}h <span>•</span> {timestamp} <span>•</span>
-          <small>Forecast snapshot</small>
+          <small>Selected weather time</small>
         </span>
       </div>
       <div className="forecast-slider-row">
-        <Tooltip title={playing ? 'Pause forecast' : 'Play forecast'}>
-          <IconButton
-            disabled={disabled}
-            className="forecast-play"
-            color="primary"
-            aria-label={playing ? 'Pause forecast' : 'Play forecast'}
-            onClick={() => onPlaying(!playing)}
-          >
-            {playing ? <PauseIcon /> : <PlayIcon />}
-          </IconButton>
-        </Tooltip>
         <div className="forecast-track">
           <Slider
             disabled={disabled}
@@ -66,7 +47,6 @@ export function ForecastTimeline({
             valueLabelFormat={(value) => `+${value}h`}
             onChange={(_, value) => {
               onForecastHour(value as number);
-              onPlaying(false);
             }}
           />
           <div className="forecast-ticks">
@@ -80,7 +60,7 @@ export function ForecastTimeline({
         <InfoIcon sx={sx(14)} />
         {variant === 'live'
           ? 'Move the slider to see weather along the route at that time. '
-          : 'Demo animation only; these are illustrative weather shapes. '}
+          : 'Demo visualization only; these shapes are illustrative. '}
         +6h means six hours after departure. Route recommendations use weather at each checkpoint’s
         truck arrival time and do not change when you move this slider.
       </div>

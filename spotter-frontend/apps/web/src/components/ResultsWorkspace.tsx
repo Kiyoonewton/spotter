@@ -28,7 +28,6 @@ type Props = {
   departure: string;
   opacity: number;
   forecast: number;
-  playing: boolean;
   state: DemoState;
   dataSource?: 'demo' | 'live';
   analysis?: TripAnalysis;
@@ -41,7 +40,6 @@ type Props = {
   onCheckpoint: (index: number) => void;
   onOpacity: (value: number) => void;
   onForecast: (value: number) => void;
-  onPlaying: (value: boolean) => void;
 };
 
 export function ResultsWorkspace(props: Props) {
@@ -128,7 +126,6 @@ export function ResultsWorkspace(props: Props) {
           progress={props.progress}
           opacity={props.opacity}
           forecast={props.forecast}
-          playing={props.playing}
           state={props.state}
           departure={props.departure}
           spacing={props.spacing}
@@ -141,7 +138,6 @@ export function ResultsWorkspace(props: Props) {
           }}
           onOpacity={props.onOpacity}
           onForecast={props.onForecast}
-          onPlaying={props.onPlaying}
         />
       )}
     </div>

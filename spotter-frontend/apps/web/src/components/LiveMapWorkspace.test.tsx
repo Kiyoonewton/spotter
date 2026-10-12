@@ -11,7 +11,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe('LiveMapWorkspace', () => {
-  it('plays snapshots without changing arrival-time analysis or route selection', () => {
+  it('selects weather time manually without changing analysis or route ownership', () => {
     vi.useFakeTimers();
     const analysis: TripAnalysis = {
       analysis_id: 'immutable',
@@ -47,13 +47,15 @@ describe('LiveMapWorkspace', () => {
         onCheckpoint={onCheckpoint}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Play forecast' }));
-    act(() => vi.advanceTimersByTime(900));
+    expect(screen.queryByRole('button', { name: 'Play forecast' })).not.toBeInTheDocument();
+    fireEvent.change(
+      screen.getByRole('slider', { name: 'Corridor forecast hours after departure' }),
+      { target: { value: '1' } },
+    );
     expect(screen.getByTestId('forecast-arbitrary-route-start')).toHaveAttribute(
       'data-value',
       '60',
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Pause forecast' }));
     act(() => vi.advanceTimersByTime(1800));
     expect(screen.getByTestId('forecast-arbitrary-route-start')).toHaveAttribute('data-hour', '1');
     expect(JSON.stringify(analysis)).toBe(before);

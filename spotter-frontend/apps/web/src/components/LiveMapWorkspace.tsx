@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import LinearProgress from '@mui/material/LinearProgress';
@@ -29,15 +29,9 @@ export function LiveMapWorkspace(props: Props) {
     props.load,
   );
   const [hour, setHour] = useState(0);
-  const [playing, setPlaying] = useState(false);
   const [variable, setVariable] = useState<ForecastVariable>('wind');
   const [opacity, setOpacity] = useState(45);
   const frame = data?.frames[hour];
-  useEffect(() => {
-    if (!playing || !data || loading) return;
-    const timer = setInterval(() => setHour((value) => (value === 48 ? 0 : value + 1)), 900);
-    return () => clearInterval(timer);
-  }, [playing, data, loading]);
   const timestamp = new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
@@ -52,6 +46,7 @@ export function LiveMapWorkspace(props: Props) {
         routes={props.analysis.routes}
         selected={props.selected}
         checkpoint={props.checkpoint}
+        previewAt={new Date(Date.parse(props.startAt) + hour * 3600000).toISOString()}
         onRoute={props.onRoute}
         onCheckpoint={props.onCheckpoint}
         {...(frame
@@ -90,13 +85,12 @@ export function LiveMapWorkspace(props: Props) {
         disabled={!data || loading}
         forecastHour={hour}
         timestamp={timestamp}
-        playing={playing}
         onForecastHour={setHour}
-        onPlaying={setPlaying}
       />
       <p style={{ padding: '0 16px', fontSize: 12 }}>
-        Sampled checkpoint weather, not radar or a continuous heatmap. Dashed circles indicate
-        unavailable measurements. {props.timezone}.
+        Truck marker: estimated from route timing, not live GPS. Timing assumes
+        distance-proportional travel. Sampled checkpoint weather, not radar or a continuous heatmap.
+        Dashed circles indicate unavailable measurements. {props.timezone}.
         {data
           ? ` Open-Meteo retrieved ${data.retrieved_at}; cached up to ${data.cache_ttl_seconds}s.`
           : ''}{' '}

@@ -14,7 +14,6 @@ type Props = {
   progress: number;
   opacity: number;
   forecast: number;
-  playing: boolean;
   state: DemoState;
   departure: string;
   spacing: number;
@@ -23,7 +22,6 @@ type Props = {
   onCheckpoint: (index: number) => void;
   onOpacity: (value: number) => void;
   onForecast: (value: number) => void;
-  onPlaying: (value: boolean) => void;
 };
 const risks: Risk[] = ['Low', 'Moderate', 'High', 'Severe', 'No Travel', 'Unknown'];
 const sx = (fontSize: number) => ({ fontSize });
@@ -110,9 +108,7 @@ export function MapWorkspace(props: Props) {
         }).format(
           new Date(new Date(`${props.departure}:00-05:00`).getTime() + props.forecast * 3600000),
         )}
-        playing={props.playing}
         onForecastHour={props.onForecast}
-        onPlaying={props.onPlaying}
       />
     </section>
   );

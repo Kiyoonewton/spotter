@@ -72,6 +72,7 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
   expect(requestBody?.destination_coordinates).toEqual({ lat: 42.3, lon: -71.1 });
   expect(requestBody?.departure_at).toBe('2026-10-10T14:00:00.000Z');
   await expect(page.getByText('Route 2 recommended')).toBeVisible();
+  await expect(page.getByTestId('estimated-truck')).toHaveAttribute('data-route-id', 'here-safe');
   await expect(page.getByRole('region', { name: 'Geographic route map' })).toBeVisible();
   const forecastHour = page.getByRole('slider', {
     name: 'Corridor forecast hours after departure',
@@ -82,6 +83,10 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
     '10',
   );
   await forecastHour.press('ArrowRight');
+  await expect(page.getByTestId('estimated-truck')).toHaveAttribute(
+    'data-selected-at',
+    '2026-10-10T15:00:00.000Z',
+  );
   await expect(page.getByTestId('forecast-here-safe-here-safe-start')).toHaveAttribute(
     'data-hour',
     '1',
@@ -104,6 +109,7 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
     'missing',
   );
   await page.getByRole('button', { name: 'Map route here-fast, High segment' }).press('Enter');
+  await expect(page.getByTestId('estimated-truck')).toHaveAttribute('data-route-id', 'here-fast');
   await page.getByRole('button', { name: 'Map checkpoint 2 on route here-fast' }).press('Enter');
   await expect(page.getByText(/Route 1 · Sample checkpoint 2/)).toBeVisible();
   await page
