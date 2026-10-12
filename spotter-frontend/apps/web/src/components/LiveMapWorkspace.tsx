@@ -1,3 +1,4 @@
+import { journeyHorizon } from '@/lib/journey-horizon';
 import { useState } from 'react';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
@@ -28,7 +29,9 @@ export function LiveMapWorkspace(props: Props) {
     props.startAt,
     props.load,
   );
-  const [hour, setHour] = useState(0);
+  const [selectedHour, setHour] = useState(0);
+  const horizonHours = journeyHorizon(props.analysis.routes);
+  const hour = Math.min(selectedHour, horizonHours);
   const [variable, setVariable] = useState<ForecastVariable>('wind');
   const [opacity, setOpacity] = useState(45);
   const frame = data?.frames[hour];
@@ -82,6 +85,7 @@ export function LiveMapWorkspace(props: Props) {
       </div>
       <ForecastTimeline
         variant="live"
+        horizonHours={horizonHours}
         disabled={!data || loading}
         forecastHour={hour}
         timestamp={timestamp}

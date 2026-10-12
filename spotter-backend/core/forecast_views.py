@@ -14,7 +14,7 @@ def corridor_forecasts(request):
     try:
         result = corridor_forecast(request.data)
     except ForecastValidationError:
-        return Response({"error": "Invalid corridor forecast request. Provide offset-aware start_at, finite non-negative load_weight_lb, and 1 to 200 uniquely identified coordinate points.", "code": "invalid_corridor_forecast"}, status=400)
+        return Response({"error": "Invalid corridor forecast request. Provide offset-aware start_at, finite non-negative load_weight_lb, 1 to 200 uniquely identified coordinate points, and optional integer horizon_hours from 1 to 720.", "code": "invalid_corridor_forecast"}, status=400)
     except WeatherProviderError as error:
         request_id = str(uuid4())
         logger.warning("corridor forecast unavailable request_id=%s category=%s", request_id, type(error).__name__)

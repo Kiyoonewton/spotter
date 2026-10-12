@@ -14,6 +14,7 @@ type Props = {
   progress: number;
   opacity: number;
   forecast: number;
+  horizonHours: number;
   state: DemoState;
   departure: string;
   spacing: number;
@@ -27,6 +28,7 @@ const risks: Risk[] = ['Low', 'Moderate', 'High', 'Severe', 'No Travel', 'Unknow
 const sx = (fontSize: number) => ({ fontSize });
 
 export function MapWorkspace(props: Props) {
+  const forecast = Math.min(props.forecast, props.horizonHours);
   return (
     <section className="map-workspace">
       <div className="map-header">
@@ -64,7 +66,7 @@ export function MapWorkspace(props: Props) {
             checkpoint={props.checkpoint}
             onCheckpoint={props.onCheckpoint}
             opacity={props.opacity}
-            forecast={props.forecast}
+            forecast={forecast}
             state={props.state}
           />
         )}
@@ -100,14 +102,13 @@ export function MapWorkspace(props: Props) {
         </span>
       </div>
       <ForecastTimeline
-        forecastHour={props.forecast}
+        horizonHours={props.horizonHours}
+        forecastHour={forecast}
         timestamp={new Intl.DateTimeFormat('en-US', {
           hour: 'numeric',
           minute: '2-digit',
           timeZoneName: 'short',
-        }).format(
-          new Date(new Date(`${props.departure}:00-05:00`).getTime() + props.forecast * 3600000),
-        )}
+        }).format(new Date(new Date(`${props.departure}:00-05:00`).getTime() + forecast * 3600000))}
         onForecastHour={props.onForecast}
       />
     </section>

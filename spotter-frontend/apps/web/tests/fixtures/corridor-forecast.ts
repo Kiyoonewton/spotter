@@ -1,6 +1,10 @@
 import type { CorridorForecast, ForecastPoint } from '../../src/services/corridor-forecast';
 
-export function corridorFixture(points: ForecastPoint[], startAt: string): CorridorForecast {
+export function corridorFixture(
+  points: ForecastPoint[],
+  startAt: string,
+  horizonHours = 48,
+): CorridorForecast {
   return {
     data_source: 'live',
     provider: 'open-meteo',
@@ -9,7 +13,7 @@ export function corridorFixture(points: ForecastPoint[], startAt: string): Corri
     cache_ttl_seconds: 300,
     units: { wind: 'mph', rain: 'in/hr', snow: 'in/hr' },
     points,
-    frames: Array.from({ length: 49 }, (_, hour) => {
+    frames: Array.from({ length: horizonHours + 1 }, (_, hour) => {
       const validAt = new Date(new Date(startAt).getTime() + hour * 3600000).toISOString();
       const end = new Date(new Date(validAt).getTime() + 3600000).toISOString();
       return {

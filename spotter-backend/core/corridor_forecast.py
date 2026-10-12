@@ -12,6 +12,7 @@ from .weather import WeatherCheckpoint, fetch_forecasts, select_hour
 MAX_POINTS = 200
 BATCH_SIZE = 50
 CACHE_SECONDS = 300
+MAX_HORIZON_HOURS = 720
 
 
 class ForecastValidationError(ValueError):
@@ -31,6 +32,9 @@ def validate_forecast(data):
     load = data.get("load_weight_lb")
     if isinstance(load, bool) or not isinstance(load, (int, float)) or not math.isfinite(load) or load < 0:
         raise ForecastValidationError("load_weight_lb must be a finite non-negative number.")
+    horizon = data.get("horizon_hours", 48)
+    if isinstance(horizon, bool) or not isinstance(horizon, int) or not 1 <= horizon <= MAX_HORIZON_HOURS:
+        raise ForecastValidationError("horizon_hours must be an integer from 1 to 720.")
     points = data.get("points")
     if not isinstance(points, list) or not 1 <= len(points) <= MAX_POINTS:
         raise ForecastValidationError("Provide 1 to 200 corridor points.")
@@ -54,7 +58,7 @@ def validate_forecast(data):
         if not -90 <= lat <= 90 or not -180 <= lon <= 180:
             raise ForecastValidationError("Coordinates are outside valid bounds.")
         validated.append({"id": identity[1], "route_id": identity[0], "coordinates": {"lat": lat, "lon": lon}})
-    return start, load, validated
+    return start, load, validated, horizon
 
 
 def _payloads(points, start):
@@ -75,10 +79,10 @@ def _payloads(points, start):
 
 
 def corridor_forecast(data):
-    start, load, points = validate_forecast(data)
+    start, load, points, horizon = validate_forecast(data)
     payloads, retrieved, pending_cache = _payloads(points, start)
     frames = []
-    for hour in range(49):
+    for hour in range(horizon + 1):
         instant = start + timedelta(hours=hour)
         samples = []
         for point in points:
@@ -96,7 +100,7 @@ def corridor_forecast(data):
     return {
         "data_source": "live", "provider": "open-meteo",
         "retrieved_at": retrieved, "start_at": start.isoformat().replace("+00:00", "Z"),
-        "cache_ttl_seconds": CACHE_SECONDS,
+        "cache_ttl_seconds": CACHE_SECONDS, "horizon_hours": horizon,
         "units": {"wind": "mph", "rain": "in/hr", "snow": "in/hr"},
         "points": points, "frames": frames,
         "notice": "Sampled hourly forecast; not radar or a continuous weather field. Arrival-time ranking is unchanged.",

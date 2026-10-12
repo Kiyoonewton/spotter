@@ -1,3 +1,4 @@
+import { forecastTicks } from '@/lib/journey-horizon';
 import Slider from '@mui/material/Slider';
 import CloudIcon from '@mui/icons-material/FilterDramaOutlined';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
@@ -5,6 +6,7 @@ import InfoIcon from '@mui/icons-material/InfoOutlined';
 type Props = {
   variant?: 'demo' | 'live';
   disabled?: boolean;
+  horizonHours: number;
   forecastHour: number;
   timestamp: string;
   onForecastHour: (hour: number) => void;
@@ -15,17 +17,22 @@ const sx = (fontSize: number) => ({ fontSize });
 export function ForecastTimeline({
   variant = 'demo',
   disabled = false,
+  horizonHours,
   forecastHour,
   timestamp,
   onForecastHour,
 }: Props) {
+  const ticks = forecastTicks(horizonHours);
   return (
     <div className="forecast-panel">
       <div className="forecast-heading">
         <div>
           <CloudIcon sx={sx(20)} />
-          <strong>Weather over the next 48 hours</strong>
-          <span>{variant === 'live' ? 'Hourly route weather' : 'Illustrative demo weather'}</span>
+          <strong>Weather through the longest journey</strong>
+          <span>
+            {variant === 'live' ? 'Hourly route weather' : 'Illustrative demo weather'} · through +
+            {horizonHours}h
+          </span>
         </div>
         <span className="forecast-timestamp">
           <span className="snapshot-dot" />
@@ -39,10 +46,10 @@ export function ForecastTimeline({
             disabled={disabled}
             aria-label="Corridor forecast hours after departure"
             min={0}
-            max={48}
+            max={horizonHours}
             step={1}
-            marks={[0, 12, 24, 36, 48].map((value) => ({ value }))}
-            value={forecastHour}
+            marks={ticks.map((value) => ({ value }))}
+            value={Math.min(forecastHour, horizonHours)}
             valueLabelDisplay="auto"
             valueLabelFormat={(value) => `+${value}h`}
             onChange={(_, value) => {
@@ -50,7 +57,7 @@ export function ForecastTimeline({
             }}
           />
           <div className="forecast-ticks">
-            {[0, 12, 24, 36, 48].map((value) => (
+            {ticks.map((value) => (
               <span key={value}>{value === 0 ? 'Departure' : `+${value}h`}</span>
             ))}
           </div>
@@ -61,8 +68,9 @@ export function ForecastTimeline({
         {variant === 'live'
           ? 'Move the slider to see weather along the route at that time. '
           : 'Demo visualization only; these shapes are illustrative. '}
-        +6h means six hours after departure. Route recommendations use weather at each checkpoint’s
-        truck arrival time and do not change when you move this slider.
+        The hourly view ends at the longest route’s arrival, rounded up to the next hour. Route
+        recommendations use weather at each checkpoint’s truck arrival time and do not change when
+        you move this slider.
       </div>
     </div>
   );

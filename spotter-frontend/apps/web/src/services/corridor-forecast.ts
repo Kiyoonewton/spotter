@@ -33,11 +33,17 @@ export async function fetchCorridorForecast(
   startAt: string,
   load: number,
   signal: AbortSignal,
+  horizonHours = 48,
 ): Promise<CorridorForecast> {
   const response = await fetch(apiUrl('/corridor-forecasts/'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ points, start_at: startAt, load_weight_lb: load }),
+    body: JSON.stringify({
+      points,
+      start_at: startAt,
+      load_weight_lb: load,
+      horizon_hours: horizonHours,
+    }),
     signal,
   });
   const body = await response.json();
@@ -45,7 +51,7 @@ export async function fetchCorridorForecast(
   if (
     body.data_source !== 'live' ||
     !Array.isArray(body.frames) ||
-    body.frames.length !== 49 ||
+    body.frames.length !== horizonHours + 1 ||
     body.frames.some((frame: ForecastFrame, index: number) => frame.hour !== index)
   )
     throw new Error('Corridor forecast returned an invalid hourly series.');

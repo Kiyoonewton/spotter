@@ -42,9 +42,14 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
     }),
   );
   await page.route('**/api/corridor-forecasts/', async (route) => {
-    const body = route.request().postDataJSON() as { points: ForecastPoint[]; start_at: string };
+    const body = route.request().postDataJSON() as {
+      points: ForecastPoint[];
+      start_at: string;
+      horizon_hours: number;
+    };
     expect(body.start_at).toBe('2026-10-10T14:00:00.000Z');
-    await route.fulfill({ json: corridorFixture(body.points, body.start_at) });
+    expect(body.horizon_hours).toBe(1);
+    await route.fulfill({ json: corridorFixture(body.points, body.start_at, body.horizon_hours) });
   });
   let requestBody: Record<string, unknown> | undefined;
   await page.route('**/api/trip-analyses/', async (route) => {

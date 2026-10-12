@@ -1,3 +1,4 @@
+import { journeyHorizon } from '@/lib/journey-horizon';
 import IconButton from '@mui/material/IconButton';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
@@ -126,6 +127,9 @@ export function ResultsWorkspace(props: Props) {
           progress={props.progress}
           opacity={props.opacity}
           forecast={props.forecast}
+          horizonHours={journeyHorizon(
+            props.routes.map((route) => ({ duration_minutes: route.minutes })),
+          )}
           state={props.state}
           departure={props.departure}
           spacing={props.spacing}
