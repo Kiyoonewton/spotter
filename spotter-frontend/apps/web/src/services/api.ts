@@ -85,6 +85,9 @@ export type TripAnalysis = {
     name: string;
     distance_miles: number;
     duration_minutes: number;
+    timing_method?: string;
+    timing_span_count?: number;
+    timing_notice?: string;
     eligibility: string;
     risk_miles: Record<string, number>;
     average_risk: number | null;
@@ -95,6 +98,8 @@ export type TripAnalysis = {
       coordinates?: MapCoordinate;
       distance_from_origin_miles: number;
       arrival_at: string;
+      timing_method?: string;
+      elapsed_seconds?: number;
       risk: string;
       weather: {
         wind_mph: number | null;

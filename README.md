@@ -55,7 +55,8 @@ verification are distinct evidence; a passing build does not prove weather accur
 
 ## Important limits
 
-Live checkpoint timing uses a distance-proportional driving estimate; driver
+Live checkpoint timing interpolates validated HERE speed-change span durations,
+with an explicit distance-proportional fallback ([timing policy](docs/route-timing.md)); driver
 breaks are not modeled. Truck mode does not yet accept a configurable vehicle
 profile. Missing forecasts remain Unknown, and blocked/incomplete routes cannot
 win eligible ranking. Map weather circles are sampled forecasts, not radar.

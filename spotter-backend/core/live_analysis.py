@@ -29,7 +29,7 @@ def _route_result(route, request, weather_by_index):
             "coordinates": {"lat": checkpoint.coordinates[0], "lon": checkpoint.coordinates[1]},
             "distance_from_origin_miles": checkpoint.distance_miles,
             "elapsed_minutes": round(checkpoint.elapsed_seconds / 60), "arrival_at": checkpoint.arrival_at,
-            "timing_method": checkpoint.timing_method,
+            "timing_method": checkpoint.timing_method, "elapsed_seconds": checkpoint.elapsed_seconds,
             "weather": None if weather is None else {"wind_mph": weather.wind_mph, "rain_in_hr": weather.rain_in_hr, "snow_in_hr": weather.snow_in_hr, "forecast_valid_at": weather.forecast_valid_at, "interval_start": weather.interval_start, "interval_end": weather.interval_end, "provider": weather.provider, "retrieved_at": weather.retrieved_at},
             "risk": risk, "reasons": reasons,
         })
@@ -43,7 +43,7 @@ def _route_result(route, request, weather_by_index):
     covered = distance - risk_miles["Unknown"]
     eligible = "blocked" if risk_miles["No Travel"] else "incomplete" if risk_miles["Unknown"] else "eligible"
     average = sum(RISK_ORDER[s["risk"]] * s["distance_miles"] for s in segments if s["risk"] != "Unknown") / covered if covered else None
-    return {"id": route.provider_id, "name": f"HERE truck route {route.provider_id}", "distance_miles": distance, "duration_minutes": round(route.duration_seconds / 60), "checkpoints": output_checkpoints, "segments": segments, "timing_method": timing["timing_method"], "risk_miles": risk_miles, "unknown_miles": risk_miles["Unknown"], "forecast_coverage_percent": round(covered / distance * 100, 2) if distance else 0, "average_risk": average, "eligibility": eligible, "provider_limitations": ["HERE truck profile; no hazardous-material suitability claim", "Timing uses distance-proportional estimate from section totals"]}
+    return {"id": route.provider_id, "name": f"HERE truck route {route.provider_id}", "distance_miles": distance, "duration_minutes": round(route.duration_seconds / 60), "checkpoints": output_checkpoints, "segments": segments, "timing_method": timing["timing_method"], "timing_span_count": timing["timing_span_count"], "timing_notice": "Interpolated HERE span durations; no driver breaks or live GPS." if timing["timing_method"] == "here_span_interpolation" else "Distance-proportional estimate; detailed provider timing unavailable or inconsistent. No driver breaks or live GPS.", "risk_miles": risk_miles, "unknown_miles": risk_miles["Unknown"], "forecast_coverage_percent": round(covered / distance * 100, 2) if distance else 0, "average_risk": average, "eligibility": eligible, "provider_limitations": ["HERE truck profile; no hazardous-material suitability claim", "Checkpoint times are interpolated planning estimates, not observed arrivals"]}
 
 
 def analyze_live(request: dict) -> dict:

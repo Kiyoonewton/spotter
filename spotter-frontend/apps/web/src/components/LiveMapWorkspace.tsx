@@ -1,3 +1,4 @@
+import { timingDescription } from '@/lib/timing-presentation';
 import { journeyHorizon } from '@/lib/journey-horizon';
 import { useState } from 'react';
 import Alert from '@mui/material/Alert';
@@ -92,9 +93,10 @@ export function LiveMapWorkspace(props: Props) {
         onForecastHour={setHour}
       />
       <p style={{ padding: '0 16px', fontSize: 12 }}>
-        Truck marker: estimated from route timing, not live GPS. Timing assumes
-        distance-proportional travel. Sampled checkpoint weather, not radar or a continuous heatmap.
-        Dashed circles indicate unavailable measurements. {props.timezone}.
+        Truck marker: interpolated between checkpoint arrivals, not live GPS.{' '}
+        {timingDescription(props.analysis.routes.find((route) => route.id === props.selected))}{' '}
+        Sampled checkpoint weather, not radar or a continuous heatmap. Dashed circles indicate
+        unavailable measurements. {props.timezone}.
         {data
           ? ` Open-Meteo retrieved ${data.retrieved_at}; cached up to ${data.cache_ttl_seconds}s.`
           : ''}{' '}
