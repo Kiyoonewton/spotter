@@ -89,3 +89,12 @@ failed install. Frozen lockfile and package integrity verification remain active
 The cache is build-only and contains public dependencies, not application secrets.
 A persistent registry outage can still fail a build; this is not an offline build.
 Failed builds occur before service restart or migrations.
+
+## Long-running SSH commands
+
+Deployment and rsync connections send authenticated SSH keepalive packets every
+30 seconds. Six unanswered probes end the connection, so an unresponsive server
+still fails instead of hanging indefinitely. This prevents an idle connection
+from expiring while a Docker dependency download produces no log output.
+Pinned host-key checking remains enabled. A disconnected build is not evidence
+of successful rollout; readiness must be confirmed afterward.

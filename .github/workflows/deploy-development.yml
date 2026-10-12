@@ -75,15 +75,15 @@ jobs:
 
       - name: Check server prerequisites
         run: |
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEV_HOST" \
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=6 "$DEPLOY_USER@$DEV_HOST" \
             "test -f '$DEPLOY_PATH/spotter-infrastructure/.env.development' && command -v docker >/dev/null && docker compose version >/dev/null"
 
       - name: Sync complete stack, preserving server runtime files
         run: |
-          export RSYNC_RSH='ssh -o BatchMode=yes -o StrictHostKeyChecking=yes'
+          export RSYNC_RSH='ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=6'
           bash spotter-infrastructure/scripts/sync-development.sh "$GITHUB_WORKSPACE" "$DEPLOY_USER@$DEV_HOST:$DEPLOY_PATH"
 
       - name: Build, back up and verify complete stack
         run: |
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEV_HOST" \
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=6 "$DEPLOY_USER@$DEV_HOST" \
             "bash '$DEPLOY_PATH/spotter-infrastructure/scripts/deploy-development.sh' '$DEPLOY_PATH'"
