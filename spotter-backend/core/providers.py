@@ -40,7 +40,8 @@ def search_locations(query: str, *, mode: str = "demo") -> list[LocationCandidat
     key = os.getenv("OPENCAGE_API_KEY")
     if not key:
         raise ProviderError("Live geocoding requires OPENCAGE_API_KEY.")
-    params = urlencode({"q": query, "key": key, "limit": 5, "no_annotations": 1})
+    # Timezone annotations are required for origin-local departure conversion.
+    params = urlencode({"q": query, "key": key, "limit": 5})
     request = Request(
         f"https://api.opencagedata.com/geocode/v1/json?{params}",
         headers={"Accept": "application/json", "User-Agent": "spotter/1.0"},
