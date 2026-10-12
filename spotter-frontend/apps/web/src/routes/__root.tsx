@@ -1,3 +1,4 @@
+import resultWorkflow from '../result-workflow.css?url';
 import briefingPrint from '../briefing-print.css?url';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -95,6 +96,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: 'stylesheet', href: briefingPrint },
       { rel: 'stylesheet', href: appCss },
       { rel: 'stylesheet', href: responsiveCss },
+      { rel: 'stylesheet', href: resultWorkflow },
       { rel: 'stylesheet', href: typographyCss },
       { rel: 'stylesheet', href: introCss },
       { rel: 'icon', href: '/spotter-favicon.svg', type: 'image/svg+xml' },
