@@ -15,8 +15,8 @@
     radial-gradient(ellipse at 94% 18%, #e8eefb 0, transparent 38%), #f5f7f4;
 }
 .dispatch-app header {
-  background: rgb(255 255 255 / 88%);
-  border-bottom: 1px solid #dce6e1;
+  background: #0d2b34;
+  border-bottom: 1px solid rgb(255 255 255 / 12%);
 }
 .dispatch-app .eyebrow {
   color: #087c75;
@@ -221,4 +221,66 @@
   .dispatch-app .route-card-top > .MuiChip-root {
     max-width: 100%;
   }
+}
+
+/* Spotter-inspired dark masthead and teal highlights, with readable light data surfaces. */
+.dispatch-app .brand {
+  color: #ffffff;
+}
+.dispatch-app .brand-icon,
+.dispatch-app .brand-period,
+.dispatch-app .eyebrow {
+  color: #2bc5b4;
+}
+.dispatch-app .workspace-tag {
+  color: #b7cbd0;
+  border-color: rgb(255 255 255 / 20%);
+}
+.dispatch-app .header-status-mui {
+  color: #8ce3d6;
+  border-color: #367a79;
+}
+.dispatch-app .page-heading h1 {
+  color: #ffffff;
+}
+.dispatch-app .page-heading p {
+  color: #bfd2d8;
+}
+.dispatch-app .page-heading .data-note {
+  color: #e1f2ed;
+  background: rgb(255 255 255 / 8%);
+  border-color: rgb(255 255 255 / 20%);
+}
+.dispatch-app main > .MuiToggleButtonGroup-root {
+  background: #ffffff;
+  border-radius: 10px;
+}
+.dispatch-app .page-heading {
+  padding-bottom: 8px;
+}
+
+.dispatch-app .live-map-workspace {
+  min-width: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+}
+.dispatch-app .live-map-workspace > .MuiToggleButtonGroup-root {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 12px;
+}
+.dispatch-app .live-map-workspace > .MuiToggleButtonGroup-root > button {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  padding-inline: 8px;
+}
+.dispatch-app .forecast-timestamp {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.dispatch-app .forecast-heading > div {
+  min-width: 0;
+  flex-wrap: wrap;
 }

@@ -54,7 +54,22 @@ for (const width of [320, 390, 768, 1280]) {
     const fits = await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth + 1,
     );
-    expect(fits).toBe(true);
+    const overflow = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('body *'))
+        .filter(
+          (element) =>
+            element instanceof HTMLElement &&
+            element.getBoundingClientRect().height > 0 &&
+            element.getBoundingClientRect().right > window.innerWidth + 1,
+        )
+        .slice(0, 12)
+        .map((element) => ({
+          tag: element.tagName,
+          class: element.className,
+          right: element.getBoundingClientRect().right,
+        })),
+    );
+    expect(fits, JSON.stringify(overflow)).toBe(true);
     await testInfo.attach(`responsive-${width}`, {
       body: await page.screenshot({ fullPage: true }),
       contentType: 'image/png',
