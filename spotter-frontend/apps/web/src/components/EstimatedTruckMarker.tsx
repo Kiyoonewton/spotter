@@ -1,4 +1,3 @@
-import TruckIcon from '@mui/icons-material/LocalShippingRounded';
 import type { MapCoordinate } from '@/services/api';
 import type { MapRoute } from '@/lib/geographic-map';
 import { estimateTruckPosition } from '@/lib/truck-position';
@@ -28,7 +27,12 @@ export function EstimatedTruckMarker({ route, selectedAt, project }: Props) {
           : 'Estimated position from route timing; not live GPS'}
       </title>
       <circle r="17" fill="#143c70" stroke="white" strokeWidth="3" />
-      <TruckIcon x="-11" y="-11" sx={{ width: 22, height: 22, color: 'white' }} />
+      <g transform="translate(-10, -7)" fill="white" aria-hidden="true">
+        <rect x="0" y="0" width="12" height="10" rx="1" />
+        <path d="M13 3H17L20 7V10H13Z" />
+        <circle cx="4" cy="12" r="2" />
+        <circle cx="16" cy="12" r="2" />
+      </g>
     </g>
   );
 }
