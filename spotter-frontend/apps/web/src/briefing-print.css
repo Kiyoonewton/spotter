@@ -17,6 +17,28 @@
   color: #173b3a;
   font-size: 13px;
 }
+#driver-briefing h1 {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 12px;
+}
+#driver-briefing h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+#driver-briefing h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 16px 0 8px;
+}
+#driver-briefing p {
+  line-height: 1.45;
+  margin: 6px 0;
+}
+#driver-briefing {
+  overflow-wrap: anywhere;
+}
 #driver-briefing table {
   width: 100%;
   border-collapse: collapse;
@@ -35,6 +57,7 @@
 @media print {
   html,
   body {
+    background: #fff !important;
     height: auto !important;
     overflow: visible !important;
   }
@@ -62,6 +85,7 @@
     max-width: none !important;
     width: 100% !important;
     overflow: visible !important;
+    background: #fff !important;
     box-shadow: none !important;
     padding: 0 !important;
   }
