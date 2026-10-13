@@ -66,3 +66,13 @@ with a printable driver briefing. See [saved analysis behavior](docs/saved-analy
 Weather-only [Route × Departure comparison](docs/departure-comparison.md) evaluates
 four departure windows without altering the saved result. Full time-dependent
 rerouting and a React Native companion remain future milestones.
+
+## React Native driver companion
+
+`spotter-mobile` contains the native Expo/React Native app. It includes the GIF
+welcome screen, direct Demo/Live trip planning, selected-location search,
+origin-local departure validation, optional truck measurements, API-owned route
+comparison and checkpoint weather, plus saved-link restoration.
+
+See [mobile setup and verification](spotter-mobile/README.md). Native maps,
+on-device persistence, and verified Android APK distribution remain pending.

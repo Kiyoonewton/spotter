@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Button, Card, Chip, Divider, Text } from 'react-native-paper';
-import type { SavedTrip } from '../services/types';
+import type { TripAnalysis } from '../services/types';
 const measure = (value: number | null | undefined, unit: string) =>
   value == null ? 'Unavailable' : `${value.toFixed(2)} ${unit}`;
-export function TripDetails({ trip }: { trip: SavedTrip }) {
+export function TripDetails({ trip }: { trip: TripAnalysis }) {
   const [selected, setSelected] = useState(trip.recommendation.recommended_route_id ?? trip.routes[0].id);
   const [index, setIndex] = useState(0);
   const route = trip.routes.find(r => r.id === selected) ?? trip.routes[0];
@@ -16,12 +16,12 @@ export function TripDetails({ trip }: { trip: SavedTrip }) {
   return <View style={{ gap: 16 }}>
     <Card><Card.Content style={{ gap: 8 }}>
       <Text variant="headlineSmall">{trip.applied_request.origin} → {trip.applied_request.destination}</Text>
-      <Chip>{trip.data_source === 'demo' ? 'Demo · illustrative data' : 'Saved live analysis'}</Chip>
+      <Chip>{trip.data_source === 'demo' ? 'Demo · illustrative data' : (trip.snapshot ? 'Saved live analysis' : 'Live analysis')}</Chip>
       <Text>Departure: {formatTime(trip.applied_request.departure_at)} ({timezone})</Text>
       <Text>Cargo: {trip.applied_request.load_weight_lb.toLocaleString()} lb</Text>
-      <Text>Saved: {formatTime(trip.snapshot.created_at)}</Text>
-      <Text>Link expires: {formatTime(trip.snapshot.expires_at)}</Text>
-      <Text>Saved weather is not refreshed. Recheck conditions on the website before departure.</Text>
+      {trip.snapshot && <Text>Saved: {formatTime(trip.snapshot.created_at)}</Text>}
+      {trip.snapshot && <Text>Link expires: {formatTime(trip.snapshot.expires_at)}</Text>}
+      <Text>Weather reflects the analysis time. Recheck conditions before departure.</Text>
     </Card.Content></Card>
     <Card><Card.Content style={{ gap: 8 }}>
       <Text variant="titleLarge">{trip.recommendation.recommended_route_id === null ?

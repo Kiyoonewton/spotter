@@ -29,9 +29,9 @@ export default function WelcomeScreen() {
           accessibilityLabel="Illustration of a truck journey" />
       </View>
       <Text variant="displaySmall" accessibilityRole="header" style={styles.light}>A clearer road ahead.</Text>
-      <Text variant="bodyLarge" style={styles.description}>Take your saved route and weather briefing with you. Know the checkpoints before you set off.</Text>
+      <Text variant="bodyLarge" style={styles.description}>Plan your route, compare weather risks, and take your checkpoint briefing with you.</Text>
       <Button mode="contained" buttonColor="#B8F0DD" textColor="#073C33"
-        contentStyle={{ minHeight: 52 }} onPress={() => router.replace('/trip')}>Open saved trip</Button>
+        contentStyle={{ minHeight: 52 }} onPress={() => router.replace('/trip')}>Plan a trip</Button>
       {!reduceMotion && <Button textColor="#E1F1E9" onPress={() => setPaused(value => !value)}>
         {paused ? 'Play illustration' : 'Pause illustration'}
       </Button>}

@@ -1,7 +1,7 @@
 # Waycast Driver — Spotter React Native companion
 
 An Expo SDK 57 / React Native app with native Material components. This is a
-saved-itinerary viewer, not a WebView or Capacitor wrapper.
+native trip planner and saved-itinerary viewer. It uses the shared Django API.
 
 ## Run
 
@@ -19,7 +19,26 @@ Android emulator, run `npm run android`.
 
 The welcome screen bundles the truck GIF from
 `Kiyoonewton/spotter-ui/public/background.gif`, with a manual pause and a static
-poster when reduced motion is enabled. The button opens the saved-trip screen.
+poster when reduced motion is enabled. The button opens the planner.
+
+## Native trip planning
+
+The planner opens in Demo mode for deterministic Chicago → Pittsburgh results.
+Switch to Live, search and select both locations, enter the origin-local departure
+(`YYYY-MM-DDTHH:mm`), cargo weight and checkpoint spacing, and analyze directly.
+No website visit or saved link is needed. Missing origin timezone requires an
+explicit IANA timezone; there is no silent Chicago fallback. DST gaps/overlaps
+and past live departures are rejected. Optional six-field truck measurements
+preserve cargo/loaded/rated/axle weight distinctions.
+
+New successful results replace the applied trip. Failed replacements preserve the
+previous results with an error notice. Draft changes do not mutate previous
+results. Mode/tool changes clear results. Live failures never substitute demo.
+The API saves snapshots when available; a save failure still displays successful
+analysis results. Device persistence, native maps and offline mode are later
+milestones. An internet connection and reachable Django API are required.
+
+## Saved links
 
 On the website, save an analysis and copy its share link. Paste the link into the
 app. Only HTTPS links from `spotter.kiyoo.online` or a bare 64-character token are

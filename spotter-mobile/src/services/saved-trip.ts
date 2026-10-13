@@ -1,4 +1,4 @@
-import type { SavedTrip } from './types';
+import type { SavedTrip, TripAnalysis } from './types';
 const origin = 'https://spotter.kiyoo.online';
 export const restoreEndpoint = `${origin}/api/saved-analyses/restore/`;
 const unavailable = 'This saved trip is unavailable or expired. Create a new trip on the website.';
@@ -19,9 +19,9 @@ const object = (x: unknown): x is Record<string, unknown> =>
 const text = (x: unknown): x is string => typeof x === 'string';
 const number = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
 const date = (x: unknown) => text(x) && Number.isFinite(Date.parse(x));
-export function isSavedTrip(x: unknown): x is SavedTrip {
+export function isTripAnalysis(x: unknown): x is TripAnalysis {
   if (!object(x) || !text(x.analysis_id) || !['demo', 'live'].includes(String(x.data_source)) ||
-      !object(x.snapshot) || !date(x.snapshot.created_at) || !date(x.snapshot.expires_at) ||
+      (x.snapshot !== undefined && (!object(x.snapshot) || !date(x.snapshot.created_at) || !date(x.snapshot.expires_at))) ||
       !object(x.applied_request) || !text(x.applied_request.origin) ||
       !text(x.applied_request.destination) || !text(x.applied_request.departure_timezone) ||
       !date(x.applied_request.departure_at) || !number(x.applied_request.load_weight_lb) ||
@@ -56,6 +56,9 @@ export function isSavedTrip(x: unknown): x is SavedTrip {
   const recommended = x.recommendation.recommended_route_id;
   return (recommended === null || ids.has(recommended)) &&
     (x.routing_profile_notice === undefined || text(x.routing_profile_notice));
+}
+export function isSavedTrip(x: unknown): x is SavedTrip {
+  return isTripAnalysis(x) && x.snapshot !== undefined;
 }
 export async function restoreTrip(input: string, signal: AbortSignal): Promise<SavedTrip> {
   const token = readToken(input);

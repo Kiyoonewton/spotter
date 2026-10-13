@@ -8,7 +8,9 @@
     "userInterfaceStyle": "light",
     "plugins": [
       "expo-router",
-      "expo-image"
+      "expo-image",
+      "expo-asset",
+      "expo-font"
     ],
     "android": {
       "package": "online.kiyoo.spotter.driver"
