@@ -23,10 +23,10 @@ export type Route = {
   risk_miles: Record<string, number>;
   checkpoints: Checkpoint[];
 };
-export type SavedTrip = {
+export type TripAnalysis = {
   analysis_id: string;
   data_source: 'demo' | 'live';
-  snapshot: { created_at: string; expires_at: string };
+  snapshot?: { created_at: string; expires_at: string };
   applied_request: {
     origin: string;
     destination: string;
@@ -42,3 +42,5 @@ export type SavedTrip = {
     explanation: string;
   };
 };
+
+export type SavedTrip = TripAnalysis & { snapshot: { created_at: string; expires_at: string } };

@@ -14,7 +14,7 @@ test('shows the GIF with pause and enters the main screen only on action', async
   await waitFor(() => expect(screen.getByTestId('welcome-image').props.autoplay).toBe(true));
   await fireEvent.press(screen.getByText('Pause illustration'));
   expect(screen.getByTestId('welcome-image').props.autoplay).toBe(false);
-  await fireEvent.press(screen.getByText('Open saved trip'));
+  await fireEvent.press(screen.getByText('Plan a trip'));
   expect(router.replace).toHaveBeenCalledWith('/trip');
 });
 test('keeps illustration static when the OS requests reduced motion', async () => {
