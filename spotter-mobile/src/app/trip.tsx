@@ -16,7 +16,7 @@ export default function DriverScreen() {
   return <SafeAreaView style={{ flex: 1, backgroundColor: '#F5F4EE' }}>
     <StatusBar style="dark" />
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView ref={scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, gap: 20 }}>
+      <ScrollView ref={scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, gap: 20, width: '100%', maxWidth: 680, alignSelf: 'center' }}>
         <View style={{ gap: 6 }}><Text variant="headlineLarge" accessibilityRole="header">Waycast Driver</Text>
           <Text variant="bodyLarge">Your trip. Its weather. One clear briefing.</Text></View>
         <SegmentedButtons value={tool} onValueChange={value => { clear(); setInput(''); setTool(value); }}

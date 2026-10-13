@@ -63,6 +63,6 @@ export function TripDetails({ trip }: { trip: TripAnalysis }) {
       <Button disabled={index === 0} accessibilityLabel="Previous checkpoint" onPress={() => setIndex(i => i - 1)}>Previous</Button>
       <Button disabled={index >= route.checkpoints.length - 1} accessibilityLabel="Next checkpoint" onPress={() => setIndex(i => i + 1)}>Next</Button>
     </Card.Actions></Card>
-    <Text>This companion is a saved itinerary viewer. It provides no GPS, turn-by-turn navigation, offline access, or hours-of-service calculation.</Text>
+    <Text>This companion plans trips and restores saved analyses. It provides no GPS, turn-by-turn navigation, offline access, or hours-of-service calculation.</Text>
   </View>;
 }
