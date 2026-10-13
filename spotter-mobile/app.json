@@ -13,10 +13,15 @@
       "expo-font"
     ],
     "android": {
-      "package": "online.kiyoo.spotter.driver"
+      "package": "online.kiyoo.spotter.driver",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/app-icon.png",
+        "backgroundColor": "#073C33"
+      }
     },
     "ios": {
       "bundleIdentifier": "online.kiyoo.spotter.driver"
-    }
+    },
+    "icon": "./assets/app-icon.png"
   }
 }

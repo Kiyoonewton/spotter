@@ -121,3 +121,13 @@ page scrolls to **Trip results** once the new section is laid out. Reduced motio
 uses immediate scrolling. Failed/invalid/cancelled requests and later form/map
 layout changes do not reveal old results again; planner errors appear next to
 **Analyze trip**. Physical-device gesture and scroll testing remains necessary.
+
+## Typography and release review
+
+Bundled Manrope headings and DM Sans body text align with the web theme. Font
+licenses are included under `assets/fonts`; system fonts keep the UI usable while
+loading or on failure. The road launcher icon is project-owned, not an official
+Spotter endorsement. The main page caps its width on large displays, preserves
+scroll access and uses a 52dp Analyze trip button. Device layout/accessibility
+verification remains required. See [Android release checklist](../docs/android-release.md)
+and [assessment audit](../docs/assessment-audit.md).

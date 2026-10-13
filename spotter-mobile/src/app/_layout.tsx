@@ -1,13 +1,16 @@
 import { Stack } from 'expo-router';
-import { MD3LightTheme, PaperProvider } from 'react-native-paper';
+import { useFonts } from 'expo-font';
+import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-const theme = { ...MD3LightTheme, colors: {
-  ...MD3LightTheme.colors, primary: '#006B5E', onPrimary: '#FFFFFF',
-  primaryContainer: '#B8F0DD', background: '#F5F4EE', surface: '#FFFEFA',
-  onSurface: '#193C35', secondary: '#57675D', outline: '#75877E',
-}};
+import { driverTheme } from '../theme';
+
 export default function Layout() {
-  return <SafeAreaProvider><PaperProvider theme={theme}>
+  const [loaded] = useFonts({
+    Manrope: require('../../assets/fonts/Manrope.ttf'),
+    DMSans: require('../../assets/fonts/DMSans.ttf'),
+  });
+  // Keep the app usable with system fonts while loading, or if loading fails.
+  return <SafeAreaProvider><PaperProvider theme={driverTheme(loaded)}>
     <Stack screenOptions={{ headerShown: false }} />
   </PaperProvider></SafeAreaProvider>;
 }

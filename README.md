@@ -18,6 +18,7 @@ fastest eligible alternative. API recommendations remain authoritative.
 | `spotter-frontend/apps/web` | React/MUI workspace, typed API clients, request/selection hooks, unit and browser tests |
 | `spotter-backend` | Django APIs, provider adapters, checkpoint sampling, deterministic risk and ranking |
 | `spotter-infrastructure` | Docker Compose, Nginx, deployment/backup scripts and full-stack browser checks |
+| `spotter-mobile` | Expo/React Native driver app, planning, maps and saved-link restoration |
 | `docs` | Provider configuration, forecast semantics, cache/readiness documentation |
 
 ## Run with Docker
@@ -65,7 +66,7 @@ Completed browser analyses can be restored or shared through seven-day token lin
 with a printable driver briefing. See [saved analysis behavior](docs/saved-analyses.md).
 Weather-only [Route × Departure comparison](docs/departure-comparison.md) evaluates
 four departure windows without altering the saved result. Full time-dependent
-rerouting and a React Native companion remain future milestones.
+rerouting remains a future milestone.
 
 ## React Native driver companion
 
@@ -74,5 +75,7 @@ welcome screen, direct Demo/Live trip planning, selected-location search,
 origin-local departure validation, optional truck measurements, API-owned route
 comparison and checkpoint weather, plus saved-link restoration.
 
-See [mobile setup and verification](spotter-mobile/README.md). Native maps,
-on-device persistence, and verified Android APK distribution remain pending.
+Live trips include an interactive geographic map and optional corridor risk bands.
+See [mobile setup](spotter-mobile/README.md), [Android release checklist](docs/android-release.md),
+and [assessment audit](docs/assessment-audit.md). On-device persistence and verified
+Android APK distribution remain pending.

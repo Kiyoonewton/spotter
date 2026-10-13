@@ -54,8 +54,8 @@ export function TripPlanner({ pending, onSubmit, onReset, error = '' }: {
       if (spacing === '10' || spacing === '25' || spacing === '50') setDraft(d => ({ ...d, spacing }));
     }} buttons={['10', '25', '50'].map(value => ({ value, label: `${value} mi`, disabled: pending }))} />
     {draft.mode === 'live' && <TruckFields value={draft.truck} disabled={pending} onChange={truck => setDraft(d => ({ ...d, truck }))} />}
-    {error !== '' && <Text accessibilityRole="alert" accessibilityLiveRegion="polite">{error}</Text>}
-    <Button mode="contained" loading={pending} disabled={pending || !draft.origin || !draft.destination}
+    {error !== '' && <Text style={{ color: '#A12B32' }} accessibilityRole="alert" accessibilityLiveRegion="polite">{error}</Text>}
+    <Button mode="contained" contentStyle={{ minHeight: 52 }} loading={pending} disabled={pending || !draft.origin || !draft.destination}
       onPress={() => onSubmit(draft)}>Analyze trip</Button>
   </Card.Content></Card>;
 }
