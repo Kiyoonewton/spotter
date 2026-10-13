@@ -1,3 +1,4 @@
+import { AndroidDownload } from '@/components/AndroidDownload';
 import { TruckProfileForm } from '@/components/TruckProfileForm';
 import { useTruckProfile } from '@/hooks/useTruckProfile';
 import { DispatchIntro } from '@/components/DispatchIntro';
@@ -135,6 +136,7 @@ function Index() {
       <WorkspaceHeader />
       <main className={!analysis ? 'has-intro' : undefined}>
         {!analysis && <DispatchIntro />}
+        <AndroidDownload />
         <div className="page-heading" id="trip-planning">
           <div>
             <div className="eyebrow">DISPATCH PLANNING</div>
