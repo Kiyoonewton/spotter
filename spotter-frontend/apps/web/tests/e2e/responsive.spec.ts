@@ -57,6 +57,14 @@ for (const width of [320, 390, 768, 1280]) {
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
     ).toBe(true);
+    const download = page.getByRole('link', { name: 'Download Android app', exact: true });
+    await expect(download).toBeVisible();
+    await expect(download).toHaveAttribute('href', /expo\.dev\/artifacts\/eas\/.*\.apk$/);
+    await expect(page.getByRole('link', { name: 'Android app', exact: true })).toBeVisible();
+    await page.getByText('Verify download · SHA-256', { exact: true }).click();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
+    ).toBe(true);
     await page.getByRole('link', { name: 'Plan a trip' }).click();
     await expect(page.getByRole('combobox', { name: 'Origin', exact: true })).toBeFocused();
     await page.getByRole('button', { name: 'Live', exact: true }).click();

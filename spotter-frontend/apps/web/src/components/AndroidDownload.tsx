@@ -27,7 +27,7 @@ export function AndroidDownload() {
         scrollMarginTop: '90px',
       }}
     >
-      <Box sx={{ maxWidth: 640 }}>
+      <Box sx={{ maxWidth: 640, minWidth: 0 }}>
         <Chip
           icon={<AndroidIcon />}
           label="ANDROID PREVIEW"
@@ -51,7 +51,7 @@ export function AndroidDownload() {
           planning needs an internet connection. No Expo Go required.
         </Box>
       </Box>
-      <Box sx={{ minWidth: { md: 270 }, maxWidth: { md: 330 } }}>
+      <Box sx={{ minWidth: { xs: 0, md: 270 }, maxWidth: { md: 330 } }}>
         <Button
           component="a"
           href={ANDROID_APK_URL}
@@ -61,6 +61,8 @@ export function AndroidDownload() {
           fullWidth
           sx={{
             minHeight: 52,
+            whiteSpace: 'normal',
+            fontSize: { xs: 14, sm: 15 },
             bgcolor: '#B8F0DD',
             color: '#073C33',
             '&:hover': { bgcolor: '#D8F7EB' },
