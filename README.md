@@ -64,9 +64,38 @@ Risk scoring is deterministic business logic, not a trained AI model.
 | Redis | Validated raw forecast caching; cargo-dependent risk is recomputed |
 | Docker / Nginx | Frontend Node runtime and Gunicorn API under one origin, with database/cache services |
 
-A Live request follows this flow: committed location coordinates → HERE truck
-alternatives → geometry/timing checkpoints → batched Open-Meteo arrival weather →
-risk and coverage → eligibility and ranking → normalized API result → web/native UI.
+### Live analysis flow
+
+```mermaid
+flowchart TD
+  Web["React / MUI workspace"] --> API["Django API · validate inputs"]
+  Mobile["React Native driver app"] --> API
+  Web --> Search["Location search"]
+  Mobile --> Search
+  Search --> Geo["OpenCage · coordinates and timezone"]
+  Geo --> Web
+  Geo --> Mobile
+  API --> Roads["HERE · truck alternatives and geometry"]
+  Roads --> Points["Route-owned checkpoints and arrival timing"]
+  Points --> Cache{"Validated weather cached?"}
+  Cache -->|Yes| Redis["Redis · raw forecast cache"]
+  Cache -->|No| Weather["Open-Meteo · batched hourly forecasts"]
+  Weather --> Store["Cache validated forecasts"]
+  Redis --> Risk["Risk rules · cargo overrides and coverage"]
+  Store --> Risk
+  Risk --> Eligible{"Complete and unblocked?"}
+  Eligible -->|Yes| Rank["Rank eligible routes"]
+  Eligible -->|No| Excluded["Blocked or incomplete · excluded from ranking"]
+  Rank --> Result["Normalized result · recommendation may be null"]
+  Excluded --> Result
+  Result --> Inspect["Web / native route and checkpoint inspection"]
+  Result --> Save["Optional seven-day PostgreSQL snapshot"]
+  Save --> Restore["Token-based restoration · original result"]
+```
+
+Location selection is a separate request before submission. Cached weather remains
+raw provider data; risk is recalculated for the submitted cargo. Selection and the
+manual forecast preview do not modify the backend recommendation.
 Provider failures return fixed public messages and request IDs; safe error categories
 stay in server logs. Live failures never silently fall back to Demo.
 
