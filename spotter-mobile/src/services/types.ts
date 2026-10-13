@@ -1,4 +1,7 @@
+export type MapCoordinate = { lat: number; lon: number };
+export type RouteSegment = { id: string; route_id: string; start_checkpoint_id: string; end_checkpoint_id: string; coordinates: MapCoordinate[]; risk: string };
 export type Checkpoint = {
+  coordinates?: MapCoordinate;
   id: string;
   route_id: string;
   distance_from_origin_miles: number;
@@ -12,6 +15,7 @@ export type Checkpoint = {
   reasons: { explanation: string }[];
 };
 export type Route = {
+  segments?: RouteSegment[];
   id: string;
   name: string;
   distance_miles: number;

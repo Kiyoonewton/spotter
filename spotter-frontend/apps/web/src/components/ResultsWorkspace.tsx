@@ -70,7 +70,7 @@ export function ResultsWorkspace(props: Props) {
         <CheckpointInspector
           checkpoint={props.inspectorCheckpoint}
           route={
-            props.routes.find((route) => route.id === props.selected)?.displayId ?? props.selected
+            props.routes.find((route) => route.id === props.selected)?.displayId ?? 'Unavailable'
           }
           index={props.checkpoint}
           total={props.checkpointTotal}

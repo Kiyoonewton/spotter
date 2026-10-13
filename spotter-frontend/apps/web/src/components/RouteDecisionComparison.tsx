@@ -14,7 +14,7 @@ import { formatMeasurement } from '@/lib/result-presentation';
 import type { RouteView } from './RouteCard';
 
 type Props = { routes: RouteView[]; recommended: string | null };
-const label = (route: RouteView) => `Route ${route.displayId ?? route.id}`;
+const label = (route: RouteView) => `Route ${route.displayId ?? 'Unavailable'}`;
 
 export function RouteDecisionComparison({ routes, recommended }: Props) {
   if (!routes.length) return null;

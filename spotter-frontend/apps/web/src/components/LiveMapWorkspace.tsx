@@ -95,8 +95,8 @@ export function LiveMapWorkspace(props: Props) {
       <p style={{ padding: '0 16px', fontSize: 12 }}>
         Truck marker: interpolated between checkpoint arrivals, not live GPS.{' '}
         {timingDescription(props.analysis.routes.find((route) => route.id === props.selected))}{' '}
-        Sampled checkpoint weather, not radar or a continuous heatmap. Dashed circles indicate
-        unavailable measurements. {props.timezone}.
+        Forecast circles show sampled checkpoint weather; the corridor heatmap shows arrival-time
+        risk, not radar. Dashed circles indicate unavailable measurements. {props.timezone}.
         {data
           ? ` Open-Meteo retrieved ${data.retrieved_at}; cached up to ${data.cache_ttl_seconds}s.`
           : ''}{' '}
@@ -107,10 +107,10 @@ export function LiveMapWorkspace(props: Props) {
           <summary>Forecast sample times and values</summary>
           {frame.samples
             .filter((sample) => sample.route_id === props.selected)
-            .map((sample) => (
+            .map((sample, index) => (
               <p key={sample.id}>
-                {sample.id}: wind {sample.weather?.wind_mph?.toFixed(1) ?? 'Unavailable'} mph; rain{' '}
-                {sample.weather?.rain_in_hr?.toFixed(3) ?? 'Unavailable'} in/hr; snow{' '}
+                Checkpoint {index + 1}: wind {sample.weather?.wind_mph?.toFixed(1) ?? 'Unavailable'}{' '}
+                mph; rain {sample.weather?.rain_in_hr?.toFixed(3) ?? 'Unavailable'} in/hr; snow{' '}
                 {sample.weather?.snow_in_hr?.toFixed(3) ?? 'Unavailable'} in/hr. Wind at{' '}
                 {sample.weather?.wind_valid_at ?? 'Unavailable'}; precipitation [
                 {sample.weather?.interval_start ?? 'Unavailable'},{' '}

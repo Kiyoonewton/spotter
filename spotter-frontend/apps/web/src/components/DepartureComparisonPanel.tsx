@@ -70,7 +70,7 @@ export function DepartureComparisonPanel({ analysis }: { analysis: TripAnalysis 
         <>
           <Alert severity={best ? 'info' : 'warning'} sx={{ my: 1 }}>
             {best && bestRoute
-              ? `Best eligible scenario: Route ${bestRoute.displayId ?? bestRoute.id}, departing +${best.offset_hours}h (${date(data.windows.find((window) => window.offset_hours === best.offset_hours)!.departure_at)} ${timezone}).`
+              ? `Best eligible scenario: Route ${bestRoute.displayId ?? 'Unavailable'}, departing +${best.offset_hours}h (${date(data.windows.find((window) => window.offset_hours === best.offset_hours)!.departure_at)} ${timezone}).`
               : 'No eligible option in the compared windows. Blocked and incomplete routes cannot win.'}
             {best?.arrival_delay_minutes != null
               ? ` Arrival difference versus this comparison’s baseline winner: ${formatMeasurement(best.arrival_delay_minutes)} min; Severe miles reduction: ${formatMeasurement(best.severe_miles_reduction ?? 0)} mi; High miles reduction: ${formatMeasurement(best.high_miles_reduction ?? 0)} mi; average risk improvement: ${formatMeasurement(best.average_risk_reduction ?? 0)} points.`
@@ -106,7 +106,7 @@ export function DepartureComparisonPanel({ analysis }: { analysis: TripAnalysis 
                 {routes.map((route) => (
                   <TableRow key={route.id}>
                     <TableCell component="th" scope="row">
-                      Route {route.displayId ?? route.id}
+                      Route {route.displayId ?? 'Unavailable'}
                     </TableCell>
                     {data.windows.map((window) => {
                       const cell = window.routes.find((candidate) => candidate.id === route.id);
@@ -144,7 +144,7 @@ export function DepartureComparisonPanel({ analysis }: { analysis: TripAnalysis 
                           ) : null}
                           <Button
                             size="small"
-                            aria-label={`Inspect Route ${route.displayId ?? route.id} at +${window.offset_hours}h`}
+                            aria-label={`Inspect Route ${route.displayId ?? 'Unavailable'} at +${window.offset_hours}h`}
                             onClick={() => setSelection({ window, routeId: route.id })}
                           >
                             Inspect scenario
