@@ -6,12 +6,7 @@
     "orientation": "portrait",
     "scheme": "waycast-driver",
     "userInterfaceStyle": "light",
-    "plugins": [
-      "expo-router",
-      "expo-image",
-      "expo-asset",
-      "expo-font"
-    ],
+    "plugins": ["expo-router", "expo-image", "expo-asset", "expo-font"],
     "android": {
       "package": "online.kiyoo.spotter.driver",
       "adaptiveIcon": {
@@ -22,6 +17,13 @@
     "ios": {
       "bundleIdentifier": "online.kiyoo.spotter.driver"
     },
-    "icon": "./assets/app-icon.png"
+    "icon": "./assets/app-icon.png",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "152f6297-e17e-4d22-997a-e180c6c189cb"
+      }
+    },
+    "owner": "kiyoonewton"
   }
 }
