@@ -48,7 +48,7 @@ export function DriverBriefing({ analysis, selected }: Props) {
       </p>
       {route.routing_notice && <p>{route.routing_notice}</p>}
       <h3>
-        Inspected Route {route.displayId ?? route.id} · {route.eligibility}
+        Inspected Route {route.displayId ?? 'Unavailable'} · {route.eligibility}
       </h3>
       <p>
         {formatMeasurement(route.miles)} miles · {formatMeasurement(route.minutes)} driving minutes.

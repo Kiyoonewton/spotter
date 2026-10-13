@@ -1,3 +1,5 @@
+import { MobileRouteMap } from './MobileRouteMap';
+import { routeText } from '../lib/route-labels';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Button, Card, Chip, Divider, Text } from 'react-native-paper';
@@ -25,10 +27,11 @@ export function TripDetails({ trip }: { trip: TripAnalysis }) {
     </Card.Content></Card>
     <Card><Card.Content style={{ gap: 8 }}>
       <Text variant="titleLarge">{trip.recommendation.recommended_route_id === null ?
-        'No recommended route' : 'Backend recommendation'}</Text>
-      <Text>{trip.recommendation.explanation}</Text>
+        'No recommended route' : `Recommended Route ${trip.routes.findIndex(r => r.id === trip.recommendation.recommended_route_id) + 1}`}</Text>
+      <Text>{routeText(trip.recommendation.explanation, trip.routes)}</Text>
       {trip.routing_profile_notice && <Text>{trip.routing_profile_notice}</Text>}
     </Card.Content></Card>
+    <MobileRouteMap routes={trip.routes} selected={route.id} checkpoint={index} onRoute={id => { setSelected(id); setIndex(0); }} onCheckpoint={setIndex} />
     <Text variant="titleLarge" accessibilityRole="header">Routes</Text>
     {trip.routes.map((item, ordinal) => <Card key={item.id}>
       <Card.Content style={{ gap: 8 }}>
@@ -55,11 +58,11 @@ export function TripDetails({ trip }: { trip: TripAnalysis }) {
       <Text>Wind: {measure(checkpoint.weather?.wind_mph, 'mph')}</Text>
       <Text>Rain: {measure(checkpoint.weather?.rain_in_hr, 'in/hr')}</Text>
       <Text>Snow: {measure(checkpoint.weather?.snow_in_hr, 'in/hr')}</Text>
-      {checkpoint.reasons.map((reason, i) => <Text key={i}>{reason.explanation}</Text>)}
+      {checkpoint.reasons.map((reason, i) => <Text key={i}>{routeText(reason.explanation, trip.routes)}</Text>)}
     </Card.Content><Card.Actions>
       <Button disabled={index === 0} accessibilityLabel="Previous checkpoint" onPress={() => setIndex(i => i - 1)}>Previous</Button>
       <Button disabled={index >= route.checkpoints.length - 1} accessibilityLabel="Next checkpoint" onPress={() => setIndex(i => i + 1)}>Next</Button>
     </Card.Actions></Card>
-    <Text>This companion is a saved itinerary viewer. It provides no GPS, navigation, offline access, or hours-of-service calculation.</Text>
+    <Text>This companion is a saved itinerary viewer. It provides no GPS, turn-by-turn navigation, offline access, or hours-of-service calculation.</Text>
   </View>;
 }

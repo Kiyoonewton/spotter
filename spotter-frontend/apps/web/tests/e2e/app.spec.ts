@@ -109,10 +109,13 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
     '60',
   );
   await expect(page.getByText('Route 2 recommended')).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Map route here-safe, Low segment' }),
-  ).toBeVisible();
-  await testInfo.attach('live-corridor-forecast', {
+  await expect(page.getByRole('button', { name: 'Route 2, Low segment' })).toBeVisible();
+  await page.getByRole('button', { name: 'Show corridor risk heatmap' }).click();
+  await expect(page.getByTestId('corridor-risk-heat').first()).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Geographic route map' })).not.toContainText(
+    'here-safe',
+  );
+  await testInfo.attach('live-corridor-risk-heatmap', {
     body: await page.screenshot({ fullPage: true }),
     contentType: 'image/png',
   });
@@ -121,9 +124,9 @@ test('mocked live contract journey sends coordinates and hides illustrative map'
     'data-value',
     'missing',
   );
-  await page.getByRole('button', { name: 'Map route here-fast, High segment' }).press('Enter');
+  await page.getByRole('button', { name: 'Route 1, High segment' }).press('Enter');
   await expect(page.getByTestId('estimated-truck')).toHaveAttribute('data-route-id', 'here-fast');
-  await page.getByRole('button', { name: 'Map checkpoint 2 on route here-fast' }).press('Enter');
+  await page.getByRole('button', { name: 'Map checkpoint 2 on Route 1' }).press('Enter');
   await expect(page.getByText(/Route 1 · Sample checkpoint 2/)).toBeVisible();
   await page
     .getByRole('button', { name: /Route 2/ })

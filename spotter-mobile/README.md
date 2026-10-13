@@ -35,8 +35,7 @@ New successful results replace the applied trip. Failed replacements preserve th
 previous results with an error notice. Draft changes do not mutate previous
 results. Mode/tool changes clear results. Live failures never substitute demo.
 The API saves snapshots when available; a save failure still displays successful
-analysis results. Device persistence, native maps and offline mode are later
-milestones. An internet connection and reachable Django API are required.
+analysis results. Device persistence and offline mode are later milestones. An internet connection and reachable Django API are required.
 
 ## Saved links
 
@@ -78,3 +77,18 @@ Do not commit signing credentials. Install the APK on a real Android device and
 verify the welcome GIF, reduced motion, opening a current saved trip, route
 switching, checkpoint ownership, and error/clear behavior before publishing a
 download link. No verified APK or public download exists yet.
+
+## Geographic map and corridor heatmap
+
+Live geometry uses a native SVG Web Mercator map with OpenStreetMap tiles, route
+and checkpoint selection, fit/zoom controls, and arrival-time segment risk colors.
+Missing or invalid geometry is never replaced with an invented path. Demo
+analyses without geographic geometry keep route/checkpoint details available.
+
+The optional corridor risk heatmap shows translucent bands along known-risk
+segments. Smoothing and width are visual only, not an estimate of weather away
+from the road. Unknown/unsupported risks have no heat fill. This layer is not
+radar and does not change ranking or weather classification.
+
+Provider IDs remain in API data, ownership checks and callbacks; public route
+labels are response-order Route 1/2/3, independent of eligibility rank.

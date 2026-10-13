@@ -40,6 +40,14 @@ export function isTripAnalysis(x: unknown): x is TripAnalysis {
         route.checkpoints.length < 1 || route.checkpoints.length > 200 ||
         (route.routing_notice != null && !text(route.routing_notice)) ||
         (route.timing_notice !== undefined && !text(route.timing_notice))) return false;
+    if (route.segments !== undefined && (!Array.isArray(route.segments) || !route.segments.every(segment =>
+      object(segment) && text(segment.id) && text(segment.route_id) && text(segment.risk) &&
+      text(segment.start_checkpoint_id) && text(segment.end_checkpoint_id) && Array.isArray(segment.coordinates) &&
+      segment.coordinates.every(point => object(point) && number(point.lat) && number(point.lon) && Math.abs(point.lat) <= 90 && Math.abs(point.lon) <= 180)))) return false;
+    for (const point of route.checkpoints) {
+      if (object(point) && point.coordinates !== undefined && (!object(point.coordinates) ||
+        !number(point.coordinates.lat) || !number(point.coordinates.lon) || Math.abs(point.coordinates.lat) > 90 || Math.abs(point.coordinates.lon) > 180)) return false;
+    }
     ids.add(route.id);
     const checkpoints = new Set<string>();
     for (const point of route.checkpoints) {

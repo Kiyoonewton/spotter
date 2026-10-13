@@ -57,13 +57,12 @@ export function RouteCard({
         <div className="route-card-top">
           <span
             className="route-id"
-            title={route.id}
             style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
           >
-            {route.displayId ?? route.id}
+            {route.displayId ?? 'Unavailable'}
           </span>
           <div className="route-name">
-            <strong>Route {route.displayId ?? route.id}</strong>
+            <strong>Route {route.displayId ?? 'Unavailable'}</strong>
             <span>{route.name}</span>
           </div>
           {!blocked && !missing && route.id === recommended ? (
@@ -86,7 +85,7 @@ export function RouteCard({
           <span>{formatMeasurement(route.miles)} mi</span>
         </div>
         <RiskMileageBar
-          route={route.displayId ?? route.id}
+          route={route.displayId ?? 'Unavailable'}
           miles={route.miles}
           riskMiles={riskMiles as Partial<Record<Risk, number>>}
         />

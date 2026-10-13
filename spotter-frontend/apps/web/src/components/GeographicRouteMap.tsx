@@ -32,6 +32,9 @@ type Props = {
 };
 
 export function GeographicRouteMap(props: Props) {
+  const [heatmap, setHeatmap] = useState(false);
+  const routeLabel = (id: string) =>
+    `Route ${props.routes.findIndex((route) => route.id === id) + 1}`;
   const [zoomOffset, setZoomOffset] = useState(0);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [tileFailed, setTileFailed] = useState(false);
@@ -65,6 +68,15 @@ export function GeographicRouteMap(props: Props) {
           Some basemap tiles could not load. Route geometry remains visible.
         </Alert>
       )}
+      <Button aria-pressed={heatmap} onClick={() => setHeatmap((value) => !value)}>
+        {heatmap ? 'Hide corridor risk heatmap' : 'Show corridor risk heatmap'}
+      </Button>
+      {heatmap && (
+        <p style={{ padding: '0 16px', fontSize: 12 }}>
+          Corridor heatmap: arrival-time segment risk. Smoothing is visual only; no weather is
+          inferred outside the route. Unknown segments have no heat fill.
+        </p>
+      )}
       <div style={{ position: 'relative' }}>
         <svg
           viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
@@ -94,6 +106,45 @@ export function GeographicRouteMap(props: Props) {
               project={view.point}
             />
           )}
+          {heatmap &&
+            displayRoutes.flatMap((route) =>
+              ownedSegments(route)
+                .filter(
+                  (segment) => segment.risk !== 'Unknown' && Boolean(RISK_COLOURS[segment.risk]),
+                )
+                .map((segment) => {
+                  const points = segment.coordinates
+                    .map((coordinate) => {
+                      const point = view.point(coordinate);
+                      return `${point.x},${point.y}`;
+                    })
+                    .join(' ');
+                  return (
+                    <g
+                      key={`heat-${segment.id}`}
+                      data-testid="corridor-risk-heat"
+                      aria-hidden="true"
+                      pointerEvents="none"
+                    >
+                      {[
+                        { width: 44, opacity: 0.12 },
+                        { width: 28, opacity: 0.18 },
+                      ].map((layer) => (
+                        <polyline
+                          key={layer.width}
+                          points={points}
+                          fill="none"
+                          stroke={RISK_COLOURS[segment.risk] ?? RISK_COLOURS['Unknown']}
+                          strokeWidth={layer.width}
+                          strokeOpacity={layer.opacity}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      ))}
+                    </g>
+                  );
+                }),
+            )}
           {displayRoutes.map((route) =>
             ownedSegments(route).map((segment) => {
               const points = segment.coordinates
@@ -114,7 +165,7 @@ export function GeographicRouteMap(props: Props) {
                     opacity={route.id === props.selected ? 1 : 0.6}
                     role="button"
                     tabIndex={0}
-                    aria-label={`Map route ${route.id}, ${segment.risk} segment`}
+                    aria-label={`${routeLabel(route.id)}, ${segment.risk} segment`}
                     aria-pressed={route.id === props.selected}
                     onClick={() => props.onRoute(route.id)}
                     onKeyDown={(event) => {
@@ -147,7 +198,7 @@ export function GeographicRouteMap(props: Props) {
                 strokeWidth={3}
                 role="button"
                 tabIndex={0}
-                aria-label={`Map checkpoint ${index + 1} on route ${selectedRoute.id}`}
+                aria-label={`Map checkpoint ${index + 1} on ${routeLabel(selectedRoute.id)}`}
                 aria-pressed={index === props.checkpoint}
                 onClick={() => props.onCheckpoint(index)}
                 onKeyDown={(event) => {
