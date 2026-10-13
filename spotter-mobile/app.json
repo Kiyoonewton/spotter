@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Waycast Driver",
+    "slug": "spotter-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "waycast-driver",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-router",
+      "expo-image"
+    ],
+    "android": {
+      "package": "online.kiyoo.spotter.driver"
+    },
+    "ios": {
+      "bundleIdentifier": "online.kiyoo.spotter.driver"
+    }
+  }
+}
