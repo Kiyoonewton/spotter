@@ -55,3 +55,17 @@ test('403 stops tile requests, preserves route geometry and offers explicit retr
   await fireEvent.press(screen.getByText('Retry basemap'));
   expect(screen.getAllByTestId('basemap-tile').length).toBeGreaterThan(0);
 });
+
+test('expanded map provides isolated gesture surface and closes without losing route selection', async () => {
+  const route = fixture().routes[0];
+  route.checkpoints[0].coordinates = { lat: 41, lon: -87 };
+  route.checkpoints.push({ ...route.checkpoints[0], id: 'end', coordinates: { lat: 40, lon: -79 } });
+  route.segments = [{ id: 'seg', route_id: route.id, start_checkpoint_id: route.checkpoints[0].id, end_checkpoint_id: 'end', risk: 'Low', coordinates: [{ lat: 41, lon: -87 }, { lat: 40, lon: -79 }] }];
+  const onRoute = jest.fn();
+  const screen = await render(<PaperProvider><MobileRouteMap routes={[route]} selected={route.id} checkpoint={0} onRoute={onRoute} onCheckpoint={jest.fn()} /></PaperProvider>);
+  await fireEvent.press(screen.getByText('Expand interactive map'));
+  expect(screen.getByTestId('map-gestures')).toBeTruthy();
+  expect(screen.getByText('Drag to pan. Pinch to zoom. Tap a route or checkpoint.')).toBeTruthy();
+  await fireEvent.press(screen.getByText('Close map'));
+  expect(screen.queryByTestId('map-gestures')).toBeNull(); expect(onRoute).not.toHaveBeenCalled();
+});

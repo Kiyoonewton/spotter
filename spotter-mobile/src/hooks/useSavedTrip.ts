@@ -4,6 +4,7 @@ import { analyzeTrip, buildRequest, type Draft } from '../services/trip-planning
 import type { TripAnalysis } from '../services/types';
 export function useSavedTrip() {
   const [trip, setTrip] = useState<TripAnalysis | null>(null);
+  const [resultVersion, setResultVersion] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const active = useRef<AbortController | null>(null);
@@ -21,7 +22,7 @@ export function useSavedTrip() {
     const timeout = setTimeout(() => controller.abort(), duration);
     try {
       const result = await operation(controller.signal);
-      if (sequence.current === id) setTrip(result);
+      if (sequence.current === id) { setTrip(result); setResultVersion(value => value + 1); }
     } catch {
       if (sequence.current === id) setError(message);
     } finally {
@@ -42,5 +43,5 @@ export function useSavedTrip() {
     catch (failure) { setError(failure instanceof Error ? failure.message : 'Check the trip inputs.'); return; }
     await run(signal => analyzeTrip(request, signal), 'Trip analysis failed. Check your connection and inputs, then retry. Previous results remain unchanged.', 60000);
   }
-  return { trip, pending, error, open, analyze, clear };
+  return { trip, resultVersion, pending, error, open, analyze, clear };
 }

@@ -12,8 +12,8 @@ function defaults(mode: Mode): Draft {
     departure: mode === 'demo' ? upcomingDeparture('America/Chicago') : '', timezone: mode === 'demo' ? 'America/Chicago' : '',
     cargo: '42000', spacing: '25', truck: null };
 }
-export function TripPlanner({ pending, onSubmit, onReset }: {
-  pending: boolean; onSubmit: (draft: Draft) => void; onReset: () => void;
+export function TripPlanner({ pending, onSubmit, onReset, error = '' }: {
+  error?: string; pending: boolean; onSubmit: (draft: Draft) => void; onReset: () => void;
 }) {
   const [draft, setDraft] = useState(() => defaults('demo'));
   const editedTime = useRef(false);
@@ -54,6 +54,7 @@ export function TripPlanner({ pending, onSubmit, onReset }: {
       if (spacing === '10' || spacing === '25' || spacing === '50') setDraft(d => ({ ...d, spacing }));
     }} buttons={['10', '25', '50'].map(value => ({ value, label: `${value} mi`, disabled: pending }))} />
     {draft.mode === 'live' && <TruckFields value={draft.truck} disabled={pending} onChange={truck => setDraft(d => ({ ...d, truck }))} />}
+    {error !== '' && <Text accessibilityRole="alert" accessibilityLiveRegion="polite">{error}</Text>}
     <Button mode="contained" loading={pending} disabled={pending || !draft.origin || !draft.destination}
       onPress={() => onSubmit(draft)}>Analyze trip</Button>
   </Card.Content></Card>;
