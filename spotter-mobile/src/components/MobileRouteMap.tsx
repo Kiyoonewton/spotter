@@ -2,7 +2,7 @@ import { useMapGestures } from '../hooks/useMapGestures';
 import { mapHit, anchoredPan } from '../lib/map-interaction';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BasemapTile } from './BasemapTile';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Linking, Modal, StyleSheet, Keyboard } from 'react-native';
 import Svg, { Circle, G, Polyline } from 'react-native-svg';
 import { Button, Card, Checkbox, Text } from 'react-native-paper';
@@ -20,9 +20,9 @@ export function MobileRouteMap({ routes, selected, checkpoint, onRoute, onCheckp
   const [blocked, setBlocked] = useState(accessBlocked);
   const [retry, setRetry] = useState(0);
   const [tilesFailed, setTilesFailed] = useState(accessBlocked);
-  const fit = fitRoutes(routes);
+  const fit = useMemo(() => fitRoutes(routes), [routes]);
   const view = fit ? viewport(fit, zoom, pan) : null;
-  const gesture = useMapGestures({ zoom, pan, fitZoom: fit?.zoom ?? 1, width, onZoom: setZoom, onPan: setPan,
+  const gesture = useMapGestures({ zoom, pan, fitZoom: fit?.zoom ?? 1, width, onZoom: setZoom, onPan: next => setPan(previous => previous.x === next.x && previous.y === next.y ? previous : next),
     onTap: (x, y) => {
       if (!view || width <= 0) return;
       const hit = mapHit(routes, selected, view, width, x, y);
@@ -33,6 +33,7 @@ export function MobileRouteMap({ routes, selected, checkpoint, onRoute, onCheckp
   const route = routes.find(item => item.id === selected);
   const changeZoom = (delta: number) => {
     const next = Math.max(1 - fit.zoom, Math.min(17 - fit.zoom, zoom + delta));
+    if (next === zoom) return;
     setPan(value => anchoredPan(value, next - zoom, { x: MAP_WIDTH / 2, y: MAP_HEIGHT / 2 })); setZoom(next);
   };
   const ordered = [...routes].sort((a, b) => Number(a.id === selected) - Number(b.id === selected));
@@ -50,7 +51,7 @@ export function MobileRouteMap({ routes, selected, checkpoint, onRoute, onCheckp
       : 'Basemap tiles unavailable. Route lines remain visible.'}</Text>}
     {tilesFailed && <Button onPress={() => { setBlocked(false); setTilesFailed(false); setRetry(value => value + 1); }}>Retry basemap</Button>}
     <View testID="map-viewport" onLayout={event => setWidth(event.nativeEvent.layout.width)} style={{ width: '100%', aspectRatio: MAP_WIDTH / MAP_HEIGHT, overflow: 'hidden', backgroundColor: '#EDF1F4', borderRadius: 12 }}>
-      {width > 0 && !blocked && visibleTiles(view).map(tile => <BasemapTile key={`${retry}-${view.zoom}-${tile.left}-${tile.top}`}
+      {width > 0 && !blocked && visibleTiles(view).map(tile => <BasemapTile key={`${retry}-${tile.key}`}
         zoom={view.zoom} x={tile.x} y={tile.y} left={tile.left * width / MAP_WIDTH} top={tile.top * width / MAP_WIDTH}
         size={256 * width / MAP_WIDTH} onFailure={accessBlocked => { setTilesFailed(true); if (accessBlocked) setBlocked(true); }} />)}
       <Svg width="100%" height="100%" viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} accessibilityLabel="Geographic routes and checkpoints">

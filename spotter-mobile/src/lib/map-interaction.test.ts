@@ -1,5 +1,5 @@
 import { anchoredPan, dragPan, mapHit, pinchZoom } from './map-interaction';
-import { fitRoutes, viewport } from './geographic-map';
+import { fitRoutes, viewport, visibleTiles } from './geographic-map';
 import { fixture } from '../services/fixture';
 test('drag and pinch use native screen scale, integer tile zooms, bounded zoom and anchored focal point', () => {
   expect(dragPan({ x: 0, y: 0 }, 40, 20, 400)).toEqual({ x: -80, y: -40 });
@@ -22,4 +22,13 @@ test('tap targets pick owned checkpoints/routes and ignore geometry from another
   expect(mapHit([route], 'none', view, 400, (point.x + end.x) / 4, (point.y + end.y) / 4)).toEqual({ route: route.id });
   route.segments[0].route_id = 'foreign';
   expect(mapHit([route], 'none', view, 400, (point.x + end.x) / 4, (point.y + end.y) / 4)).toBeNull();
+});
+
+test('panning preserves tile identities instead of remounting every visible image', () => {
+  const fit = { x: 0.5, y: 0.5, anchor: 0, zoom: 3 };
+  const before = visibleTiles(viewport(fit, 0, { x: 0, y: 0 }));
+  const after = visibleTiles(viewport(fit, 0, { x: 20, y: 0 }));
+  const shared = before.find(tile => after.some(next => next.key === tile.key));
+  expect(shared).toBeDefined();
+  expect(after.find(tile => tile.key === shared?.key)?.left).toBe(shared!.left - 20);
 });

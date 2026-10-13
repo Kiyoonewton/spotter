@@ -98,12 +98,13 @@ export function viewport(
 }
 
 export function visibleTiles(view: ReturnType<typeof viewport>) {
-  const tiles: { x: number; y: number; left: number; top: number }[] = [];
+  const tiles: { key: string; x: number; y: number; left: number; top: number }[] = [];
   const limit = 2 ** view.zoom;
   for (let x = Math.floor(view.left / 256); x <= Math.floor((view.left + MAP_WIDTH) / 256); x++) {
     for (let y = Math.floor(view.top / 256); y <= Math.floor((view.top + MAP_HEIGHT) / 256); y++) {
       if (y < 0 || y >= limit) continue;
       tiles.push({
+        key: `${view.zoom}:${x}:${y}`,
         x: ((x % limit) + limit) % limit,
         y,
         left: x * 256 - view.left,
