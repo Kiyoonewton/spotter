@@ -37,7 +37,7 @@ claim that every feature is deployed or device verified.
 ## Remaining release evidence
 
 - Signed Android APK, actual installation and public download verification.
-- Current complete HERE/Open-Meteo live trip through the deployed frontend/API.
+- Native live-trip/device QA remains pending; deployed web live-trip verification is recorded below.
 - Original assessment cross-check; no invented AI/scoring claims.
 - Mobile map gestures, OSM access, keyboard/result reveal, large fonts and focus on
   a physical device. Component tests cannot establish those observations.
@@ -66,3 +66,23 @@ record does not establish a provider failure or an application regression. A
 browser/device or server-side complete live trip remains unverified in this pass.
 EAS project association is absent, and no authenticated EAS build or Android device
 is available here. APK creation, installation and download publication remain open.
+
+
+## Deployed browser verification — 13 October 2026
+
+A real browser completed Live mode on https://spotter.kiyoo.online/ with selected
+Chicago and Pittsburgh provider candidates, departure 13 October 11:00 America/Chicago,
+42,000 lb cargo and 25-mile checkpoints. The returned analysis showed three HERE
+truck alternatives: Route 1 462.7 mi / 7h23m; Route 2 487.9 mi / 8h12m;
+Route 3 487.8 mi / 8h09m. Route 1 was recommended, with 462.7 Low miles.
+All three cards showed full Low exposure. Checkpoint wind/rain/snow measurements
+and retrieved Open-Meteo provenance were present; the saved-analysis notice appeared.
+Switching to Route 2 changed the inspector and map to its 21 owned checkpoints
+while Route 1 remained recommended. Enabling the risk heatmap preserved selection
+and displayed the arrival-time risk disclosure. OSM basemap tiles rendered.
+
+This verifies the deployed web journey, not provider forecast accuracy, Android
+map access or the unmerged PR's deployment. The inspector uses explicit browser
+local zone labels (PDT in this browser); the departure/timeline shows America/Chicago.
+Native screen/device QA and original-assessment cross-check remain pending.
+EAS CLI `whoami` returned Not logged in; no signed build could be initiated.
