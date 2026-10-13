@@ -1,115 +1,85 @@
-# Getting started
+# Local setup
 
-This is the one doc a new person needs to get set up and start working on Spotter. It covers setup once, then the two ways to work day-to-day: with Docker (the normal way) or without Docker (a fast path for a quick, isolated change).
+Spotter is one public monorepo. Clone `develop`; the backend, frontend, infrastructure
+and mobile folders are already included. No separate organisation access or sibling
+repository checkouts are needed.
 
-Nothing here is duplicated elsewhere — each repo's own README links back to this file instead of repeating it.
+## Docker workflow
 
-## 1. Prerequisites
+Requirements: Git, Docker with Compose, and a free local port 80.
+From the repository root:
 
-- **Docker Desktop** — required for the normal (Docker) workflow below. Not required for the no-Docker fast path.
-- **Node.js 22+ and Yarn 1.x** (frontend) and **Python 3.12+** (backend) — required either way: for running each repo's quality checks on the host, and for the no-Docker workflow.
-- **GitHub access** to the `Spotterv1` org, with access to all three repos.
-
-## 2. Clone all three repos as siblings
-
-They must sit next to each other — the Docker setup depends on this exact layout:
-
-```text
-work-space/
-├── spotter-frontend/
-├── spotter-backend/
-└── spotter-infrastructure/
-```
-
-## 3. Set up a local domain (Docker workflow only)
-
-Nginx routes based on the `server_name` in `spotter-infrastructure/webserver/conf.d/dev/spotter.conf`. Pick any local domain, point it at `127.0.0.1`, and set `server_name` to match.
-
-**Simplest option** — add one line to `/etc/hosts` (requires `sudo`):
-
-```text
-127.0.0.1  your-app.test
-```
-
-An optional wildcard-DNS setup (`dnsmasq`) exists for resolving many local domains at once — see `spotter-infrastructure/README.md` if you want it. It's not required.
-
-## 4. Copy environment files
-
-None of the real `.env` files are committed — only `.env.example` templates are. Copy each one and fill in values (defaults are fine to start):
-
-```bash
-cp spotter-backend/.env.example spotter-backend/.env
-cp spotter-frontend/apps/web/.env.example spotter-frontend/apps/web/.env
-cp spotter-infrastructure/.env.example spotter-infrastructure/.env
-```
-
-## 5. Start everything and verify
-
-```bash
+```sh
+test -f spotter-backend/.env || cp spotter-backend/.env.example spotter-backend/.env
+test -f spotter-infrastructure/.env || cp spotter-infrastructure/.env.example spotter-infrastructure/.env
 cd spotter-infrastructure
 docker compose -f docker-compose.local.yml up -d --build
+docker compose -f docker-compose.local.yml ps
+curl -H 'Host: spotter.kiyoo' http://127.0.0.1/api/health
 ```
 
-Open `http://<your-local-domain>/` in a browser, and confirm the API responds:
+Open http://localhost/. Demo needs no provider credentials. The dev Nginx server
+name is `spotter.kiyoo`; optionally add `127.0.0.1 spotter.kiyoo` to your hosts file.
+The frontend gets `VITE_API_BASE_URL=/api` from Compose. PostgreSQL and Redis use
+internal service names; Compose supplies the backend database/cache URLs.
 
-```bash
-curl -H "Host: <your-local-domain>" http://127.0.0.1/api/health
+For Live, set `OPENCAGE_API_KEY` and `HERE_API_KEY` in `spotter-backend/.env`, then
+recreate the backend. Never expose keys through frontend variables or commit secrets.
+Local example passwords are unsuitable for deployed environments.
+
+```sh
+docker compose -f docker-compose.local.yml up -d --force-recreate spotter-backend
+docker compose -f docker-compose.local.yml logs --tail 80 webserver spotter-backend spotter-frontend
+docker compose -f docker-compose.local.yml exec spotter-backend python manage.py check
+docker compose -f docker-compose.local.yml exec spotter-backend python manage.py test
 ```
 
-Expect `{"status":"ok"}`. Setup is done.
+Source mounts enable development reload. Rebuild the affected service after
+Dockerfile/dependency changes. Stop with `docker compose -f docker-compose.local.yml down`;
+adding `-v` deletes the local database volumes.
 
----
+## Without Docker
 
-## Day-to-day workflow — with Docker (normal)
+Use the Node version in the web `.nvmrc`, Yarn 1 and Python 3.12. Backend:
 
-Use this for regular work. Source changes hot-reload automatically; you don't rebuild for every edit.
-
-| You changed...                     | Do this                                                         |
-| ----------------------------------- | ------------------------------------------------------------------ |
-| Backend or frontend source code     | Nothing — hot reload picks it up automatically                     |
-| Backend dependencies (`requirements.txt`) | `docker compose -f docker-compose.local.yml restart spotter-backend`            |
-| A Dockerfile itself                 | `docker compose -f docker-compose.local.yml up -d --build --force-recreate <service>`          |
-
-Useful commands while working (all with `-f docker-compose.local.yml`):
-
-```bash
-docker compose -f docker-compose.local.yml ps           # what's running
-docker compose -f docker-compose.local.yml logs -f      # tail all logs
-docker compose -f docker-compose.local.yml down         # stop everything (never add -v — it deletes your local database)
-```
-
-**Before pushing**, in whichever repo you changed:
-
-```bash
-yarn quality
-```
-
-Runs lint, type-check, format-check, tests, and build. Fix anything it reports, then open a PR into `develop`. GitHub Actions runs the same checks automatically on the PR.
-
----
-
-## Day-to-day workflow — without Docker (fast path)
-
-Use this when you want to make a quick, isolated change and don't need the full stack (database, Redis, Nginx). Only Node, Yarn and Python are required — no Docker.
-
-**Backend** (one terminal), runs on `http://localhost:8000`:
-
-```bash
+```sh
 cd spotter-backend
-python -m venv .venv && source .venv/bin/activate
-make install
-make dev
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+test -f .env || cp .env.example .env
 ```
 
-**Frontend** (another terminal), runs on `http://localhost:5173`, talking to the backend directly:
+Edit `.env`: remove the Docker `DATABASE_URL` for SQLite, and leave `REDIS_URL`
+unset for local-memory caching. Keep keys server-side. Then:
 
-```bash
+```sh
+python manage.py migrate
+python manage.py runserver 127.0.0.1:8000
+```
+
+In another terminal from the repository root:
+
+```sh
 cd spotter-frontend/apps/web
 corepack enable
-yarn install
-yarn dev
+yarn install --frozen-lockfile
+test -f .env || cp .env.example .env
 ```
 
-**What you don't get this way:** Postgres (the backend falls back to SQLite), Redis, or Nginx — fine if your change doesn't touch those.
+Set `VITE_API_BASE_URL=/api` in `.env`, then run `yarn dev`. Open
+http://127.0.0.1:5173; Vite proxies `/api` to 127.0.0.1:8000 by default.
 
-**Before pushing:** same as the Docker workflow — `make quality` (backend) or `yarn quality` (frontend).
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| Port 80 already allocated | Change local webserver host port, and use that port in browser/curl |
+| Frontend rejects environment | Ensure `VITE_API_BASE_URL=/api` is set; restart Vite after env changes |
+| Database host `postgres` unavailable on host | Use Compose, or remove Docker DATABASE_URL for SQLite |
+| Live search/routing unavailable | Check server-side key presence and safe request-ID/category logs |
+| Live route incomplete | Use an upcoming departure within forecast coverage; inspect Unknown fields |
+| Browser tests cannot start | Install Chromium and check port 5173 availability |
+
+Full-stack E2E configuration lives in this folder; web mocked browser tests live in
+`spotter-frontend/apps/web/tests/e2e`. Native setup is in `spotter-mobile/README.md`.
