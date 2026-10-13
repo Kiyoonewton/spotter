@@ -1,0 +1,25 @@
+import mockSafeArea from 'react-native-safe-area-context/jest/mock';
+import { AccessibilityInfo, ScrollView } from 'react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { PaperProvider } from 'react-native-paper';
+import DriverScreen from '../app/trip';
+import * as api from '../services/trip-planning';
+import { fixture } from '../services/fixture';
+jest.mock('react-native-safe-area-context', () => mockSafeArea);
+afterEach(() => jest.restoreAllMocks());
+test('success scrolls to results, reduced motion disables animation, failure never reveals old results again', async () => {
+  jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
+  const scrollTo = jest.spyOn(ScrollView.prototype, 'scrollTo');
+  jest.spyOn(api, 'analyzeTrip').mockResolvedValueOnce(fixture()).mockRejectedValueOnce(new Error('private'));
+  const screen = await render(<PaperProvider><DriverScreen /></PaperProvider>);
+  await fireEvent.press(screen.getByText('Analyze trip'));
+  await waitFor(() => expect(screen.getByTestId('loaded-results')).toBeTruthy());
+  const layout = { nativeEvent: { layout: { y: 600, height: 100 } } };
+  await fireEvent(screen.getByTestId('loaded-results'), 'layout', layout);
+  expect(scrollTo).toHaveBeenCalledWith({ y: 588, animated: false });
+  const count = scrollTo.mock.calls.length;
+  await fireEvent.press(screen.getByText('Analyze trip'));
+  await waitFor(() => expect(screen.getByText(/Trip analysis failed/)).toBeTruthy());
+  await fireEvent(screen.getByTestId('loaded-results'), 'layout', layout);
+  expect(scrollTo).toHaveBeenCalledTimes(count);
+});

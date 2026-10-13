@@ -107,3 +107,17 @@ restart Metro with `npx expo start --clear`, then reload the emulator. This clea
 Metro's JavaScript cache; the patch uses a different image loader from the prior
 React Native Image implementation. Confirm actual tiles on the device. Passing
 JS/component tests alone does not establish that a device/IP block is lifted.
+
+## Map interaction and loaded results
+
+Tap **Expand interactive map** for an isolated map view: drag to pan, pinch to
+zoom, and tap near a route or checkpoint to select it. Zoom buttons and **Fit
+routes** remain available. Closing the map preserves route/checkpoint selection
+and heatmap settings. These interactions do not change weather or recommendation.
+The expanded view avoids competing with the trip page's vertical scrolling.
+
+After a successful analysis or saved-trip restore, the keyboard dismisses and the
+page scrolls to **Trip results** once the new section is laid out. Reduced motion
+uses immediate scrolling. Failed/invalid/cancelled requests and later form/map
+layout changes do not reveal old results again; planner errors appear next to
+**Analyze trip**. Physical-device gesture and scroll testing remains necessary.
