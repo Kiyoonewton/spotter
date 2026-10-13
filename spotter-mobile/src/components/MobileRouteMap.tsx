@@ -1,5 +1,6 @@
+import { BasemapTile } from './BasemapTile';
 import { useState } from 'react';
-import { View, Image as NativeImage, Linking } from 'react-native';
+import { View, Linking } from 'react-native';
 import Svg, { Circle, G, Polyline } from 'react-native-svg';
 import { Button, Card, Checkbox, Text } from 'react-native-paper';
 import type { Route } from '../services/types';
@@ -11,6 +12,8 @@ export function MobileRouteMap({ routes, selected, checkpoint, onRoute, onCheckp
   const [width, setWidth] = useState(0);
   const [zoom, setZoom] = useState(0);
   const [heatmap, setHeatmap] = useState(false);
+  const [blocked, setBlocked] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [tilesFailed, setTilesFailed] = useState(false);
   const fit = fitRoutes(routes);
   if (!fit) return <Text>Geographic route map unavailable for this analysis. Route and checkpoint details remain available.</Text>;
@@ -23,9 +26,14 @@ export function MobileRouteMap({ routes, selected, checkpoint, onRoute, onCheckp
   return <Card><Card.Content style={{ gap: 10 }}>
     <Text variant="titleLarge" accessibilityRole="header">Route map</Text>
     <Checkbox.Item label="Corridor risk heatmap" status={heatmap ? 'checked' : 'unchecked'} onPress={() => setHeatmap(value => !value)} />
-    {tilesFailed && <Text>Basemap tiles unavailable. Route lines remain visible.</Text>}
-    <View onLayout={event => setWidth(event.nativeEvent.layout.width)} style={{ width: '100%', aspectRatio: MAP_WIDTH / MAP_HEIGHT, overflow: 'hidden', backgroundColor: '#EDF1F4', borderRadius: 12 }}>
-      {width > 0 && visibleTiles(view).map(tile => <NativeImage key={`${view.zoom}-${tile.left}-${tile.top}`} source={{ uri: `https://tile.openstreetmap.org/${view.zoom}/${tile.x}/${tile.y}.png`, headers: { 'User-Agent': 'WaycastDriver/0.1 (https://spotter.kiyoo.online)' } }} style={{ position: 'absolute', left: tile.left * width / MAP_WIDTH, top: tile.top * width / MAP_WIDTH, width: 256 * width / MAP_WIDTH, height: 256 * width / MAP_WIDTH }} onError={() => setTilesFailed(true)} />)}
+    {tilesFailed && <Text accessibilityRole="alert">{blocked
+      ? 'OpenStreetMap access is blocked (403). Route lines remain visible. Check the tile service or network before retrying.'
+      : 'Basemap tiles unavailable. Route lines remain visible.'}</Text>}
+    {tilesFailed && <Button onPress={() => { setBlocked(false); setTilesFailed(false); setRetry(value => value + 1); }}>Retry basemap</Button>}
+    <View testID="map-viewport" onLayout={event => setWidth(event.nativeEvent.layout.width)} style={{ width: '100%', aspectRatio: MAP_WIDTH / MAP_HEIGHT, overflow: 'hidden', backgroundColor: '#EDF1F4', borderRadius: 12 }}>
+      {width > 0 && !blocked && visibleTiles(view).map(tile => <BasemapTile key={`${retry}-${view.zoom}-${tile.left}-${tile.top}`}
+        zoom={view.zoom} x={tile.x} y={tile.y} left={tile.left * width / MAP_WIDTH} top={tile.top * width / MAP_WIDTH}
+        size={256 * width / MAP_WIDTH} onFailure={accessBlocked => { setTilesFailed(true); if (accessBlocked) setBlocked(true); }} />)}
       <Svg width="100%" height="100%" viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} accessibilityLabel="Geographic routes and checkpoints">
         {heatmap && ordered.flatMap(item => ownedSegments(item).filter(segment => segment.risk !== 'Unknown' && Boolean(RISK_COLOURS[segment.risk])).map(segment =>
           <G key={`heat-${segment.id}`} testID="corridor-risk-heat" pointerEvents="none">

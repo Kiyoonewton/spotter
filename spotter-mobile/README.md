@@ -92,3 +92,18 @@ radar and does not change ranking or weather classification.
 
 Provider IDs remain in API data, ownership checks and callbacks; public route
 labels are response-order Route 1/2/3, independent of eligibility rank.
+
+## Android basemap access
+
+Tiles use Expo Image with explicit Waycast User-Agent/application identity and
+memory/disk caching. Only the currently visible tiles are requested; no cache
+bypass headers, tile prefetch, rotating identities, or proxy workaround is used.
+Reported HTTP 403 errors stop tile rendering until an explicit retry; route
+geometry and corridor risk remain visible. Raw image error strings are not
+shown or logged. A blocked service may still require provider/operator action.
+
+When testing this patch, update `fix/android-map-tiles`, install dependencies and
+restart Metro with `npx expo start --clear`, then reload the emulator. This clears
+Metro's JavaScript cache; the patch uses a different image loader from the prior
+React Native Image implementation. Confirm actual tiles on the device. Passing
+JS/component tests alone does not establish that a device/IP block is lifted.
