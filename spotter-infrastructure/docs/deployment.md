@@ -1,72 +1,128 @@
-# Deployment plan
+# Development deployment
 
-## Environments
+Development runs the built React/TanStack Node frontend, Django/Gunicorn,
+Nginx, Postgres and Redis through `docker-compose.development.yml`.
+Only the Spotter gateway publishes HTTP_PORT (default 8085). Its container
+listens on port 80. The existing Nginx Proxy Manager handles public HTTPS.
+This workflow does not provision or deploy staging/production.
 
-```text
-Local  →  Development  →  Staging  →  Production
-```
+## Server setup
 
-- **Local** — your own machine, hot reload, bind-mounted source. `docker-compose.local.yml`. See the root README and [getting-started.md](getting-started.md).
-- **Development** — a remote server running production-style builds (no hot reload, no bind mounts) with its own Postgres and Redis. `docker-compose.development.yml`, domain `dev.spotter.com`. See "Development environment" below.
-- **Staging** — a pre-production environment for validating changes before they reach real users, on the same server as Development, with its own compose file and containers (not yet created — will follow the same pattern as Development once needed). Configuration and secrets are separate from Development's.
-- **Production** — the live environment. Not yet provisioned. Database backup/restore procedures are documented separately in `../spotter-backend/docs/database-operations.md` (daily backups, 30-day retention, pre-migration backups, restore drills) and apply once production exists.
+Keep the three service directories under one workspace (default
+`/root/kiyoo/spotter-new`). Install Docker Compose v2 and rsync. The SSH user
+must own the workspace and be permitted to run Docker. Configure the real
+`spotter-infrastructure/.env.development` on the server; it is never synced
+from CI. Use `.env.development.example` as a template, with real secrets.
 
-## Development environment
+Set `PUBLIC_HOST` to the development hostname, include it in
+`DJANGO_ALLOWED_HOSTS`, and set the matching `CORS_ORIGIN`. `DATABASE_URL`
+must use the same password as `POSTGRES_PASSWORD`, and Redis should point
+to the private `redis` service. Provider credentials remain server-only.
 
-Runs on a remote server, reachable at `http://dev.spotter.com` (HTTP only for now — see "Deferred" below).
+In the GitHub `development` environment configure:
 
-**Compose file:** `docker-compose.development.yml`. Services: `webserver` (built from `webserver/Dockerfile.prod`, frontend baked in as a production build), `spotter-backend` (built from `spotter-backend/Dockerfile`, production build), `postgres` (16), `redis` (7). No `container_name` on any service — Staging will run on the same server later and fixed names would collide. Only `webserver` publishes a host port; Postgres, Redis, and the backend are private Docker-network services only.
+| Kind | Name | Purpose |
+| --- | --- | --- |
+| Variable | DEV_HOST | Server DNS name or IPv4 address |
+| Variable | DEV_USER | SSH user; defaults to root for existing setup |
+| Variable | DEV_PATH | Absolute workspace; defaults to /root/kiyoo/spotter-new |
+| Secret | DEV_SSH_PRIVATE_KEY | Deployment SSH key |
+| Secret | DEV_SSH_KNOWN_HOSTS | Pinned OpenSSH known_hosts entry for DEV_HOST |
 
-### Starting Development
+Verify the host-key fingerprint through your server console or another trusted
+channel before saving the known_hosts entry. The workflow never trusts a fresh
+unauthenticated ssh-keyscan result. Environment protection rules can require
+approval; configure those in GitHub as appropriate.
 
-```bash
-# From the workspace root on the server, with spotter-frontend,
-# spotter-backend, and spotter-infrastructure checked out as siblings:
-cd spotter-infrastructure
+## Rollout behavior
 
-# 1. Copy the dockerignore into place for the wide build context
-cp workspace.dockerignore ../.dockerignore
+Pushes to develop retain automatic deployment; workflow_dispatch is also
+available on develop. The gate waits for all eight required checks on the exact
+commit, including both CodeQL analyses, Docker runtime tests and browser tests.
+The PR-only CodeQL aggregate is checked when present but is not required on
+branch pushes. The gate also reads published CodeQL analyses for both languages
+at the exact SHA/ref and requires zero open CodeQL alerts on develop. Failed API
+access or stale/missing security results cannot authorize deployment.
+It refuses failed/missing/neutral checks and rejects a stale rollout if develop
+advanced while waiting for environment approval. In-progress rollouts are not
+cancelled by later pushes, so migrations are not interrupted.
 
-# 2. Create the real env file from its example and fill in real values
-cp .env.development.example .env.development
+Rsync updates frontend, backend and infrastructure together. Server .env files,
+SQLite/runtime files and installed dependencies are protected from deletion;
+placeholder examples are updated. Backups live outside those service directories.
+The script copies the workspace Docker allowlist and builds all three application
+images before changing running services.
 
-# 3. Validate the compose file
-docker compose -f docker-compose.development.yml --env-file .env.development config --quiet
+For an existing running Postgres service, pg_dump must produce a non-empty,
+mode-0600 server backup before restart. A failed build or backup stops deployment.
+The script retains the existing Compose project and volumes, starts with
+--wait, runs Django checks, and verifies database/cache readiness and the page
+through Nginx. It derives the HTTP host from server configuration, not a hardcoded
+host port. A failed readiness check fails the workflow.
 
-# 4. Start the stack
-docker compose -f docker-compose.development.yml --env-file .env.development up -d --build
+First install has no existing database to back up. CI tests both first install
+and a repeat rollout, then restores the backup into a disposable Postgres
+database and verifies migration history. Live SSH/server deployment is separate
+from these temporary CI-stack tests.
 
-# 5. Verify
-curl -H "Host: dev.spotter.com" http://127.0.0.1/api/health
-```
+## Recovery and limits
 
-Expect `{"status":"ok"}`.
+This is an in-place Compose rollout and may have brief downtime. Database
+migrations run during backend startup. There is no automatic rollback after a
+migration: restoring a database can discard subsequent writes and requires an
+explicit operational decision. Never run down --volumes on the server.
 
-### Environment file
+For recovery, select a previously verified revision, sync its complete service
+sources while preserving the server env, and rebuild compatible images. Review
+migration compatibility before starting the older backend. Restore a backup
+only when necessary and after preserving current data. Keep backups protected,
+copy them off-server and define retention; this workflow does not delete them.
+Production secret/host hardening, TLS, monitoring, staging and full live HERE
+verification remain outstanding. No real server deployment is established by
+this documentation or by mocked SSH-free tests.
 
-`.env.development` is gitignored — only `.env.development.example` is committed, with placeholders. It must set:
+## Slow dependency downloads
 
-- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` — for the Postgres container.
-- `DATABASE_URL` — for the backend, using the **same** `POSTGRES_PASSWORD` value as above (see the example file's comment for the exact format). These must match, or the backend can't authenticate against its own database.
-- `CORS_ORIGIN` — `http://dev.spotter.com`.
+The built frontend uses a persistent BuildKit Yarn cache with a shared lock,
+a ten-minute download timeout and two concurrent network requests. This limits
+simultaneous large downloads and retains completed package downloads after a
+failed install. Frozen lockfile and package integrity verification remain active.
+The cache is build-only and contains public dependencies, not application secrets.
+A persistent registry outage can still fail a build; this is not an offline build.
+Failed builds occur before service restart or migrations.
 
-Generate a real password (not the placeholder) before deploying, e.g. `openssl rand -base64 32`, and use the same value in both places.
+## Long-running SSH commands
 
-## What's already in place
+Deployment and rsync connections send authenticated SSH keepalive packets every
+30 seconds. Six unanswered probes end the connection, so an unresponsive server
+still fails instead of hanging indefinitely. This prevents an idle connection
+from expiring while a Docker dependency download produces no log output.
+Pinned host-key checking remains enabled. A disconnected build is not evidence
+of successful rollout; readiness must be confirmed afterward.
 
-- `docker-compose.prod.yml` — builds a single production-style Nginx image (compiled frontend served as static files, `/api/` proxied to the backend) and a production backend image, without its own Postgres/Redis (assumes managed/external database services). This is the artifact production deployment will eventually run — not yet an actual deployment pipeline.
-- `docker-compose.development.yml` — the same production-style webserver/backend build, plus its own Postgres and Redis, for a real (if early) server environment.
-- The backend's own production Dockerfile is multi-stage (compile, install production-only dependencies, non-root runtime user).
-- The webserver image build needs a `.dockerignore` at the workspace root (see [`workspace.dockerignore`](../workspace.dockerignore) and the README's "Building a production-style webserver image" section). Any pipeline building this image must copy that file into place (`cp workspace.dockerignore ../.dockerignore`) before running the build — otherwise the build context is the entire, unrelated workspace root, and `spotter-backend/.env` could be sent to Docker.
+## Nginx Proxy Manager integration
 
-## Deferred
+Development gateway host binding defaults to 0.0.0.0:8085. Set HTTP_PORT in
+server .env.development if that port is occupied. HTTP_BIND_ADDRESS can select
+a private host interface reachable from your NPM container. Container services
+and internal gateway port 80 are unchanged; existing NPM ports 80/443 remain
+untouched. Production standalone Compose is unchanged.
 
-- **HTTPS.** Development currently runs over plain HTTP. Cloudflare DNS and HTTPS are the next step once the stack is confirmed working over HTTP — not part of this setup.
-- Staging's own compose file and server config (will mirror Development).
-- Where Production actually runs (hosting provider / orchestration).
-- Secrets management for a real environment (how `DATABASE_URL`, `POSTGRES_PASSWORD`, etc. reach the server safely in an ongoing way — right now it's a manually-created `.env.development` on the server, which is fine for an early single-developer setup but not a long-term secrets story).
-- CI/CD: what triggers a Development/Staging deploy, what gates a Production deploy.
-- Production domain and TLS.
-- Monitoring, alerting, and on-call ownership.
+In NPM, create or edit only the Spotter proxy host:
 
-This section will be replaced with concrete steps as each is decided — this file exists so the plan is agreed in shape before infrastructure is built, not invented retroactively.
+- Domain: spotter.kiyoo.online (or your actual PUBLIC_HOST).
+- Scheme: http.
+- Forward hostname/IP: the Docker host address reachable from NPM.
+- Forward port: the configured HTTP_PORT, normally 8085.
+- SSL: select a valid certificate covering the public domain and enable HTTPS.
+
+For Cloudflare Full (strict), use a valid public CA or Cloudflare Origin CA
+certificate installed in NPM. An Origin CA certificate is trusted by Cloudflare,
+not ordinary browsers connecting directly to the origin. Keep its private key
+in NPM/server storage, never Git or frontend assets. Cloudflare 526 indicates
+origin certificate validation failed; changing the app port alone cannot fix it.
+Do not disable certificate validation to claim HTTPS readiness.
+
+CI starts the development stack on its dedicated host port, verifies HTTP
+readiness and restores the protected database backup. Public-domain verification
+must additionally exercise NPM/Cloudflare and the real browser/API journey.

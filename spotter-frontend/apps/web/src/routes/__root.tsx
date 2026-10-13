@@ -1,3 +1,5 @@
+import resultWorkflow from '../result-workflow.css?url';
+import briefingPrint from '../briefing-print.css?url';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   Outlet,
@@ -11,6 +13,9 @@ import {
 import { useEffect, type ReactNode } from 'react';
 
 import appCss from '../styles.css?url';
+import responsiveCss from '../responsive-results.css?url';
+import typographyCss from '../dispatch-typography.css?url';
+import introCss from '../dispatch-intro.css?url';
 import { reportLovableError } from '../lib/lovable-error-reporting';
 import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { muiTheme } from '../lib/mui-theme';
@@ -88,8 +93,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: 'twitter:card', content: 'summary_large_image' },
     ],
     links: [
+      { rel: 'stylesheet', href: briefingPrint },
       { rel: 'stylesheet', href: appCss },
-      { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
+      { rel: 'stylesheet', href: responsiveCss },
+      { rel: 'stylesheet', href: resultWorkflow },
+      { rel: 'stylesheet', href: typographyCss },
+      { rel: 'stylesheet', href: introCss },
+      { rel: 'icon', href: '/spotter-favicon.svg', type: 'image/svg+xml' },
       {
         rel: 'stylesheet',
         href: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700&family=Manrope:wght@400;500;600;650;700;750;800&display=swap',

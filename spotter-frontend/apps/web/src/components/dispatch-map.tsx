@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { checkpoints, type DemoState, type RouteId } from '@/lib/dispatch-data';
+import { checkpoints, type DemoState } from '@/lib/dispatch-data';
 import { ILLUSTRATIVE_MAP_LABEL, ROUTE_PATHS } from './dispatch-map-geometry';
 import { IllustrativeBasemap } from './IllustrativeBasemap';
 import { IllustrativeForecastOverlay } from './IllustrativeForecastOverlay';
@@ -8,8 +8,8 @@ import { MapControls } from './MapControls';
 import { MapEndpoints } from './MapEndpoints';
 
 type Props = {
-  selected: RouteId;
-  onSelect: (id: RouteId) => void;
+  selected: string;
+  onSelect: (id: string) => void;
   checkpoint: number;
   onCheckpoint: (index: number) => void;
   opacity: number;
@@ -88,7 +88,7 @@ export function DispatchMap({
         >
           <IllustrativeBasemap />
           <IllustrativeForecastOverlay forecastHour={forecast} opacity={opacity} />
-          {(['A', 'B', 'C'] as RouteId[]).map((id) => (
+          {['A', 'B', 'C'].map((id) => (
             <g
               key={id}
               data-map-control="true"

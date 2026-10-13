@@ -1,70 +1,63 @@
-import IconButton from '@mui/material/IconButton';
+import { forecastTicks } from '@/lib/journey-horizon';
 import Slider from '@mui/material/Slider';
-import Tooltip from '@mui/material/Tooltip';
 import CloudIcon from '@mui/icons-material/FilterDramaOutlined';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
-import PauseIcon from '@mui/icons-material/PauseRounded';
-import PlayIcon from '@mui/icons-material/PlayArrowRounded';
 
 type Props = {
+  variant?: 'demo' | 'live';
+  disabled?: boolean;
+  horizonHours: number;
   forecastHour: number;
   timestamp: string;
-  playing: boolean;
   onForecastHour: (hour: number) => void;
-  onPlaying: (playing: boolean) => void;
 };
 
 const sx = (fontSize: number) => ({ fontSize });
 
 export function ForecastTimeline({
+  variant = 'demo',
+  disabled = false,
+  horizonHours,
   forecastHour,
   timestamp,
-  playing,
   onForecastHour,
-  onPlaying,
 }: Props) {
+  const ticks = forecastTicks(horizonHours);
   return (
     <div className="forecast-panel">
       <div className="forecast-heading">
         <div>
           <CloudIcon sx={sx(20)} />
-          <strong>Corridor forecast</strong>
-          <span>Illustrative radar &amp; heatmap</span>
+          <strong>Weather through the longest journey</strong>
+          <span>
+            {variant === 'live' ? 'Hourly route weather' : 'Illustrative demo weather'} · through +
+            {horizonHours}h
+          </span>
         </div>
         <span className="forecast-timestamp">
           <span className="snapshot-dot" />
           Depart +{forecastHour}h <span>•</span> {timestamp} <span>•</span>
-          <small>Forecast snapshot</small>
+          <small>Selected weather time</small>
         </span>
       </div>
       <div className="forecast-slider-row">
-        <Tooltip title={playing ? 'Pause forecast' : 'Play forecast'}>
-          <IconButton
-            className="forecast-play"
-            color="primary"
-            aria-label={playing ? 'Pause forecast' : 'Play forecast'}
-            onClick={() => onPlaying(!playing)}
-          >
-            {playing ? <PauseIcon /> : <PlayIcon />}
-          </IconButton>
-        </Tooltip>
         <div className="forecast-track">
           <Slider
+            disabled={disabled}
             aria-label="Corridor forecast hours after departure"
             min={0}
-            max={48}
+            max={horizonHours}
             step={1}
-            marks={[0, 12, 24, 36, 48].map((value) => ({ value }))}
-            value={forecastHour}
+            marks={ticks.map((value) => ({ value }))}
+            value={Math.min(forecastHour, horizonHours)}
             valueLabelDisplay="auto"
             valueLabelFormat={(value) => `+${value}h`}
             onChange={(_, value) => {
               onForecastHour(value as number);
-              onPlaying(false);
             }}
           />
           <div className="forecast-ticks">
-            {[0, 12, 24, 36, 48].map((value) => (
+            {ticks.map((value) => (
               <span key={value}>{value === 0 ? 'Departure' : `+${value}h`}</span>
             ))}
           </div>
@@ -72,8 +65,12 @@ export function ForecastTimeline({
       </div>
       <div className="forecast-note">
         <InfoIcon sx={sx(14)} />
-        Illustrative forecast visualization only. The slider does not change route ranking or
-        checkpoint arrival-time weather.
+        {variant === 'live'
+          ? 'Move the slider to see weather along the route at that time. '
+          : 'Demo visualization only; these shapes are illustrative. '}
+        The hourly view ends at the longest route’s arrival, rounded up to the next hour. Route
+        recommendations use weather at each checkpoint’s truck arrival time and do not change when
+        you move this slider.
       </div>
     </div>
   );

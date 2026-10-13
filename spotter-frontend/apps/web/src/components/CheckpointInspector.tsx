@@ -8,7 +8,8 @@ import RainIcon from '@mui/icons-material/WaterDropOutlined';
 import SnowIcon from '@mui/icons-material/AcUnitRounded';
 import WarningIcon from '@mui/icons-material/WarningAmberRounded';
 import WindIcon from '@mui/icons-material/AirRounded';
-import type { Risk, RouteId } from '@/lib/dispatch-data';
+import { formatMeasurement } from '@/lib/result-presentation';
+import type { Risk } from '@/lib/dispatch-data';
 
 export type InspectorCheckpoint = {
   city: string;
@@ -23,7 +24,7 @@ export type InspectorCheckpoint = {
 };
 type Props = {
   checkpoint: InspectorCheckpoint;
-  route: RouteId;
+  route: string;
   index: number;
   total: number;
   departure: string;
@@ -40,18 +41,19 @@ export function CheckpointInspector({
   onPrevious,
   onNext,
 }: Props) {
-  const unknown = cp.risk === 'Unknown';
-  const formatArrival =
-    cp.arrivalAt ??
-    new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      timeZoneName: 'short',
-    }).format(new Date(new Date(`${departure}:00-05:00`).getTime() + cp.minutes * 60000));
+  const formatArrival = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  }).format(
+    cp.arrivalAt
+      ? new Date(cp.arrivalAt)
+      : new Date(new Date(`${departure}:00Z`).getTime() + cp.minutes * 60000),
+  );
   return (
-    <div className="checkpoint-panel">
+    <div className="checkpoint-panel" style={{ marginBottom: 20, borderTop: 'none' }}>
       <div className="panel-heading">
         <h3>Checkpoint inspector</h3>
         <div className="checkpoint-nav">
@@ -70,13 +72,17 @@ export function CheckpointInspector({
         <div>
           <strong>{cp.city}</strong>
           <span>
-            Route {route} · Sample checkpoint {index + 1} · Mile {cp.miles}
+            Route {route} · Sample checkpoint {index + 1} · Mile {formatMeasurement(cp.miles)}
           </span>
         </div>
         <Chip
           size="small"
           className={`risk-chip risk-${cp.risk.toLowerCase().replace(' ', '-')}`}
           label={cp.risk}
+          sx={{
+            bgcolor: 'color-mix(in oklch, var(--risk-color) 13%, var(--card))',
+            color: 'color-mix(in oklch, var(--risk-color) 70%, var(--foreground))',
+          }}
         />
       </div>
       <div className="checkpoint-eta">
@@ -88,7 +94,7 @@ export function CheckpointInspector({
         <div>
           <WindIcon sx={sx(20)} />
           <strong>
-            {unknown || cp.wind == null ? '—' : cp.wind}
+            {cp.wind == null ? '—' : formatMeasurement(cp.wind)}
             <small>mph</small>
           </strong>
           <span>Wind</span>
@@ -96,7 +102,7 @@ export function CheckpointInspector({
         <div>
           <RainIcon sx={sx(20)} />
           <strong>
-            {unknown || cp.rain == null ? '—' : cp.rain.toFixed(2)}
+            {cp.rain == null ? '—' : cp.rain.toFixed(2)}
             <small>in/hr</small>
           </strong>
           <span>Rain</span>
@@ -104,13 +110,13 @@ export function CheckpointInspector({
         <div>
           <SnowIcon sx={sx(20)} />
           <strong>
-            {unknown || cp.snow == null ? '—' : cp.snow.toFixed(2)}
+            {cp.snow == null ? '—' : cp.snow.toFixed(2)}
             <small>in/hr</small>
           </strong>
           <span>Snow</span>
         </div>
       </div>
-      <div className={`trigger-rule ${unknown ? 'unknown-rule' : ''}`}>
+      <div className={`trigger-rule ${cp.risk === 'Unknown' ? 'unknown-rule' : ''}`}>
         <span>
           <WarningIcon sx={sx(15)} />
           TRIGGERING RULE
@@ -122,8 +128,8 @@ export function CheckpointInspector({
           />
         </span>
         <p>
-          {unknown
-            ? 'Risk unknown—forecast unavailable. No arrival-time weather can be assessed at this checkpoint.'
+          {cp.risk === 'Unknown'
+            ? 'Risk unknown—one or more forecast measurements are unavailable. Known measurements are shown above.'
             : cp.rule}
         </p>
       </div>

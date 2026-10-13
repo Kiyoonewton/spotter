@@ -17,6 +17,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Test deployment gate and rollout behavior
+        run: |
+          node --test scripts/deployment-gate.test.cjs
+          python -m unittest discover -s spotter-infrastructure/tests/deployment -v
+          bash -n spotter-infrastructure/scripts/deploy-development.sh
+          bash -n spotter-infrastructure/scripts/sync-development.sh
+
       - name: Create placeholder .env files
         run: |
           touch spotter-backend/.env
@@ -51,8 +58,74 @@ jobs:
 
       - name: Build Development webserver image
         working-directory: spotter-infrastructure
-        run: docker compose -f docker-compose.development.yml --env-file .env.development build webserver
+        run: docker compose -f docker-compose.development.yml --env-file .env.development build webserver spotter-frontend
 
       - name: Build Production webserver image
         working-directory: spotter-infrastructure
-        run: docker compose -f docker-compose.prod.yml build webserver
+        run: docker compose -f docker-compose.prod.yml build webserver spotter-frontend
+
+      - name: Validate built Nginx configurations
+        run: |
+          docker run --rm --add-host spotter-backend:127.0.0.1 --add-host spotter-frontend:127.0.0.1 spotter-webserver:development nginx -t
+          docker run --rm --add-host spotter-backend:127.0.0.1 --add-host spotter-frontend:127.0.0.1 spotter-webserver:prod nginx -t
+
+      - name: Start built production stack
+        working-directory: spotter-infrastructure
+        run: docker compose -f docker-compose.prod.yml up -d --build --wait --wait-timeout 120
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: spotter-infrastructure/yarn.lock
+
+      - name: Install production browser checks
+        working-directory: spotter-infrastructure
+        run: |
+          yarn install --frozen-lockfile
+          yarn playwright install --with-deps chromium
+
+      - name: Verify built application through Nginx
+        working-directory: spotter-infrastructure
+        env:
+          E2E_BASE_URL: http://127.0.0.1
+          E2E_BUILT_FRONTEND: 'true'
+          CI: 'true'
+        run: yarn test:e2e --retries=0
+
+      - name: Production logs on failure
+        if: failure()
+        working-directory: spotter-infrastructure
+        run: docker compose -f docker-compose.prod.yml logs --tail=100
+
+      - name: Stop production test stack
+        if: always()
+        working-directory: spotter-infrastructure
+        run: docker compose -f docker-compose.prod.yml down --volumes
+
+      - name: Exercise complete development rollout twice
+        run: |
+          bash spotter-infrastructure/scripts/deploy-development.sh "$GITHUB_WORKSPACE"
+          bash spotter-infrastructure/scripts/deploy-development.sh "$GITHUB_WORKSPACE"
+
+      - name: Verify published development gateway port
+        run: |
+          curl -fsS -H 'Host: dev.spotter.com' http://127.0.0.1:8085/api/health | python -c 'import json,sys; assert json.load(sys.stdin)["status"] == "ok"'
+          curl -fsS http://127.0.0.1:8085/ | python -c 'import sys; assert "Weather-aware routing" in sys.stdin.read()'
+
+      - name: Verify database backup restores to a disposable database
+        working-directory: spotter-infrastructure
+        run: |
+          backup=$(ls -t ../backups/development-*.sql | head -1)
+          test "$(stat -c '%a' "$backup")" = 600
+          docker compose --env-file .env.development -f docker-compose.development.yml exec -T postgres \
+            sh -ec 'createdb -U "$POSTGRES_USER" spotter_ci_restore'
+          docker compose --env-file .env.development -f docker-compose.development.yml exec -T postgres \
+            sh -ec 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d spotter_ci_restore' < "$backup" >/dev/null
+          docker compose --env-file .env.development -f docker-compose.development.yml exec -T postgres \
+            sh -ec 'test "$(psql -tAc "SELECT count(*) FROM django_migrations" -U "$POSTGRES_USER" -d spotter_ci_restore)" -gt 0; dropdb -U "$POSTGRES_USER" spotter_ci_restore'
+
+      - name: Stop development test stack
+        if: always()
+        working-directory: spotter-infrastructure
+        run: docker compose --env-file .env.development -f docker-compose.development.yml down --volumes

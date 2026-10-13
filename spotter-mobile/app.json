@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Waycast Driver",
+    "slug": "spotter-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "waycast-driver",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router", "expo-image", "expo-asset", "expo-font"],
+    "android": {
+      "package": "online.kiyoo.spotter.driver",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/app-icon.png",
+        "backgroundColor": "#073C33"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "online.kiyoo.spotter.driver"
+    },
+    "icon": "./assets/app-icon.png",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "152f6297-e17e-4d22-997a-e180c6c189cb"
+      }
+    },
+    "owner": "kiyoonewton"
+  }
+}

@@ -1,100 +1,166 @@
+import { readTruckProfile, type TruckProfileDraft } from '@/services/truck-profile';
+import { localTimestamp } from '@/lib/departure-time';
+export { localTimestamp } from '@/lib/departure-time';
+import { useSavedTripRestore } from './useSavedTripRestore';
+import { rememberSnapshot, forgetSnapshot } from '@/services/saved-analyses';
 import { useCallback, useRef, useState } from 'react';
-import { createTripAnalysis, type TripAnalysis } from '@/services/api';
-import type { RouteId } from '@/lib/dispatch-data';
+import { createTripAnalysis, type LocationCandidate, type TripAnalysis } from '@/services/api';
 
+export type AnalysisMode = 'demo' | 'live';
 export type EditableTrip = {
+  truckProfile?: TruckProfileDraft;
+  mode?: AnalysisMode;
   origin: string;
   destination: string;
+  originCandidate?: LocationCandidate | null;
+  destinationCandidate?: LocationCandidate | null;
   departure: string;
+  timezone?: string;
   weight: string;
   spacing: string;
 };
 export type AppliedTrip = {
+  mode: AnalysisMode;
   origin: string;
   destination: string;
   departure: string;
+  timezone: string;
+  resolvedDepartureAt: string;
   weight: number;
   spacing: number;
 };
-type Result = {
+export type Result = {
   analysis: TripAnalysis | null;
-  applied: AppliedTrip;
-  selectedRouteId: RouteId;
+  applied: AppliedTrip | null;
+  selectedRouteId: string;
   checkpointIndex: number;
   pending: boolean;
   error: string;
+  requestId: string | undefined;
   submit: (trip: EditableTrip, event?: React.FormEvent) => Promise<void>;
-  selectRoute: (id: RouteId) => void;
+  selectRoute: (id: string) => void;
   setCheckpointIndex: (index: number) => void;
-};
-
-const initialApplied: AppliedTrip = {
-  origin: 'Chicago, IL',
-  destination: 'Pittsburgh, PA',
-  departure: '2026-10-10T10:00',
-  weight: 42000,
-  spacing: 25,
+  reset: () => void;
 };
 
 export function useTripAnalysis(): Result {
   const [analysis, setAnalysis] = useState<TripAnalysis | null>(null);
-  const [applied, setApplied] = useState(initialApplied);
-  const [selectedRouteId, setSelectedRouteId] = useState<RouteId>('B');
+  const [applied, setApplied] = useState<AppliedTrip | null>(null);
+  const [selectedRouteId, setSelectedRouteId] = useState('');
   const [checkpointIndex, setCheckpointIndex] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
-  const requestId = useRef(0);
-  const selectRoute = useCallback((id: RouteId) => {
+  const [requestId, setRequestId] = useState<string | undefined>(undefined);
+  const sequence = useRef(0);
+  const pendingGuard = useRef(false);
+  const reset = useCallback(() => {
+    forgetSnapshot();
+    sequence.current += 1;
+    pendingGuard.current = false;
+    setAnalysis(null);
+    setApplied(null);
+    setSelectedRouteId('');
+    setCheckpointIndex(0);
+    setPending(false);
+    setError('');
+    setRequestId(undefined);
+  }, []);
+  const selectRoute = useCallback((id: string) => {
     setSelectedRouteId(id);
     setCheckpointIndex(0);
   }, []);
   const submit = useCallback(async (trip: EditableTrip, event?: React.FormEvent) => {
     event?.preventDefault();
-    if (
-      !trip.origin.trim() ||
-      !trip.destination.trim() ||
-      !trip.departure ||
-      Number(trip.weight) <= 0
-    )
-      throw new Error('Enter both locations, a departure time, and a positive load weight.');
-    if (
-      trip.origin.trim().toLowerCase() !== 'chicago, il' ||
-      trip.destination.trim().toLowerCase() !== 'pittsburgh, pa'
-    )
-      throw new Error('This illustrative demo supports Chicago, IL to Pittsburgh, PA only.');
-    const id = ++requestId.current;
-    const nextApplied = {
-      origin: trip.origin,
-      destination: trip.destination,
-      departure: trip.departure,
-      weight: Number(trip.weight),
-      spacing: Number(trip.spacing),
-    };
-    setApplied(nextApplied);
-    setPending(true);
-    setError('');
+    if (pendingGuard.current) return;
+    const id = ++sequence.current;
+    const mode = trip.mode ?? 'demo';
     try {
-      const result = await createTripAnalysis({
-        origin: nextApplied.origin,
-        destination: nextApplied.destination,
-        departure_at: new Date(nextApplied.departure).toISOString(),
-        departure_timezone: 'America/Chicago',
-        load_weight_lb: nextApplied.weight,
-        checkpoint_spacing_miles: nextApplied.spacing,
-      });
-      if (id !== requestId.current) return;
+      if (mode === 'live' && (!trip.originCandidate || !trip.destinationCandidate))
+        throw new Error('Select an origin and destination from the search results.');
+      const weight = Number(trip.weight);
+      const spacing = Number(trip.spacing);
+      if (!Number.isFinite(weight) || weight < 0)
+        throw new Error('Enter a valid non-negative load weight.');
+      const timezone = trip.timezone ?? '';
+      const resolvedDepartureAt = localTimestamp(trip.departure, timezone);
+      pendingGuard.current = true;
+      setPending(true);
+      setError('');
+      setRequestId(undefined);
+      const input = {
+        mode,
+        origin: trip.origin,
+        destination: trip.destination,
+        departure_at: resolvedDepartureAt,
+        departure_timezone: timezone,
+        load_weight_lb: weight,
+        checkpoint_spacing_miles: spacing,
+        ...(mode === 'live' && trip.truckProfile
+          ? { truck_profile: readTruckProfile(trip.truckProfile, weight) }
+          : {}),
+        ...(mode === 'live' && trip.originCandidate && trip.destinationCandidate
+          ? {
+              origin_coordinates: {
+                lat: trip.originCandidate.latitude,
+                lon: trip.originCandidate.longitude,
+              },
+              destination_coordinates: {
+                lat: trip.destinationCandidate.latitude,
+                lon: trip.destinationCandidate.longitude,
+              },
+            }
+          : {}),
+      };
+      const result = await createTripAnalysis(input);
+      if (id !== sequence.current) return;
+      const fallback =
+        result.routes.find((route) => route.eligibility === 'eligible') ?? result.routes[0];
       setAnalysis(result);
-      const available = result.routes.find((route) => route.eligibility !== 'blocked');
-      const recommended = result.recommendation.recommended_route_id as RouteId | null;
-      setSelectedRouteId(recommended ?? available?.id ?? result.routes[0]?.id ?? 'A');
+      forgetSnapshot();
+      rememberSnapshot(result.snapshot?.token);
+      setApplied({
+        mode,
+        origin: trip.origin,
+        destination: trip.destination,
+        departure: trip.departure,
+        timezone,
+        resolvedDepartureAt,
+        weight,
+        spacing,
+      });
+      setSelectedRouteId(result.recommendation.recommended_route_id ?? fallback?.id ?? '');
       setCheckpointIndex(0);
     } catch (requestError) {
-      if (id === requestId.current)
-        setError(requestError instanceof Error ? requestError.message : 'Trip analysis failed.');
+      if (id === sequence.current) {
+        const errorValue = requestError as Error & { requestId?: string };
+        setError(errorValue.message);
+        setRequestId(errorValue.requestId ?? undefined);
+      }
     } finally {
-      if (id === requestId.current) setPending(false);
+      if (id === sequence.current) {
+        pendingGuard.current = false;
+        setPending(false);
+      }
     }
   }, []);
+  useSavedTripRestore(
+    useCallback((saved, trip) => {
+      if (sequence.current !== 0) return false;
+      setAnalysis(saved);
+      setApplied(trip);
+      setSelectedRouteId(
+        saved.recommendation.recommended_route_id ??
+          saved.routes.find((route) => route.eligibility === 'eligible')?.id ??
+          saved.routes[0]?.id ??
+          '',
+      );
+      setCheckpointIndex(0);
+      return true;
+    }, []),
+    useCallback((message) => {
+      if (sequence.current === 0) setError(message);
+    }, []),
+  );
   return {
     analysis,
     applied,
@@ -102,8 +168,10 @@ export function useTripAnalysis(): Result {
     checkpointIndex,
     pending,
     error,
+    requestId,
     submit,
     selectRoute,
     setCheckpointIndex,
+    reset,
   };
 }

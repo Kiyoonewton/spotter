@@ -4,11 +4,11 @@ import ArrowRightIcon from '@mui/icons-material/ArrowForwardRounded';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
 import ShieldIcon from '@mui/icons-material/GppGoodOutlined';
 import WarningIcon from '@mui/icons-material/WarningAmberRounded';
-import type { RouteId } from '@/lib/dispatch-data';
 
 type Props = {
   status: 'loading' | 'recommended' | 'blocked' | 'incomplete' | 'error';
-  recommendedRouteId: RouteId | null;
+  recommendedRouteId: string | null;
+  recommendedRouteLabel?: string | undefined;
   explanation: string;
   onChangeDeparture: () => void;
 };
@@ -18,6 +18,7 @@ const sx = (fontSize: number) => ({ fontSize });
 export function RecommendationBanner({
   status,
   recommendedRouteId,
+  recommendedRouteLabel,
   explanation,
   onChangeDeparture,
 }: Props) {
@@ -33,7 +34,7 @@ export function RecommendationBanner({
         ? 'Recommendation unavailable — incomplete forecast'
         : error
           ? 'Trip analysis unavailable'
-          : `Route ${recommendedRouteId ?? '—'} recommended`;
+          : `Route ${recommendedRouteLabel ?? recommendedRouteId ?? '—'} recommended`;
   return (
     <div
       className={`recommendation ${blocked ? 'recommendation-blocked' : incomplete ? 'recommendation-missing' : ''}`}

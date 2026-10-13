@@ -1,0 +1,25 @@
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { PaperProvider } from 'react-native-paper';
+import { TripPlanner } from './TripPlanner';
+import * as api from '../services/trip-planning';
+afterEach(() => jest.restoreAllMocks());
+test('plans demo directly and live requires selected locations; edited selected text clears coordinates', async () => {
+  const onSubmit = jest.fn();
+  const screen = await render(<PaperProvider><TripPlanner pending={false} onSubmit={onSubmit} onReset={jest.fn()} /></PaperProvider>);
+  await fireEvent.press(screen.getByText('Analyze trip'));
+  expect(onSubmit.mock.calls[0][0].mode).toBe('demo');
+  jest.spyOn(api, 'searchLocations').mockResolvedValue([{ provider_id: 'one', label: 'Chicago selected', latitude: 41, longitude: -87, timezone: 'America/Chicago' }]);
+  await fireEvent.press(screen.getByText('Live'));
+  await fireEvent.changeText(screen.getByLabelText('Origin'), 'Chi');
+  await waitFor(() => expect(screen.getByLabelText('Select Origin: Chicago selected')).toBeTruthy());
+  await fireEvent.press(screen.getByLabelText('Select Origin: Chicago selected'));
+  await fireEvent.changeText(screen.getByLabelText('Destination'), 'Pitt');
+  await waitFor(() => expect(screen.getByLabelText('Select Destination: Chicago selected')).toBeTruthy());
+  await fireEvent.press(screen.getByLabelText('Select Destination: Chicago selected'));
+  await fireEvent.press(screen.getByText('Analyze trip'));
+  expect(onSubmit.mock.calls[1][0].origin.latitude).toBe(41);
+  expect(onSubmit.mock.calls[1][0].timezone).toBe('America/Chicago');
+  await fireEvent.changeText(screen.getByLabelText('Origin'), 'edited');
+  await fireEvent.press(screen.getByText('Analyze trip'));
+  expect(onSubmit).toHaveBeenCalledTimes(2);
+});

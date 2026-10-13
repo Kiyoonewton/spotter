@@ -1,41 +1,39 @@
-# Dispatch workspace prototype
+# Weather-aware dispatch workspace
 
-This frontend uses TanStack Start, React, Material UI, and Tailwind CSS.
-The dispatch screen compares three illustrative Chicago-to-Pittsburgh corridors,
-with route ranking, checkpoint weather, map selection, forecast controls, and
-loading, missing-forecast, and blocked-route demo states.
+React, TypeScript and Material UI connect to Django REST APIs. The deployed
+workspace compares truck routes, evaluates forecast weather at checkpoint arrival
+times, and presents the returned recommendation, route exposure and checkpoint
+inspection. Docker Compose runs the frontend Node runtime, Django/Gunicorn,
+PostgreSQL, Redis and Nginx.
 
-## Run locally
+## Product behavior
 
-Use the Node version in `.nvmrc` and Yarn 1:
+- Demo mode uses deterministic Chicago–Pittsburgh alternatives and weather.
+- Live mode uses committed location coordinates from OpenCage, HERE truck routing,
+  and Open-Meteo hourly wind, rain and snowfall. Keys remain server-side.
+- Checkpoints belong to their routes, at 10/25/50-mile intervals and the destination.
+- Risk thresholds and cargo-weight overrides are deterministic backend rules.
+- Blocked and incomplete routes cannot be recommended; missing data stays Unknown.
+- Eligible routes rank by Severe miles, High miles, distance-weighted average risk,
+  duration, and stable route ID for exact ties. Selection never creates a recommendation.
+- “Why this route?” compares returned metrics in priority order, identifies the
+  first difference against the next eligible option, and quantifies driving time
+  and distance relative to the fastest eligible route. An inconsistent returned
+  winner is flagged rather than replaced.
+- Live maps show provider geometry and route-owned checkpoints. Weather circles
+  are sampled locations, not radar or a continuous corridor field.
+- The manual weather timeline covers the longest alternative, rounded up to an
+  hour. Preview time is independent of arrival-time risk and ranking.
+- The truck preview follows owned segment geometry using modeled arrival timing;
+  it is an estimate, not live GPS. Demo imagery is clearly illustrative.
+
+## Run and verify
+
+Use the Node version in `.nvmrc` and Yarn 1. From this directory:
 
 ```sh
 yarn install --frozen-lockfile
 yarn dev
-```
-
-Open `http://localhost:5173`. The dispatch screen needs no backend credentials.
-
-## Request lifecycle
-
-The Lovable Vite wrapper enables TanStack Start and selects `src/server.ts` as
-the custom server entry. Start discovers `src/start.ts` for request error and
-CSRF middleware. `src/router.tsx` creates a router and query client per request;
-`src/routes/__root.tsx` renders the HTML shell and providers.
-Start supplies the client hydration entry. The legacy `index.html`, `main.tsx`,
-and `App.tsx` are not the Start hydration entry.
-
-## Temporary data
-
-`src/lib/dispatch-data.ts` supplies local fixtures and ranking calculations.
-There is no live weather, routing, geocoding, or backend integration yet.
-The form intentionally supports only Chicago, IL to Pittsburgh, PA.
-The backend can later replace the fixture reads with API calls; `server.ts`
-currently hosts the frontend SSR lifecycle, not the future Spotter API.
-
-## Checks
-
-```sh
 yarn typecheck
 yarn lint
 yarn format:check
@@ -44,11 +42,47 @@ yarn test:e2e
 yarn build
 ```
 
-Playwright requires its Chromium browser (`yarn playwright install chromium`).
-Build output and dependency folders are excluded from version control.
+Playwright needs Chromium (`yarn playwright install chromium`). The Vite API proxy
+uses `VITE_API_PROXY_TARGET`, defaulting to `http://127.0.0.1:8000`.
+From `spotter-backend`, install requirements and run:
 
-## Milestone verification
+```sh
+python manage.py check
+python manage.py test
+```
 
-The trip-analysis API is wired through `src/services/api.ts`; local Vite development proxies `/api` to `VITE_API_PROXY_TARGET` (default `http://127.0.0.1:8000`). The map remains an illustrative SVG and does not claim live geographic routing. Route cards and the existing inspector still contain legacy fixture presentation logic; full component extraction and response-driven map/card rendering remain follow-up work.
+See the root README for Docker startup, `docs/providers.md` for provider setup,
+and `docs/corridor-forecast.md` for weather semantics and caching. GitHub Actions
+run backend/frontend checks, browser journeys, Docker validation, CodeQL and the
+300-line authored-file policy. Passing fixture tests does not establish live
+provider accuracy; report live verification separately.
 
-Verification on 2026-10-10: `yarn typecheck`, `yarn lint` (six pre-existing Fast Refresh warnings), `yarn format:check`, `yarn test` (4 files, 9 tests), and `yarn build` passed. `yarn test:e2e` was blocked by the sandbox refusing a local listener (`listen EPERM 127.0.0.1:5173`). Docker backend verification was blocked by Docker socket permission; the isolated Python fallback could not download dependencies because network access was unavailable. Backend tests therefore remain unverified in this environment.
+## Architecture
+
+TanStack Start serves React through its Node runtime. `src/routes/index.tsx`
+composes focused MUI components. Request/selection hooks protect against stale
+responses and preserve successfully applied trip metadata. Django provider
+adapters normalize external data before pure classification and ranking logic.
+Redis caches validated raw forecasts; load-dependent risk is recomputed.
+Provider failures use fixed public messages and request IDs, with safe diagnostic
+categories logged server-side. Readiness checks database and cache dependencies.
+
+## Current limitations and next milestones
+
+- Checkpoint timing interpolates validated HERE span durations with an explicit
+  distance-proportional fallback, with no modeled driver breaks. See
+  [timing policy](../../../docs/route-timing.md).
+- Optional physical truck profiles support six explicit measurements; critical
+  routing notices exclude routes. Permits, hazmat and axle groups are not modeled.
+  See [truck profile policy](../../../docs/truck-profile.md).
+- Successful browser analyses request server-side immutable snapshots with seven-day
+  token links. Refresh/share restoration preserves arrival weather and applied trip
+  inputs. Saved links are bearer access; there is no user-account history list.
+  Hourly preview frames are not saved or fetched again when reopening a snapshot.
+- Driver briefings print the inspected route’s arrival itinerary and recommendation
+  status; they are not certified driver logs. Route × Departure comparison evaluates
+  four weather-only windows on saved geometry/timing; full time-dependent rerouting
+  and HOS remain future work.
+- The live overlay does not yet sample a wider corridor grid.
+- Provider forecast coverage and rate limits can leave weather unavailable.
+- React Native companion and accuracy backtesting remain future work.

@@ -1,107 +1,89 @@
 name: Deploy to Development
 
-# workflow_run cannot be used here: GitHub only discovers workflow_run
-# listener workflows from the file as it exists on the default branch
-# (main for this repo), not on develop where this workflow currently
-# lives — so a Frontend CI run on develop would never trigger it. Running
-# the quality gate directly in this workflow, gated on develop pushes,
-# avoids that limitation while still deploying only commits that pass it.
 on:
   push:
     branches: [develop]
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+  checks: read
+
 concurrency:
   group: deploy-development
-  cancel-in-progress: true
+  # A second push must not interrupt migrations or a running rollout.
+  cancel-in-progress: false
 
 jobs:
-  quality:
-    name: frontend-quality
+  gate:
+    name: Full-stack deployment gate
+    if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: spotter-frontend/apps/web
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      checks: read
+      security-events: read
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - name: Require successful CI for this exact commit
+        uses: actions/github-script@v7
         with:
-          node-version-file: spotter-frontend/apps/web/.nvmrc
-          cache: yarn
-          cache-dependency-path: spotter-frontend/apps/web/yarn.lock
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Create placeholder env files
-        run: |
-          echo "VITE_API_BASE_URL=/api" > .env
-          echo "VITE_API_BASE_URL=/api" > .env.test
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Run quality gate (lint, typecheck, format, unit/RTL/MSW tests, Playwright, build)
-        run: yarn quality
+          script: |
+            const { waitForChecks } = require('./scripts/deployment-gate.cjs');
+            await waitForChecks({ github, core, context });
 
   deploy:
     name: deploy
-    needs: quality
+    needs: gate
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     environment: development
+    env:
+      DEV_HOST: ${{ vars.DEV_HOST }}
+      DEPLOY_USER: ${{ vars.DEV_USER || 'root' }}
+      DEPLOY_PATH: ${{ vars.DEV_PATH || '/root/kiyoo/spotter-new' }}
+      SSH_KNOWN_HOSTS: ${{ secrets.DEV_SSH_KNOWN_HOSTS }}
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - name: Reject stale rollout after waiting for approval
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data } = await github.rest.git.getRef({ ...context.repo, ref: 'heads/develop' });
+            if (data.object.sha !== context.sha) core.setFailed('Develop advanced; deploy its latest verified commit instead');
 
-      - name: Check required configuration
+      - uses: actions/checkout@v4
+
+      - name: Validate deployment configuration
+        shell: bash
         run: |
-          if [ -z "${{ vars.DEV_HOST }}" ]; then
-            echo "DEV_HOST is not configured" >&2
-            exit 1
-          fi
+          [[ "$DEV_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]] || { echo "Valid DEV_HOST is required" >&2; exit 1; }
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]] || { echo "Invalid DEV_USER" >&2; exit 1; }
+          [[ "$DEPLOY_PATH" =~ ^/[a-zA-Z0-9_./-]+$ && "$DEPLOY_PATH" != / && "$DEPLOY_PATH" != *'/../'* && "$DEPLOY_PATH" != */.. ]] || { echo "Invalid DEV_PATH" >&2; exit 1; }
+          [[ -n "$SSH_KNOWN_HOSTS" ]] || { echo "Pinned DEV_SSH_KNOWN_HOSTS is required" >&2; exit 1; }
 
-      - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
+      - uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
 
-      - name: Add server to known_hosts
+      - name: Install pinned host key
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H "${{ vars.DEV_HOST }}" >> ~/.ssh/known_hosts
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
-      # .env / .env.* are per-environment and must only ever be edited on
-      # the server directly (see spotter-infrastructure's docs) — never
-      # overwritten by a deploy. node_modules is rebuilt inside the Docker
-      # image; test reports and coverage are CI-only artifacts.
-      - name: Sync frontend source to the Development server
+      - name: Check server prerequisites
         run: |
-          rsync -az --delete \
-            --exclude='.git/' \
-            --exclude='node_modules/' \
-            --exclude='.env' \
-            --exclude='.env.*' \
-            --exclude='coverage/' \
-            --exclude='playwright-report/' \
-            --exclude='test-results/' \
-            spotter-frontend/ "root@${{ vars.DEV_HOST }}:/root/kiyoo/spotter-new/spotter-frontend/"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=6 "$DEPLOY_USER@$DEV_HOST" \
+            "test -f '$DEPLOY_PATH/spotter-infrastructure/.env.development' && command -v docker >/dev/null && docker compose version >/dev/null"
 
-      - name: Rebuild and restart webserver
+      - name: Sync complete stack, preserving server runtime files
         run: |
-          ssh "root@${{ vars.DEV_HOST }}" '
-            set -euo pipefail
-            cd /root/kiyoo/spotter-new/spotter-infrastructure
-            docker compose --env-file .env.development -f docker-compose.development.yml up -d --build webserver
-          '
+          export RSYNC_RSH='ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=6'
+          bash spotter-infrastructure/scripts/sync-development.sh "$GITHUB_WORKSPACE" "$DEPLOY_USER@$DEV_HOST:$DEPLOY_PATH"
 
-      - name: Verify deployment
+      - name: Build, back up and verify complete stack
         run: |
-          ssh "root@${{ vars.DEV_HOST }}" '
-            curl -fsS -H "Host: dev-spotter.kiyoo.online" http://127.0.0.1:8080/api/health
-          '
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=6 "$DEPLOY_USER@$DEV_HOST" \
+            "bash '$DEPLOY_PATH/spotter-infrastructure/scripts/deploy-development.sh' '$DEPLOY_PATH'"

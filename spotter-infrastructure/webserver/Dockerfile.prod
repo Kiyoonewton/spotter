@@ -6,7 +6,11 @@ WORKDIR /app
 RUN npm install -g corepack && corepack enable
 
 COPY spotter-frontend/apps/web/package.json spotter-frontend/apps/web/yarn.lock ./
-RUN yarn install --frozen-lockfile
+# Persist successful downloads across failed builds. Lock the shared cache
+# while the frontend/runtime and gateway targets build in parallel.
+RUN --mount=type=cache,id=spotter-yarn,target=/usr/local/share/.cache/yarn,sharing=locked \
+    yarn install --frozen-lockfile --cache-folder /usr/local/share/.cache/yarn \
+    --network-timeout 600000 --network-concurrency 2
 
 COPY spotter-frontend/apps/web/ ./
 
@@ -18,8 +22,17 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN yarn build
 
 
-# ---------- Runtime ----------
-FROM nginx:alpine
+# ---------- TanStack Start runtime ----------
+FROM node:26-alpine AS frontend-runtime
+WORKDIR /app
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=3000
+COPY --from=frontend-build --chown=node:node /app/.output ./.output
+USER node
+EXPOSE 3000
+CMD ["node", ".output/server/index.mjs"]
+
+# ---------- Nginx gateway ----------
+FROM nginx:alpine AS gateway
 
 RUN rm -f /etc/nginx/conf.d/default.conf
 

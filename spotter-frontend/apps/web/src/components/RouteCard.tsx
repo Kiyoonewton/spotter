@@ -7,31 +7,34 @@ import InfoIcon from '@mui/icons-material/InfoOutlined';
 import ShieldIcon from '@mui/icons-material/GppGoodOutlined';
 import WarningIcon from '@mui/icons-material/WarningAmberRounded';
 import { RiskMileageBar } from './risk-mileage-bar';
-import type { Risk, RouteId } from '@/lib/dispatch-data';
+import { formatMeasurement } from '@/lib/result-presentation';
+import type { Risk } from '@/lib/dispatch-data';
 
 export type RouteView = {
-  id: RouteId;
+  id: string;
+  displayId?: string;
   name: string;
   roads: string;
   miles: number;
   minutes: number;
   severe: number;
   high: number;
-  average: number;
+  average: number | null;
   risk_miles?: Record<string, number>;
+  routing_notice?: string | null;
   eligibility?: string;
 };
 const sx = (fontSize: number) => ({ fontSize });
 
 type Props = {
   route: RouteView;
-  rank: number;
-  selected: RouteId;
-  recommended: RouteId;
+  rank: number | null;
+  selected: string;
+  recommended: string | null;
   blocked: boolean;
   missing: boolean;
   spacing: number;
-  onSelect: (id: RouteId) => void;
+  onSelect: (id: string) => void;
 };
 export function RouteCard({
   route,
@@ -52,12 +55,17 @@ export function RouteCard({
         aria-pressed={selected === route.id}
       >
         <div className="route-card-top">
-          <span className="route-id">{route.id}</span>
+          <span
+            className="route-id"
+            style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          >
+            {route.displayId ?? 'Unavailable'}
+          </span>
           <div className="route-name">
-            <strong>Route {route.id}</strong>
+            <strong>Route {route.displayId ?? 'Unavailable'}</strong>
             <span>{route.name}</span>
           </div>
-          {!blocked && !missing && rank === 0 ? (
+          {!blocked && !missing && route.id === recommended ? (
             <Chip
               size="small"
               color="success"
@@ -65,15 +73,19 @@ export function RouteCard({
               label="Recommended"
             />
           ) : (
-            <Chip size="small" variant="outlined" label={`#${rank + 1}`} />
+            <Chip
+              size="small"
+              variant="outlined"
+              label={blocked ? 'Blocked' : missing ? 'Incomplete' : `#${(rank ?? 0) + 1}`}
+            />
           )}
         </div>
         <div className="route-road">
           {route.roads}
-          <span>{route.miles} mi</span>
+          <span>{formatMeasurement(route.miles)} mi</span>
         </div>
         <RiskMileageBar
-          route={route.id}
+          route={route.displayId ?? 'Unavailable'}
           miles={route.miles}
           riskMiles={riskMiles as Partial<Record<Risk, number>>}
         />
@@ -81,22 +93,22 @@ export function RouteCard({
           <div>
             <span>Severe miles</span>
             <strong>
-              {blocked ? '—' : route.severe}
+              {blocked ? '—' : formatMeasurement(route.severe)}
               <small>{!blocked ? ' mi' : ''}</small>
             </strong>
           </div>
           <div>
             <span>High miles</span>
             <strong>
-              {blocked ? '—' : route.high}
+              {blocked ? '—' : formatMeasurement(route.high)}
               <small>{!blocked ? ' mi' : ''}</small>
             </strong>
           </div>
           <div>
             <span>Average risk</span>
             <strong>
-              {blocked || missing ? '—' : route.average.toFixed(1)}
-              <small>{!blocked && !missing ? ' / 5' : ''}</small>
+              {blocked || missing || route.average == null ? '—' : route.average.toFixed(1)}
+              <small>{!blocked && !missing && route.average != null ? ' / 5' : ''}</small>
             </strong>
           </div>
           <div>
@@ -115,7 +127,12 @@ export function RouteCard({
         {blocked ? (
           <div className="blocked-rule">
             <WarningIcon sx={sx(14)} />
-            No Travel — see returned blocking reasons
+            {route.routing_notice ?? 'No Travel — see returned blocking reasons'}
+          </div>
+        ) : missing ? (
+          <div className="blocked-rule">
+            <InfoIcon sx={sx(14)} />
+            Incomplete — see returned forecast coverage
           </div>
         ) : (
           <div className="route-card-footer">

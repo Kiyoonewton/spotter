@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from math import asin, cos, radians, sin, sqrt
 
+from .route_geometry import geodesic_distance as _distance
+from .route_timing import elapsed_at_fraction
 from .routing import NormalizedRoute, RoutingProviderError
 
 MILES_PER_METER = 0.000621371192
@@ -31,13 +32,6 @@ class SampledSegment:
     distance_miles: float
     coordinates: tuple[tuple[float, float], ...]
 
-
-def _distance(a: tuple[float, float], b: tuple[float, float]) -> float:
-    radius = 6_371_008.8
-    lat1, lat2 = radians(a[0]), radians(b[0])
-    dlat, dlon = lat2 - lat1, radians(b[1] - a[1])
-    value = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-    return radius * 2 * asin(sqrt(value))
 
 
 def _geometry(route: NormalizedRoute) -> tuple[list[tuple[float, float]], list[float], float]:
@@ -72,6 +66,12 @@ def _path_between(points, cumulative, start, end):
     return tuple(path)
 
 
+def _geometry_distance_for_provider_miles(miles, provider_miles, geometry_meters):
+    if provider_miles <= 0:
+        return 0.0
+    return geometry_meters * (miles / provider_miles)
+
+
 def sample_route(route: NormalizedRoute, spacing_miles: int, departure_at: str) -> tuple[list[SampledCheckpoint], list[SampledSegment], dict]:
     if spacing_miles not in SPACING:
         raise ValueError("Checkpoint spacing must be 10, 25, or 50 miles.")
@@ -84,22 +84,32 @@ def sample_route(route: NormalizedRoute, spacing_miles: int, departure_at: str) 
     departure = departure.astimezone(timezone.utc)
     points, cumulative, geometry_meters = _geometry(route)
     provider_miles = route.distance_meters * MILES_PER_METER
-    distances = list(range(0, int(provider_miles), spacing_miles))
-    if not distances or distances[-1] != provider_miles:
+    distances = []
+    current = 0.0
+    while current < provider_miles:
+        distances.append(current)
+        current += spacing_miles
+    if not distances or abs(distances[-1] - provider_miles) > 1e-9:
         distances.append(provider_miles)
+    timing_method = "here_span_interpolation" if route.timing_profile else "distance_proportional_estimate"
     checkpoints: list[SampledCheckpoint] = []
     for index, miles in enumerate(distances):
         ratio = 0 if provider_miles == 0 else miles / provider_miles
-        elapsed = round(route.duration_seconds * ratio)
+        elapsed = round(elapsed_at_fraction(route.timing_profile, ratio, route.duration_seconds))
         arrival = departure + timedelta(seconds=elapsed)
         checkpoints.append(SampledCheckpoint(
             f"{route.provider_id}-cp-{index}", route.provider_id, miles,
-            _point_at(points, cumulative, geometry_meters * ratio), elapsed,
-            arrival.isoformat().replace("+00:00", "Z"), "distance_proportional_estimate",
+            _point_at(points, cumulative, _geometry_distance_for_provider_miles(miles, provider_miles, geometry_meters)), elapsed,
+            arrival.isoformat().replace("+00:00", "Z"), timing_method,
         ))
     segments = [SampledSegment(
         f"{route.provider_id}-seg-{index}", route.provider_id, start.id, end.id,
         end.distance_miles - start.distance_miles,
-        _path_between(points, cumulative, start.distance_miles / MILES_PER_METER, end.distance_miles / MILES_PER_METER),
+        _path_between(
+            points,
+            cumulative,
+            _geometry_distance_for_provider_miles(start.distance_miles, provider_miles, geometry_meters),
+            _geometry_distance_for_provider_miles(end.distance_miles, provider_miles, geometry_meters),
+        ),
     ) for index, (start, end) in enumerate(zip(checkpoints, checkpoints[1:]))]
-    return checkpoints, segments, {"provider_distance_miles": provider_miles, "geometry_distance_miles": geometry_meters * MILES_PER_METER, "timing_method": "distance_proportional_estimate"}
+    return checkpoints, segments, {"provider_distance_miles": provider_miles, "geometry_distance_miles": geometry_meters * MILES_PER_METER, "timing_method": timing_method, "timing_span_count": len(route.timing_profile) - 1 if route.timing_profile else 0}

@@ -1,12 +1,17 @@
 """HERE Routing API v8 adapter and provider-neutral route structures."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import json
+import math
 import os
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+
+
+from .truck_profile import vehicle_parameters, critical_provider_notice
+from .route_timing import build_span_timing
 
 
 class RoutingProviderError(Exception):
@@ -20,6 +25,7 @@ class RouteRequest:
     destination_lat: float
     destination_lon: float
     departure_at: str
+    truck_profile: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -29,6 +35,8 @@ class NormalizedRoute:
     distance_meters: float
     duration_seconds: int
     sections: list[dict]
+    timing_profile: list[tuple[float, float]] | None = None
+    critical_notice: bool = False
 
 
 def _decode_flexible_polyline(encoded: str) -> list[tuple[float, float]]:
@@ -86,19 +94,28 @@ def normalize_routes(payload: dict) -> list[NormalizedRoute]:
             sections = route["sections"]
             if not isinstance(sections, list) or not sections:
                 raise ValueError
-            coordinates: list[tuple[float, float]] = []
-            for section in sections:
-                coordinates.extend(_decode_flexible_polyline(section["polyline"]))
+            shapes = [_decode_flexible_polyline(section["polyline"]) for section in sections]
+            coordinates = [point for shape in shapes for point in shape]
             shape = tuple(coordinates)
+            critical = critical_provider_notice(route, sections)
             if shape in seen_shapes:
+                index = next(i for i, item in enumerate(normalized) if tuple(item.coordinates) == shape)
+                normalized[index] = replace(normalized[index], critical_notice=normalized[index].critical_notice or critical)
                 continue
             seen_shapes.add(shape)
             summaries = [section["summary"] for section in sections]
+            for summary in summaries:
+                for field in ("length", "duration"):
+                    value = summary[field]
+                    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+                        raise ValueError
+                if not float(summary["duration"]).is_integer():
+                    raise ValueError
             distance = sum(float(summary["length"]) for summary in summaries)
             duration = sum(int(summary["duration"]) for summary in summaries)
             if distance <= 0 or duration <= 0:
                 raise ValueError
-            normalized.append(NormalizedRoute(str(route["id"]), coordinates, distance, duration, sections))
+            normalized.append(NormalizedRoute(str(route["id"]), coordinates, distance, duration, sections, build_span_timing(sections, shapes), critical))
         except (KeyError, TypeError, ValueError):
             raise RoutingProviderError("HERE returned malformed route geometry or timing.")
     if not normalized:
@@ -116,7 +133,9 @@ def calculate_routes(request_data: RouteRequest) -> list[NormalizedRoute]:
         "destination": f"{request_data.destination_lat},{request_data.destination_lon}",
         "departureTime": request_data.departure_at, "alternatives": 2,
         "return": "polyline,summary,travelSummary",
+        "spans": "duration,length,dynamicSpeedInfo",
         "units": "imperial",
+        **vehicle_parameters(request_data.truck_profile),
     })
     try:
         with urlopen(Request(f"https://router.hereapi.com/v8/routes?{params}"), timeout=8) as response:

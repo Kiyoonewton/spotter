@@ -5,30 +5,30 @@ import LayersIcon from '@mui/icons-material/LayersOutlined';
 import RouteIcon from '@mui/icons-material/RouteOutlined';
 import { DispatchMap } from './dispatch-map';
 import { ForecastTimeline } from './ForecastTimeline';
-import type { DemoState, RouteId, Risk } from '@/lib/dispatch-data';
+import type { DemoState, Risk } from '@/lib/dispatch-data';
 
 type Props = {
-  selected: RouteId;
+  selected: string;
   checkpoint: number;
   pending: boolean;
   progress: number;
   opacity: number;
   forecast: number;
-  playing: boolean;
+  horizonHours: number;
   state: DemoState;
   departure: string;
   spacing: number;
   missing: boolean;
-  onSelect: (id: RouteId) => void;
+  onSelect: (id: string) => void;
   onCheckpoint: (index: number) => void;
   onOpacity: (value: number) => void;
   onForecast: (value: number) => void;
-  onPlaying: (value: boolean) => void;
 };
 const risks: Risk[] = ['Low', 'Moderate', 'High', 'Severe', 'No Travel', 'Unknown'];
 const sx = (fontSize: number) => ({ fontSize });
 
 export function MapWorkspace(props: Props) {
+  const forecast = Math.min(props.forecast, props.horizonHours);
   return (
     <section className="map-workspace">
       <div className="map-header">
@@ -66,7 +66,7 @@ export function MapWorkspace(props: Props) {
             checkpoint={props.checkpoint}
             onCheckpoint={props.onCheckpoint}
             opacity={props.opacity}
-            forecast={props.forecast}
+            forecast={forecast}
             state={props.state}
           />
         )}
@@ -102,17 +102,14 @@ export function MapWorkspace(props: Props) {
         </span>
       </div>
       <ForecastTimeline
-        forecastHour={props.forecast}
+        horizonHours={props.horizonHours}
+        forecastHour={forecast}
         timestamp={new Intl.DateTimeFormat('en-US', {
           hour: 'numeric',
           minute: '2-digit',
           timeZoneName: 'short',
-        }).format(
-          new Date(new Date(`${props.departure}:00-05:00`).getTime() + props.forecast * 3600000),
-        )}
-        playing={props.playing}
+        }).format(new Date(new Date(`${props.departure}:00-05:00`).getTime() + forecast * 3600000))}
         onForecastHour={props.onForecast}
-        onPlaying={props.onPlaying}
       />
     </section>
   );

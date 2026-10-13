@@ -14,7 +14,9 @@ The selected providers are:
 - **Routing: [HERE Routing API v8](https://docs.here.com/routing/reference/routing-v8-api-overview).**
   Its API supports `transportMode=truck`, `alternatives` from 0 through 6 (we request 2,
   for at most 3 total routes), Flexible Polyline geometry, route summaries, and section
-  timing. It requires `HERE_API_KEY` and has account-specific quotas. The adapter requests
+  timing. Validated speed-change span durations support checkpoint ETA interpolation,
+  with a clearly labeled distance-proportional fallback; see [timing policy](route-timing.md).
+  It requires `HERE_API_KEY` and has account-specific quotas. The adapter requests
   `routingMode=fast`, `departureTime`, `return=polyline,summary,travelSummary`, and imperial
   units. It does not claim hazardous-material, clearance, or commercial suitability beyond
   HERE's truck profile. Duplicate alternatives are removed when their complete decoded
@@ -31,7 +33,9 @@ The selected providers are:
   `[T-1h, T)`. An ETA at 10:30 selects the 11:00 sample; an ETA exactly at 11:00 selects
   the 12:00 sample. It exposes both interval boundaries and divides the preceding one-hour
   accumulation by one hour as an hourly average rate. Wind is instantaneous and uses the
-  nearest available sample without interpolation across missing values or extrapolation.
+  nearest scheduled sample, preferring the earlier sample on an exact tie, and accepts it
+  only within one hour of the ETA. If that selected sample is missing, wind remains missing;
+  the adapter does not search farther samples or extrapolate.
   Rain is `rain + showers` only when both matching-unit values exist; missing showers remain
   missing. Snowfall remains separate. NWS remains documented as a provisional US-only
   alternative and is not used for this adapter.

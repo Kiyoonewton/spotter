@@ -16,8 +16,13 @@ permissions:
 
 jobs:
   codeql:
-    name: codeql
+    name: codeql (${{ matrix.language }})
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, python]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -25,26 +30,21 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
-          languages: javascript-typescript
+          languages: ${{ matrix.language }}
+          build-mode: none
 
-      # `upload: false` — GitHub code scanning upload requires GitHub
-      # Advanced Security, unavailable for private repos on this org's
-      # current Free plan (see README). Analysis itself still runs and
-      # still fails the job on a genuine setup/analysis error; only the
-      # upload-to-GitHub step is skipped. Results are downloadable as a
-      # workflow artifact instead — see the next step.
-      - name: Perform CodeQL analysis
+      - name: Perform CodeQL analysis and publish results
         uses: github/codeql-action/analyze@v4
         with:
-          category: /language:javascript-typescript
-          upload: false
+          category: /language:${{ matrix.language }}
+          upload: true
           output: sarif-results
 
       - name: Upload SARIF results as an artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: codeql-sarif-results
+          name: codeql-sarif-results-${{ matrix.language }}
           path: sarif-results
           retention-days: 7
           if-no-files-found: ignore

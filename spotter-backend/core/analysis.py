@@ -26,7 +26,7 @@ def classify_weather(weather: Weather, load_weight_lb: float) -> tuple[str, list
             continue
         known.append(condition)
         if condition == "wind":
-            severity, threshold = (("No Travel", 55) if value >= 55 else ("Severe", 45) if value >= 35 and load_weight_lb > 30000 else ("High", 35) if value >= 35 else ("Moderate", 25) if value >= 25 else ("Low", 0))
+            severity, threshold = (("No Travel", 55) if value >= 55 else ("Severe", 45) if value >= 45 else ("High", 35) if value >= 35 else ("Moderate", 25) if value >= 25 else ("Low", 0))
             if value >= 45 and value < 55 and load_weight_lb > 30000:
                 severity, threshold = "No Travel", 30000
             elif value >= 35 and value < 45 and load_weight_lb > 40000:
@@ -40,6 +40,8 @@ def classify_weather(weather: Weather, load_weight_lb: float) -> tuple[str, list
                 severity = "No Travel" if value > 3 else "Severe" if value >= 2 else "High" if value >= 1 else "Moderate" if value >= .5 else "Low"
                 unit = "in/hr"
             reasons.append({"code": f"{condition}_{severity.lower().replace(' ', '_')}", "condition": condition, "observed": value, "threshold": value, "severity": severity, "explanation": f"{condition.title()} of {value:g} {unit} results in {severity} risk."})
+    if any(reason["severity"] == "No Travel" for reason in reasons):
+        return "No Travel", reasons
     if len(known) < 3:
         return "Unknown", reasons
     return max((r["severity"] for r in reasons), key=lambda x: RISK_ORDER[x]), reasons
@@ -73,7 +75,10 @@ def _route(route_id: str, name: str, distance: float, minutes: int, weather_zone
 
 def analyze_trip(request: dict) -> dict:
     zones = [Weather(18, .02, 0), Weather(38, .31, 0), Weather(None, None, None), Weather(28, .12, 0), Weather(12, .01, 0)]
-    routes = [_route("A", "Northern corridor", 468, 462, zones, request), _route("B", "Central corridor", 482, 480, zones[1:] + zones[:1], request), _route("C", "Southern corridor", 526, 522, [Weather(50, .02, 0), Weather(58, .01, 0), Weather(40, .2, 0), Weather(15, .01, 0), Weather(12, 0, 0)], request)]
+    # Keep one complete corridor for the default recommendation journey.
+    # Route B retains the missing-weather scenario; Route C remains blocked.
+    complete_zones = [zones[0], zones[1], Weather(22, .04, 0), *zones[3:]]
+    routes = [_route("A", "Northern corridor", 468, 462, complete_zones, request), _route("B", "Central corridor", 482, 480, zones[1:] + zones[:1], request), _route("C", "Southern corridor", 526, 522, [Weather(50, .02, 0), Weather(58, .01, 0), Weather(40, .2, 0), Weather(15, .01, 0), Weather(12, 0, 0)], request)]
     eligible = [r for r in routes if r["eligibility"] == "eligible"]
     eligible.sort(key=lambda r: (r["risk_miles"]["Severe"], r["risk_miles"]["High"], r["average_risk"], r["duration_minutes"], r["id"]))
     for rank, route in enumerate(eligible, 1): route["rank"] = rank
