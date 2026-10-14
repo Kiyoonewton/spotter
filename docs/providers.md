@@ -48,3 +48,23 @@ captured, deterministic values and remains independent of upstream services.
 Open-Meteo weather requests are now implemented without credentials; live validation still
 requires network access. Forecast values outside the returned horizon are represented as
 missing rather than clamped.
+
+## Live arrival-weather reliability
+
+Arrival-weather requests deduplicate identical coordinates across ETAs, request at
+most 50 locations per upstream batch with at most two concurrent requests, and
+respect the existing 200-checkpoint analysis budget. Raw forecast payloads are
+cached per exact coordinate/UTC retrieval day for 300 seconds; each checkpoint's
+ETA is selected independently and cargo risk is always recomputed. Only successful
+normalization writes new cache entries. No expired-cache, Demo or fabricated-weather
+fallback is used. No automatic rate-limit retries are made.
+
+Safe live-analysis logs include `weather_category`: `timeout`, `network`,
+`rate_limited`, `http_4xx`, `http_5xx`, `malformed_json`, `batch_shape`,
+`checkpoint_budget` or `invalid_data`. These are allowlisted values, not raw provider
+messages. Public 503 text/code/request-ID behavior is unchanged. Use the request ID
+to correlate the log; never log raw exception chains, URLs or response bodies.
+
+This change addresses unbounded live batching and repeated upstream traffic. It
+does not prove the cause of an earlier generic WeatherProviderError, eliminate
+provider outages, or replace deployed live verification after rollout.
