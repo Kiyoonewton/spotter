@@ -84,3 +84,16 @@ class PublicProviderErrorTests(SimpleTestCase):
                 self.assertIn("live analysis", "\n".join(logs.output))
                 live.assert_called_once()
                 demo.assert_not_called()
+
+    def test_weather_subcategory_is_safe_and_server_only(self):
+        with (
+            patch("core.views.analyze_live", side_effect=WeatherProviderError(SENSITIVE_MESSAGE, category="rate_limited")),
+            patch("core.views.analyze_trip") as demo,
+            self.assertLogs("core.views", level="WARNING") as logs,
+        ):
+            response = APIClient().post("/api/trip-analyses/", LIVE_PAYLOAD, format="json")
+        self.assert_safe_failure(response, logs, "Live analysis is temporarily unavailable.",
+                                 "live_analysis_failed", "WeatherProviderError")
+        self.assertIn("weather_category=rate_limited", "\n".join(logs.output))
+        self.assertNotIn("rate_limited", str(response.data))
+        demo.assert_not_called()

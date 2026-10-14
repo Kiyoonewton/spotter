@@ -98,7 +98,7 @@ def trip_analyses(request):
             return Response(result, status=200)
         except (LiveAnalysisError, ProviderError, RoutingProviderError, WeatherProviderError) as error:
             request_id = str(uuid4())
-            logger.warning("live analysis unavailable request_id=%s category=%s", request_id, type(error).__name__)
+            logger.warning("live analysis unavailable request_id=%s category=%s weather_category=%s", request_id, type(error).__name__, error.category if isinstance(error, WeatherProviderError) else "not_weather")
             return Response({"error": "Live analysis is temporarily unavailable.", "code": "live_analysis_failed", "request_id": request_id}, status=503)
     result = analyze_trip(request_data)
     result["data_source"] = "demo"
