@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from http.client import HTTPException
 import json
 import math
 from urllib.error import HTTPError, URLError
@@ -11,7 +12,12 @@ from urllib.request import Request, urlopen
 
 
 class WeatherProviderError(Exception):
-    pass
+    SAFE_CATEGORIES = {"rate_limited", "timeout", "network", "http_4xx", "http_5xx",
+                       "malformed_json", "batch_shape", "checkpoint_budget", "invalid_data"}
+
+    def __init__(self, message, *, category="invalid_data"):
+        super().__init__(message)
+        self.category = category if category in self.SAFE_CATEGORIES else "invalid_data"
 
 
 @dataclass(frozen=True)
@@ -105,17 +111,24 @@ def fetch_forecasts(checkpoints: list[WeatherCheckpoint]) -> tuple[list[dict], s
             payload = json.load(response)
     except HTTPError as error:
         if error.code == 429:
-            raise WeatherProviderError("Open-Meteo rate limit exceeded; retry later.") from error
-        raise WeatherProviderError("Open-Meteo weather request failed.") from error
-    except (TimeoutError, URLError, json.JSONDecodeError) as error:
-        raise WeatherProviderError("Open-Meteo weather request timed out or returned invalid data.") from error
+            raise WeatherProviderError("Open-Meteo rate limit exceeded; retry later.", category="rate_limited") from error
+        raise WeatherProviderError("Open-Meteo weather request failed.", category="http_5xx" if error.code >= 500 else "http_4xx") from error
+    except TimeoutError as error:
+        raise WeatherProviderError("Weather request timed out.", category="timeout") from error
+    except URLError as error:
+        category = "timeout" if isinstance(error.reason, TimeoutError) else "network"
+        raise WeatherProviderError("Weather network request failed.", category=category) from error
+    except (OSError, HTTPException) as error:
+        raise WeatherProviderError("Weather connection failed.", category="network") from error
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise WeatherProviderError("Invalid weather JSON.", category="malformed_json") from error
     retrieved = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     payloads = payload if isinstance(payload, list) else [payload]
     if len(payloads) != len(checkpoints):
-        raise WeatherProviderError("Open-Meteo returned an unexpected batch shape.")
+        raise WeatherProviderError("Open-Meteo returned an unexpected batch shape.", category="batch_shape")
     return payloads, retrieved
 
 
 def fetch_hourly(checkpoints: list[WeatherCheckpoint]) -> list[NormalizedWeather | None]:
-    payloads, retrieved = fetch_forecasts(checkpoints)
-    return [select_hour(item, checkpoint.arrival_at, retrieved) for item, checkpoint in zip(payloads, checkpoints)]
+    from .arrival_weather import arrival_weather
+    return arrival_weather(checkpoints)

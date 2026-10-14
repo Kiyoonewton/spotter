@@ -45,6 +45,7 @@ for (const width of [320, 390, 768, 1280]) {
     await page.goto('/');
     await expect(page.getByLabel('Load weight in lbs')).toBeEnabled({ timeout: 30000 });
     await expect(page.getByRole('heading', { name: 'A clearer road ahead.' })).toBeVisible();
+    await expect(page.locator('.page-heading')).toHaveCSS('background-color', 'rgb(21, 59, 69)');
     await expect
       .poll(() =>
         page.locator('.intro-art img').evaluate((image) => (image as HTMLImageElement).currentSrc),
@@ -76,6 +77,10 @@ for (const width of [320, 390, 768, 1280]) {
     await page.getByRole('button', { name: /Compare routes/i }).click();
     await expect(page.getByText('Route 2 recommended', { exact: true })).toBeVisible();
     await expect(page.getByRole('region', { name: 'Dispatch introduction' })).toHaveCount(0);
+    await expect(page.locator('.page-heading')).toHaveCSS('background-color', 'rgb(21, 59, 69)');
+    await expect(
+      page.getByRole('heading', { name: 'Weather-aware routing', exact: true }),
+    ).toHaveCSS('color', 'rgb(255, 255, 255)');
     await expect(page.getByRole('region', { name: 'Geographic route map' })).toBeVisible();
     await page.getByRole('button', { name: 'Why this route?' }).click();
     await expect(
