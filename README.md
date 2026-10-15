@@ -7,7 +7,8 @@ Material UI, Django REST Framework, PostgreSQL and Redis**, with a separate
 
 [**Open live workspace**](https://spotter.kiyoo.online/) ·
 [**Download Android preview**](https://expo.dev/artifacts/eas/_w_78yy93G5WWHRZDOS4q6bTDjMzxBtpGOqYeuF-UGw.apk) ·
-[Assessment evidence](docs/assessment-audit.md) · [Mobile setup](spotter-mobile/README.md)
+[Assessment evidence](docs/assessment-audit.md) · [Mobile setup](spotter-mobile/README.md) 
+[Loom Walkthrough](https://www.loom.com/share/bf6a1e73e95242948f2f6f16bacb854c)
 
 The integration branch is **`develop`**. Demo mode needs no provider keys.
 Live mode uses OpenCage locations, HERE truck routing and Open-Meteo forecasts.
